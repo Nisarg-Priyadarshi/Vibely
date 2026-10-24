@@ -26,6 +26,7 @@ export const RoomProvider = ({ children }) => {
   const [roomMembers, setRoomMembers] = useState([]);
   const [roomState, setRoomState] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
   const [roomNotification, setRoomNotification] = useState(null);
 
   // Clear transient room notification
@@ -84,6 +85,7 @@ export const RoomProvider = ({ children }) => {
       setRoomMembers([]);
       setRoomState(null);
       setPendingRequests([]);
+      setChatMessages([]);
       return;
     }
 
@@ -111,6 +113,7 @@ export const RoomProvider = ({ children }) => {
           if (res?.success) {
             setRoomMembers(res.room.members || []);
             setRoomState(res.room.state || null);
+            setChatMessages(res.messages || []);
             applyRoomSync(res.room.state);
             notify('Reconnected to room successfully.', 'success');
           }
@@ -138,6 +141,13 @@ export const RoomProvider = ({ children }) => {
     socket.on('room:members_updated', ({ members, hostId }) => {
       setRoomMembers(members || []);
       setCurrentRoom((prev) => (prev ? { ...prev, hostId } : null));
+    });
+
+    socket.on('room:chat_message', (message) => {
+      setChatMessages((prev) => {
+        if (prev.some((item) => item.id === message.id)) return prev;
+        return [...prev, message].slice(-200);
+      });
     });
 
     socket.on('room:host_changed', ({ newHostId, newHostName }) => {
@@ -175,6 +185,7 @@ export const RoomProvider = ({ children }) => {
       setRoomMembers([]);
       setRoomState(null);
       setPendingRequests([]);
+      setChatMessages([]);
     });
 
     return () => {
@@ -202,6 +213,7 @@ export const RoomProvider = ({ children }) => {
           setRoomMembers(res.room.members || []);
           setRoomState(res.room.state || null);
           setPendingRequests(res.room.requests || []);
+          setChatMessages(res.messages || []);
           notify(`Room "${res.room.name}" created! Share code: ${res.room.code}`, 'success');
           resolve(res.room);
         });
@@ -230,6 +242,7 @@ export const RoomProvider = ({ children }) => {
           setRoomMembers(res.room.members || []);
           setRoomState(res.room.state || null);
           setPendingRequests(res.room.requests || []);
+          setChatMessages(res.messages || []);
           applyRoomSync(res.room.state);
           notify(`Joined room "${res.room.name}"`, 'success');
           resolve(res.room);
@@ -248,6 +261,7 @@ export const RoomProvider = ({ children }) => {
           setRoomMembers([]);
           setRoomState(null);
           setPendingRequests([]);
+          setChatMessages([]);
           notify('Left the room.', 'info');
           resolve();
         });
@@ -256,10 +270,19 @@ export const RoomProvider = ({ children }) => {
         setRoomMembers([]);
         setRoomState(null);
         setPendingRequests([]);
+        setChatMessages([]);
         resolve();
       }
     });
   }, [currentRoom, notify]);
+
+  const sendChatMessage = useCallback((text) => new Promise((resolve, reject) => {
+    if (!socketRef.current?.connected || !currentRoom) return reject(new Error('Not connected to a room.'));
+    socketRef.current.emit('room:chat_send', { code: currentRoom.code, text }, (res) => {
+      if (!res?.success) return reject(new Error(res?.error || 'Failed to send message.'));
+      resolve(res.message);
+    });
+  }), [currentRoom]);
 
   // Host Control Playback
   const hostControl = useCallback(
@@ -373,6 +396,7 @@ export const RoomProvider = ({ children }) => {
         roomMembers,
         roomState,
         pendingRequests,
+        chatMessages,
         roomNotification,
         isHost,
         createRoom,
@@ -382,6 +406,7 @@ export const RoomProvider = ({ children }) => {
         requestAction,
         respondToRequest,
         syncRoomState,
+        sendChatMessage,
         notify,
       }}
     >

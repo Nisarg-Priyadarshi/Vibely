@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Radio,
@@ -37,6 +37,7 @@ export const RoomDetail = () => {
     socketStatus,
     currentRoom,
     roomMembers,
+    chatMessages,
     roomState,
     pendingRequests,
     roomNotification,
@@ -47,6 +48,7 @@ export const RoomDetail = () => {
     requestAction,
     respondToRequest,
     syncRoomState,
+    sendChatMessage,
   } = useRoom();
 
   const { currentTime, duration, isPlaying: localIsPlaying } = usePlayer();
@@ -58,6 +60,30 @@ export const RoomDetail = () => {
   const [loadingSongs, setLoadingSongs] = useState(false);
   const [seekingValue, setSeekingValue] = useState(null);
   const [submittingAction, setSubmittingAction] = useState(false);
+  const [chatDraft, setChatDraft] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [chatMessages]);
+
+  const handleSendChat = async (event) => {
+    event.preventDefault();
+    const text = chatDraft.trim();
+    if (!text || sendingChat) return;
+    setSendingChat(true);
+    setChatError('');
+    try {
+      await sendChatMessage(text);
+      setChatDraft('');
+    } catch (err) {
+      setChatError(err.message);
+    } finally {
+      setSendingChat(false);
+    }
+  };
 
   // Auto-join room on mount if not currently connected to this room
   useEffect(() => {
@@ -544,6 +570,43 @@ export const RoomDetail = () => {
 
         {/* Right Col: Live Room Members Sidebar */}
         <div className="space-y-6">
+          <section className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-base font-bold text-white">Room Chat</h3>
+              </div>
+              <span className="text-[10px] text-slate-500">Only members of #{currentRoom?.code || code}</span>
+            </div>
+            <div aria-live="polite" aria-label="Room chat messages" className="h-72 overflow-y-auto space-y-3 pr-1">
+              {chatMessages.length === 0 ? (
+                <p className="h-full flex items-center justify-center text-xs text-slate-500">Start the conversation.</p>
+              ) : chatMessages.map((message) => {
+                const mine = message.userId === (user.id || user._id)?.toString();
+                return (
+                  <article key={message.id} className={`max-w-[92%] rounded-2xl px-3 py-2 ${mine ? 'ml-auto bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-950/70 border border-slate-800'}`}>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-[11px] font-bold text-emerald-300">{mine ? 'You' : message.userName}</span>
+                      <time className="text-[9px] text-slate-500" dateTime={new Date(message.createdAt).toISOString()}>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+                    </div>
+                    <p className="text-xs text-slate-200 whitespace-pre-wrap break-words">{message.text}</p>
+                  </article>
+                );
+              })}
+              <div ref={chatEndRef} />
+            </div>
+            <form onSubmit={handleSendChat} className="space-y-2">
+              <label htmlFor="room-chat-input" className="sr-only">Message room members</label>
+              <div className="flex gap-2">
+                <input id="room-chat-input" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} maxLength={2000} disabled={socketStatus !== 'connected' || sendingChat} placeholder="Write a message…" className="min-w-0 flex-1 rounded-xl bg-slate-950 border border-slate-700 px-3 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50" />
+                <button type="submit" disabled={!chatDraft.trim() || socketStatus !== 'connected' || sendingChat} aria-label="Send message" className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-3 text-slate-950 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed">
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              {chatError && <p role="alert" className="text-[11px] text-rose-300">{chatError}</p>}
+            </form>
+          </section>
+
           <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">

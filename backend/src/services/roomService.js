@@ -8,6 +8,7 @@ const socketToRoom = new Map(); // socketId -> room code
 
 const ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // Unambiguous chars
 const MAX_MEMBERS_PER_ROOM = 50;
+const MAX_CHAT_MESSAGES = 200;
 
 /**
  * Generate a cryptographically random, unguessable room code.
@@ -99,6 +100,7 @@ export const createRoom = ({ name, description = '', user, socketId }) => {
       hostId: userId,
     },
     requests: new Map(),
+    messages: [],
     createdAt: Date.now(),
   };
 
@@ -106,6 +108,39 @@ export const createRoom = ({ name, description = '', user, socketId }) => {
   socketToRoom.set(socketId, code);
 
   return serializeRoom(room);
+};
+
+/** Return recent room messages to an authenticated member. */
+export const getRoomMessages = ({ code, userId }) => {
+  const room = rooms.get(code.trim().toUpperCase());
+  if (!room || !room.members.some((member) => member.userId === userId.toString())) {
+    throw new Error('You must be a room member to read chat.');
+  }
+  return room.messages;
+};
+
+/** Store and sequence a chat message on the server before broadcasting it. */
+export const addRoomMessage = ({ code, user, socketId, text }) => {
+  const normalizedCode = code.trim().toUpperCase();
+  const room = rooms.get(normalizedCode);
+  const userId = (user.id || user._id).toString();
+  if (!room || !room.members.some((member) => member.userId === userId && member.socketId === socketId)) {
+    throw new Error('You must be a connected room member to send chat.');
+  }
+  if (typeof text !== 'string' || !text.trim() || text.length > 2000) {
+    throw new Error('Message must contain 1 to 2000 characters.');
+  }
+  const message = {
+    id: crypto.randomUUID(),
+    sequence: (room.messages.at(-1)?.sequence || 0) + 1,
+    userId,
+    userName: user.name,
+    text: text.trim(),
+    createdAt: Date.now(),
+  };
+  room.messages.push(message);
+  if (room.messages.length > MAX_CHAT_MESSAGES) room.messages.shift();
+  return { code: normalizedCode, message };
 };
 
 /**

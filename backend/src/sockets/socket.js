@@ -91,6 +91,17 @@ export const initializeSocket = (server) => {
     // 1. Create Room
     socket.on('room:create', ({ name, description }, ack) => {
       try {
+        const previousCode = roomService.getCodeBySocket(socket.id);
+        if (previousCode) {
+          const previous = roomService.leaveRoom({ code: previousCode, userId, socketId: socket.id });
+          socket.leave(previousCode);
+          if (previous && !previous.deleted) {
+            ioInstance.to(previousCode).emit('room:members_updated', {
+              members: previous.room.members,
+              hostId: previous.room.hostId,
+            });
+          }
+        }
         const room = roomService.createRoom({
           name,
           description,
@@ -108,6 +119,21 @@ export const initializeSocket = (server) => {
     // 2. Join Room
     socket.on('room:join', ({ code }, ack) => {
       try {
+        const requestedCode = code?.trim().toUpperCase();
+        if (!requestedCode || !roomService.getRoom(requestedCode)) throw new Error('Room not found.');
+        const previousCode = roomService.getCodeBySocket(socket.id);
+        if (previousCode && previousCode !== requestedCode) {
+          const previous = roomService.leaveRoom({ code: previousCode, userId, socketId: socket.id });
+          socket.leave(previousCode);
+          if (previous?.deleted) {
+            ioInstance.to(previousCode).emit('room:closed', { reason: 'Room was closed because all listeners left.' });
+          } else if (previous) {
+            ioInstance.to(previousCode).emit('room:members_updated', {
+              members: previous.room.members,
+              hostId: previous.room.hostId,
+            });
+          }
+        }
         const { room, isNewMember } = roomService.joinRoom({
           code,
           user: socket.user,
@@ -122,7 +148,24 @@ export const initializeSocket = (server) => {
           hostId: room.hostId,
         });
 
-        if (typeof ack === 'function') ack({ success: true, room, isNewMember });
+        const messages = roomService.getRoomMessages({ code: room.code, userId });
+        if (typeof ack === 'function') ack({ success: true, room, isNewMember, messages });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ success: false, error: err.message });
+      }
+    });
+
+    // Room chat: persist and sequence on the server before broadcasting.
+    socket.on('room:chat_send', ({ code, text }, ack) => {
+      try {
+        const { code: roomCode, message } = roomService.addRoomMessage({
+          code,
+          user: socket.user,
+          socketId: socket.id,
+          text,
+        });
+        ioInstance.to(roomCode).emit('room:chat_message', message);
+        if (typeof ack === 'function') ack({ success: true, message });
       } catch (err) {
         if (typeof ack === 'function') ack({ success: false, error: err.message });
       }
