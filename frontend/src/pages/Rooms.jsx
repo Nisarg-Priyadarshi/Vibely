@@ -115,19 +115,19 @@ export const Rooms = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-[4rem]">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[1.5rem] sm:p-[2rem] text-center space-y-[1rem]">
-          <div className="w-[3.5rem] h-[3.5rem] rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
-            <Radio className="w-7 h-7" />
+      <div className="flex-1 flex items-center justify-center px-[24px] py-[64px]">
+        <div className="max-w-[560px] w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[32px] sm:p-[40px] text-center space-y-[20px]">
+          <div className="w-[64px] h-[64px] rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
+            <Radio className="w-[30px] h-[30px]" />
           </div>
-          <h2 className="text-2xl font-light text-white">Vibely Rooms</h2>
-          <p className="max-w-sm mx-auto text-xs text-[#999999] leading-relaxed">
+          <h2 className="text-[28px] font-light text-white">Vibely Rooms</h2>
+          <p className="max-w-[440px] mx-auto text-[15px] text-[#999999] leading-relaxed">
             Collaborative listening sessions with real-time audio synchronization. Sign in to create your own room or join with a room code.
           </p>
-          <div className="pt-2">
+          <div className="pt-[4px]">
             <Link
               to="/login"
-              className="btn-white text-xs px-5 py-2.5"
+              className="btn-white text-[14px] px-[24px] py-[12px]"
             >
               <LogIn className="w-4 h-4 mr-1.5" />
               Sign In to Enter Rooms

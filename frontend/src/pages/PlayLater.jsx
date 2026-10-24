@@ -35,18 +35,18 @@ export const PlayLater = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-[4px] bg-[#303030] text-[#ff7a1a] flex items-center justify-center mx-auto">
-            <Bookmark className="w-7 h-7" />
+      <div className="flex-1 flex items-center justify-center px-[24px] py-[64px]">
+        <div className="max-w-[560px] w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[32px] sm:p-[40px] text-center space-y-[20px]">
+          <div className="w-[64px] h-[64px] rounded-[4px] bg-[#303030] text-[#ff7a1a] flex items-center justify-center mx-auto">
+            <Bookmark className="w-[30px] h-[30px]" />
           </div>
-          <h2 className="text-xl font-medium text-white">Your Play Later Queue</h2>
-          <p className="text-xs text-[#999999] leading-relaxed">
+          <h2 className="text-[24px] font-medium text-white">Your Play Later Queue</h2>
+          <p className="text-[15px] text-[#999999] leading-relaxed">
             Sign in to bookmark tracks and build your personal listen-later queue.
           </p>
-          <div className="pt-2">
-            <Link to="/login" className="btn-white text-xs px-5 py-2.5 gap-2">
-              <LogIn className="w-4 h-4" />
+          <div className="pt-[4px]">
+            <Link to="/login" className="btn-white text-[14px] px-[24px] py-[12px] gap-[8px]">
+              <LogIn className="w-[18px] h-[18px]" />
               Sign In to View Play Later
             </Link>
           </div>

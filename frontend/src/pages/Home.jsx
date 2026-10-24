@@ -115,41 +115,41 @@ export const Home = () => {
   };
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 pt-8 sm:pt-10 pb-32 flex flex-col gap-12 sm:gap-16">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-[24px] sm:px-[40px] pt-[32px] sm:pt-[40px] pb-32 flex flex-col gap-[40px] sm:gap-[56px]">
       {/* Logged-out Welcome Banner (only shown if not authenticated) */}
       {!user && (
-        <div className="relative rounded-[6px] overflow-hidden bg-gradient-to-r from-[#181818] via-[#1c1c1c] to-[#161616] border border-white/[0.08] p-5 sm:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl">
-          <div className="flex items-center gap-4">
+        <div className="relative rounded-[6px] overflow-hidden bg-gradient-to-r from-[#181818] via-[#1c1c1c] to-[#161616] border border-white/[0.08] p-[24px] sm:p-[32px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-[24px] shadow-xl">
+          <div className="flex items-center gap-[20px]">
             <img
               src="/vibely-logo.png"
               alt="Vibely"
-              className="w-12 h-12 rounded-[6px] object-contain shrink-0 shadow-lg"
+              className="w-[56px] h-[56px] rounded-[6px] object-contain shrink-0 shadow-lg"
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-[#ff7a1a] uppercase tracking-wider">
+                <span className="text-[12px] font-bold text-[#ff7a1a] uppercase tracking-wider">
                   Listen Together In Sync
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#ff7a1a] animate-ping" />
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-white mt-0.5">
+              <h2 className="text-[20px] sm:text-[22px] font-bold text-white mt-[6px]">
                 Stream Music Collaboratively in Real-Time
               </h2>
-              <p className="text-xs text-[#999999] mt-0.5 max-w-xl">
+              <p className="text-[14px] leading-relaxed text-[#999999] mt-[6px] max-w-xl">
                 Create synchronized listening rooms, chat with friends, and discover royalty-free tracks with zero latency.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0 self-stretch sm:self-auto">
+          <div className="flex items-center gap-[12px] shrink-0 self-stretch sm:self-auto">
             <Link
               to="/login"
-              className="btn-graphite text-xs px-4 py-2 flex-1 sm:flex-initial text-center"
+              className="btn-graphite text-[14px] px-[20px] py-[11px] flex-1 sm:flex-initial text-center"
             >
               Sign In
             </Link>
             <Link
               to="/register"
-              className="btn-accent text-xs px-5 py-2 flex-1 sm:flex-initial text-center shadow-lg"
+              className="btn-accent text-[14px] px-[22px] py-[11px] flex-1 sm:flex-initial text-center shadow-lg"
             >
               Get Started Free
             </Link>
@@ -159,14 +159,14 @@ export const Home = () => {
 
       {/* Featured Spotlight Track Banner */}
       {featuredTrack && !searchQuery && selectedGenre === 'All' && (
-        <div className="relative rounded-[6px] overflow-hidden bg-[#161616] border border-white/[0.08] p-6 sm:p-10 shadow-2xl">
+        <div className="relative rounded-[6px] overflow-hidden bg-[#161616] border border-white/[0.08] p-[28px] sm:p-[40px] shadow-2xl">
           {/* Ambient blurred glow from cover artwork */}
           <div
             className="absolute -top-12 -left-12 w-96 h-96 bg-cover bg-center filter blur-3xl opacity-20 pointer-events-none scale-125"
             style={{ backgroundImage: `url(${featuredTrack.coverUrl})` }}
           />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-y-[2rem] md:gap-y-0 md:gap-x-[3rem]">
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-y-[32px] md:gap-y-0 md:gap-x-[48px]">
             {/* Artwork Card */}
             <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-[6px] overflow-hidden shrink-0 shadow-2xl border border-white/10 group">
               <img
@@ -181,7 +181,7 @@ export const Home = () => {
             </div>
 
             {/* Track Info & Actions */}
-            <div className="flex-1 space-y-4 text-center md:text-left min-w-0">
+            <div className="flex-1 space-y-[16px] text-center md:text-left min-w-0">
               <div className="flex items-center justify-center md:justify-start gap-2">
                 <span className="text-[11px] font-mono uppercase tracking-widest text-[#ff7a1a] font-semibold">
                   Spotlight Recording
@@ -200,15 +200,15 @@ export const Home = () => {
                 By <span className="text-white font-semibold">{featuredTrack.artist}</span> &bull; {featuredTrack.album || 'Single'}
               </p>
 
-              <p className="text-xs text-[#999999] max-w-xl leading-relaxed">
+              <p className="text-[14px] text-[#999999] max-w-xl leading-relaxed">
                 Synchronized real-time playback streaming directly in high fidelity. Share listening rooms and discover new tracks with low latency.
               </p>
 
               {/* Action Buttons Toolbar */}
-              <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <div className="pt-[8px] flex flex-wrap items-center justify-center md:justify-start gap-[12px]">
                 <button
                   onClick={handlePlayFeatured}
-                  className="btn-accent text-xs px-6 py-2.5 flex items-center gap-2 shadow-lg"
+                  className="btn-accent text-[14px] px-[22px] py-[12px] flex items-center gap-[8px] shadow-lg"
                 >
                   {isFeaturedPlaying ? (
                     <>
@@ -226,7 +226,7 @@ export const Home = () => {
                 <button
                   onClick={() => toggleFavorite(featuredTrack)}
                   aria-label={featuredIsFav ? 'Remove from favourites' : 'Add to favourites'}
-                  className={`btn-graphite text-xs px-4 py-2.5 flex items-center gap-2 transition-all ${
+                  className={`btn-graphite text-[14px] px-[18px] py-[12px] flex items-center gap-[8px] transition-all ${
                     featuredIsFav
                       ? 'text-rose-500 border-rose-500/40 bg-rose-500/10'
                       : 'text-[#cccccc] hover:text-white'
@@ -239,7 +239,7 @@ export const Home = () => {
                 <button
                   onClick={() => togglePlayLater(featuredTrack)}
                   aria-label={featuredIsPlayLater ? 'Remove from Play Later' : 'Save to Play Later'}
-                  className={`btn-graphite text-xs px-4 py-2.5 flex items-center gap-2 transition-all ${
+                  className={`btn-graphite text-[14px] px-[18px] py-[12px] flex items-center gap-[8px] transition-all ${
                     featuredIsPlayLater
                       ? 'text-[#ff7a1a] border-[#ff7a1a]/40 bg-[#ff7a1a]/10'
                       : 'text-[#cccccc] hover:text-white'
@@ -251,7 +251,7 @@ export const Home = () => {
 
                 <button
                   onClick={() => setFeaturedModalOpen(true)}
-                  className="btn-graphite text-xs px-4 py-2.5 flex items-center gap-2 text-[#cccccc] hover:text-white"
+                  className="btn-graphite text-[14px] px-[18px] py-[12px] flex items-center gap-[8px] text-[#cccccc] hover:text-white"
                 >
                   <ListPlus className="w-4 h-4" />
                   <span>Add to Playlist</span>
@@ -259,7 +259,7 @@ export const Home = () => {
 
                 <Link
                   to={`/songs/${featuredTrackId}`}
-                  className="btn-ghost text-xs px-3 py-2.5 flex items-center gap-1.5 text-[#999999] hover:text-white ml-auto"
+                  className="btn-ghost text-[14px] px-[14px] py-[12px] flex items-center gap-[8px] text-[#999999] hover:text-white ml-auto"
                 >
                   <span>Track Details</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -277,14 +277,14 @@ export const Home = () => {
       )}
 
       {/* Music Catalogue Header & Controls */}
-      <div className="space-y-6 sm:space-y-7">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div className="space-y-[24px] sm:space-y-[28px]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-[20px]">
           <div>
-            <h2 className="text-xl sm:text-2xl font-light text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-[26px] sm:text-[30px] font-light text-white tracking-tight flex items-center gap-[10px]">
               Trending Catalogue
               <span className="w-1.5 h-1.5 rounded-full bg-[#ff7a1a]" />
             </h2>
-            <p className="text-xs text-[#999999] mt-1.5">
+            <p className="text-[14px] text-[#999999] mt-[8px]">
               Stream royalty-free tracks and discover community selections
             </p>
           </div>

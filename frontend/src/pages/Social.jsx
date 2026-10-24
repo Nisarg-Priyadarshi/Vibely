@@ -416,19 +416,19 @@ export const Social = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-[4rem]">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-white/10 rounded-[6px] p-[1.5rem] sm:p-[2rem] text-center space-y-[1rem] shadow-2xl">
-          <div className="w-[3.5rem] h-[3.5rem] rounded-[4px] bg-[#303030] flex items-center justify-center mx-auto">
-            <Users className="w-6 h-6 text-[#ff7a1a]" />
+      <div className="flex-1 flex items-center justify-center px-[24px] py-[64px]">
+        <div className="max-w-[560px] w-full bg-[#1e1e1e] border border-white/10 rounded-[6px] p-[32px] sm:p-[40px] text-center space-y-[20px] shadow-2xl">
+          <div className="w-[64px] h-[64px] rounded-[4px] bg-[#303030] flex items-center justify-center mx-auto">
+            <Users className="w-[28px] h-[28px] text-[#ff7a1a]" />
           </div>
-          <h2 className="text-xl font-bold text-white">Sign In Required</h2>
-          <p className="max-w-sm mx-auto text-xs text-[#999999]">
+          <h2 className="text-[24px] font-bold text-white">Sign In Required</h2>
+          <p className="max-w-[440px] mx-auto text-[15px] text-[#999999] leading-relaxed">
             Please log in to chat with friends and receive room invitations.
           </p>
-          <div className="pt-2">
+          <div className="pt-[4px]">
             <Link
               to="/login"
-              className="btn-accent text-xs px-5 py-2.5"
+              className="btn-accent text-[14px] px-[28px] py-[12px]"
             >
               Sign In
             </Link>
