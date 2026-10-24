@@ -1,8 +1,18 @@
 import 'dotenv/config';
+import dns from 'dns';
 import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+
+try {
+  const dnsServers = process.env.DNS_SERVERS
+    ? process.env.DNS_SERVERS.split(',').map((s) => s.trim())
+    : ['8.8.8.8', '8.8.4.4', '1.1.1.1'];
+  dns.setServers(dnsServers);
+} catch (err) {
+  console.warn('⚠️  [DNS] Could not set custom DNS servers:', err.message);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
