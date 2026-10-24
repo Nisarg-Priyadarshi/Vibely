@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Vibely 🎵
 
 A full-stack music streaming web application inspired by Spotify, featuring **Vibely Rooms** for real-time collaborative listening.
@@ -152,3 +153,6 @@ node src/tests/player.test.js
 - `DELETE /:id` — Delete playlist (Owner only).
 - `POST /:id/songs` — Add song to playlist (Owner only, duplicate prevented).
 - `DELETE /:id/songs/:songId` — Remove song from playlist (Owner only).
+=======
+# Music-Area
+>>>>>>> origin/main
