@@ -8,8 +8,10 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import User from '../src/models/User.js';
+import { signToken } from '../src/services/authService.js';
 
 const BASE_URL = 'http://localhost:5000/api/auth';
+
 
 const colors = {
   green: (text) => `\x1b[32m${text}\x1b[0m`,
@@ -159,9 +161,41 @@ async function runTests() {
 
     // 6. Accessing Protected Route /api/auth/me
     console.log(colors.yellow('\n6. Testing protected route /api/auth/me:'));
-    // Unauthenticated
-    const unauthRes = await fetch(`${BASE_URL}/me`);
+    // Unauthenticated (logged out access)
+    const unauthRes = await fetch(`${BASE_URL}/me`, {
+      headers: { Origin: 'http://localhost:5173' },
+    });
+    const unauthData = await unauthRes.json();
     assert(unauthRes.status === 401, 'Unauthenticated /api/auth/me returns HTTP 401 Unauthorized');
+    assert(unauthData.success === false, 'Unauthenticated /api/auth/me returns success: false');
+    assert(
+      unauthData.error?.message === 'Authentication required. No token provided.',
+      'Unauthenticated /api/auth/me returns clear authentication required error message'
+    );
+
+    // CORS & COOP Headers verification
+    const coopHeader = unauthRes.headers.get('cross-origin-opener-policy');
+    assert(
+      coopHeader === 'same-origin-allow-popups',
+      'API sets Cross-Origin-Opener-Policy: same-origin-allow-popups for Google OAuth support'
+    );
+    assert(
+      unauthRes.headers.get('access-control-allow-credentials') === 'true',
+      'CORS response permits credentials from frontend origin'
+    );
+    assert(
+      unauthRes.headers.get('access-control-allow-origin') === 'http://localhost:5173',
+      'CORS response allows origin http://localhost:5173'
+    );
+
+    // Cross-origin request from 127.0.0.1
+    const altOriginRes = await fetch(`${BASE_URL}/me`, {
+      headers: { Origin: 'http://127.0.0.1:5173' },
+    });
+    assert(
+      altOriginRes.headers.get('access-control-allow-origin') === 'http://127.0.0.1:5173',
+      'CORS dynamically supports 127.0.0.1:5173 with credentials'
+    );
 
     // Authenticated via Bearer Token header
     const authHeaderRes = await fetch(`${BASE_URL}/me`, {
@@ -179,11 +213,56 @@ async function runTests() {
     assert(cookieRes.status === 200, 'Authenticated via HTTP-only Cookie returns HTTP 200 OK');
     assert(cookieData.user.id === createdUserId, 'Returns correct user profile via Cookie');
 
-    // Malformed token
-    const malformedRes = await fetch(`${BASE_URL}/me`, {
+    // Malformed token in Bearer header
+    const malformedHeaderRes = await fetch(`${BASE_URL}/me`, {
       headers: { Authorization: 'Bearer this.is.an.invalid.token' },
     });
-    assert(malformedRes.status === 401, 'Malformed token returns HTTP 401 Unauthorized');
+    const malformedHeaderData = await malformedHeaderRes.json();
+    assert(malformedHeaderRes.status === 401, 'Malformed Bearer token returns HTTP 401 Unauthorized');
+    assert(malformedHeaderData.error?.message === 'Invalid authentication token.', 'Malformed token returns invalid token message');
+
+    // Malformed token in Cookie
+    const malformedCookieRes = await fetch(`${BASE_URL}/me`, {
+      headers: { Cookie: 'token=invalid.token.payload' },
+    });
+    assert(malformedCookieRes.status === 401, 'Malformed cookie token returns HTTP 401 Unauthorized');
+    const malformedCookieHeader = malformedCookieRes.headers.get('set-cookie');
+    assert(
+      malformedCookieHeader && (malformedCookieHeader.includes('Expires=Thu, 01 Jan 1970') || malformedCookieHeader.includes('Max-Age=0')),
+      'Malformed cookie token triggers cookie invalidation / clear'
+    );
+
+    // Expired token testing
+    console.log(colors.yellow('\n6b. Testing expired token handling:'));
+    const expiredToken = signToken({ id: createdUserId, email: testEmail }, { expiresIn: '-1s' });
+
+    // Expired Bearer token
+    const expiredHeaderRes = await fetch(`${BASE_URL}/me`, {
+      headers: { Authorization: `Bearer ${expiredToken}` },
+    });
+    const expiredHeaderData = await expiredHeaderRes.json();
+    assert(expiredHeaderRes.status === 401, 'Expired Bearer token returns HTTP 401 Unauthorized');
+    assert(
+      expiredHeaderData.error?.message === 'Authentication token has expired. Please log in again.',
+      'Expired token returns descriptive expired message'
+    );
+
+    // Expired Cookie token
+    const expiredCookieRes = await fetch(`${BASE_URL}/me`, {
+      headers: { Cookie: `token=${expiredToken}` },
+    });
+    const expiredCookieData = await expiredCookieRes.json();
+    assert(expiredCookieRes.status === 401, 'Expired Cookie token returns HTTP 401 Unauthorized');
+    assert(
+      expiredCookieData.error?.message === 'Authentication token has expired. Please log in again.',
+      'Expired cookie token returns descriptive expired message'
+    );
+    const expiredCookieHeader = expiredCookieRes.headers.get('set-cookie');
+    assert(
+      expiredCookieHeader && (expiredCookieHeader.includes('Expires=Thu, 01 Jan 1970') || expiredCookieHeader.includes('Max-Age=0')),
+      'Expired cookie triggers cookie clear to prevent stale session loop'
+    );
+
 
     // 7. Testing Logout
     console.log(colors.yellow('\n7. Testing logout endpoint:'));

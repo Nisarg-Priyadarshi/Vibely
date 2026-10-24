@@ -28,8 +28,10 @@ export const Register = () => {
 
   // Mount Google Sign-In button
   useEffect(() => {
+    let isCancelled = false;
+
     const tryRender = () => {
-      if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+      if (!window.google?.accounts?.id || !googleButtonRef.current || isCancelled) return;
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: async ({ credential }) => {
@@ -46,14 +48,27 @@ export const Register = () => {
         shape: 'rectangular',
       });
     };
+
+    if (window.google?.accounts?.id) {
+      tryRender();
+      return () => {
+        isCancelled = true;
+      };
+    }
+
     const interval = setInterval(() => {
       if (window.google?.accounts?.id) {
         clearInterval(interval);
         tryRender();
       }
     }, 100);
-    return () => clearInterval(interval);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
   }, [loginWithGoogle, navigate]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
