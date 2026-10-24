@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Music, LogIn, UserPlus, LogOut, User, ListMusic, Compass, Radio } from 'lucide-react';
+import { Music, LogIn, UserPlus, LogOut, User, ListMusic, Compass, Radio, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar = () => {
@@ -67,6 +67,18 @@ export const Navbar = () => {
               <Radio className="w-3.5 h-3.5" />
               Rooms
             </Link>
+
+            <Link
+              to="/social"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                isActive('/social') || location.pathname.startsWith('/chat')
+                  ? 'bg-slate-800/80 text-emerald-400'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              Social
+            </Link>
           </nav>
         </div>
 
@@ -81,8 +93,14 @@ export const Navbar = () => {
                   isActive('/profile') ? 'border-emerald-500/40' : 'border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-[11px] font-bold text-slate-950 uppercase shrink-0">
-                  {user.name ? user.name.charAt(0) : <User className="w-3.5 h-3.5" />}
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-[11px] font-bold text-slate-950 uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : user.name ? (
+                    user.name.charAt(0)
+                  ) : (
+                    <User className="w-3.5 h-3.5" />
+                  )}
                 </div>
                 <div className="text-left hidden md:block">
                   <div className="text-xs font-bold text-slate-200 leading-tight truncate max-w-[120px]">

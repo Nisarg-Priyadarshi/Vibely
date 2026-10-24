@@ -1,10 +1,27 @@
 import User from '../models/User.js';
 import { signToken, setAuthCookie, clearAuthCookie } from '../services/authService.js';
-import { OAuth2Client } from 'google-auth-library';
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
+
+/**
+ * Validates buffer magic bytes for JPEG, PNG, and WebP
+ */
+const isValidImageBuffer = (buffer) => {
+  if (!buffer || buffer.length < 4) return false;
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return true;
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) return true;
+  // WebP: RIFF (52 49 46 46) .... WEBP (57 45 42 50)
+  if (
+    buffer.length >= 12 &&
+    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+    buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50
+  ) return true;
+  return false;
+};
 
 /**
  * Register a new user account.
@@ -207,7 +224,72 @@ export const updateProfile = async (req, res, next) => {
 
     user.name = name.trim();
     if (avatar !== undefined) {
-      user.avatar = typeof avatar === 'string' && avatar.trim() ? avatar.trim() : null;
+      if (avatar === null || avatar === '') {
+        const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+        if (oldPublicId && isCloudinaryConfigured()) {
+          try {
+            await deleteAvatarFromCloudinary(oldPublicId);
+          } catch (e) {
+            console.warn('Failed to delete old avatar on avatar clearing:', e.message);
+          }
+        }
+        user.avatar = null;
+        user.avatarPublicId = null;
+        user.cloudinaryPublicId = null;
+      } else if (typeof avatar === 'string' && avatar.trim()) {
+        user.avatar = avatar.trim();
+      }
+    }
+
+    // If an image file was uploaded with profile update
+    if (req.file && req.file.buffer) {
+      if (!isCloudinaryConfigured()) {
+        return res.status(500).json({
+          success: false,
+          error: {
+            message: 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+            status: 500,
+          },
+        });
+      }
+
+      const mime = (req.file.mimetype || '').toLowerCase();
+      if (!ALLOWED_MIME_TYPES.has(mime) || !isValidImageBuffer(req.file.buffer)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.',
+            status: 400,
+          },
+        });
+      }
+
+      if (req.file.size > MAX_AVATAR_SIZE) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'File size exceeds the 5 MB limit. Please upload an image smaller than 5 MB.',
+            status: 400,
+          },
+        });
+      }
+
+      const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+      if (oldPublicId) {
+        try {
+          await deleteAvatarFromCloudinary(oldPublicId);
+        } catch (e) {
+          console.warn('Failed to delete previous avatar from Cloudinary:', e.message);
+        }
+      }
+
+      const uploadResult = await uploadAvatarToCloudinary(req.file.buffer, {
+        public_id: `avatar_${user._id}_${Date.now()}`,
+      });
+
+      user.avatar = uploadResult.secure_url;
+      user.avatarPublicId = uploadResult.public_id;
+      user.cloudinaryPublicId = uploadResult.public_id;
     }
 
     await user.save();
@@ -222,93 +304,11 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
-/**
- * Verify a Google ID token and issue a Vibely session.
- * POST /api/auth/google
- */
-export const googleAuth = async (req, res, next) => {
-  try {
-    const { credential } = req.body;
-
-    if (!credential || typeof credential !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Google credential is required.', status: 400 },
-      });
-    }
-
-    if (!process.env.GOOGLE_CLIENT_ID) {
-      return res.status(500).json({
-        success: false,
-        error: { message: 'Google authentication is not configured on this server.', status: 500 },
-      });
-    }
-
-    // Verify the ID token with Google's public keys
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { sub: googleId, email, name, picture } = payload;
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Google account must have an email address.', status: 400 },
-      });
-    }
-
-    // Find existing user by googleId or email, or create a new one
-    let user = await User.findOne({ $or: [{ googleId }, { email: email.toLowerCase() }] });
-
-    if (!user) {
-      user = await User.create({
-        name: name || email.split('@')[0],
-        email: email.toLowerCase(),
-        googleId,
-        avatar: picture || null,
-      });
-    } else if (!user.googleId) {
-      // Link Google ID to an existing email/password account
-      user.googleId = googleId;
-      if (!user.avatar && picture) user.avatar = picture;
-      await user.save();
-    }
-
-    const token = signToken({ id: user._id.toString(), email: user.email });
-    setAuthCookie(res, token);
-
-    res.status(200).json({
-      success: true,
-      message: 'Google login successful.',
-      user: user.toSafeObject(),
-      token,
-    });
-  } catch (error) {
-    // Google token verification errors are user errors, not server errors
-    if (error.message && error.message.includes('Token used too late')) {
-      return res.status(401).json({
-        success: false,
-        error: { message: 'Google sign-in session expired. Please try again.', status: 401 },
-      });
-    }
-    if (error.message && (error.message.includes('Invalid token') || error.message.includes('audience'))) {
-      return res.status(401).json({
-        success: false,
-        error: { message: 'Invalid Google credential. Please try again.', status: 401 },
-      });
-    }
-    next(error);
-  }
-};
-
 export default {
   register,
   login,
   logout,
   getMe,
   updateProfile,
-  googleAuth,
 };
 

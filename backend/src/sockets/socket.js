@@ -1,9 +1,13 @@
 import { Server } from 'socket.io';
 import { verifyToken, COOKIE_NAME } from '../services/authService.js';
 import User from '../models/User.js';
+import Friendship from '../models/Friendship.js';
+import Message from '../models/Message.js';
+import RoomInvitation from '../models/RoomInvitation.js';
 import * as roomService from '../services/roomService.js';
 
 let ioInstance = null;
+
 
 /**
  * Extract JWT from handshake auth payload, headers, or cookies.
@@ -87,6 +91,9 @@ export const initializeSocket = (server) => {
   ioInstance.on('connection', (socket) => {
     const userId = (socket.user.id || socket.user._id).toString();
     console.log(`⚡ [Socket.IO] Authenticated listener connected: ${socket.user.name} (${socket.id})`);
+
+    // Join private user room for direct messages and personal notifications
+    socket.join(`user:${userId}`);
 
     // 1. Create Room
     socket.on('room:create', ({ name, description }, ack) => {
@@ -302,7 +309,128 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // 8. Handle Disconnect
+    // 8. Real-Time One-to-One Chat
+    socket.on('chat:send', async ({ recipientId, content }, ack) => {
+      try {
+        if (!recipientId || !content || !content.trim()) {
+          if (typeof ack === 'function') ack({ success: false, error: 'Recipient and content are required.' });
+          return;
+        }
+
+        // Server-Side Security Check: Direct chat permitted ONLY between accepted friends
+        const isFriend = await Friendship.areFriends(userId, recipientId);
+        if (!isFriend) {
+          if (typeof ack === 'function') {
+            ack({ success: false, error: 'Access denied: You can only message accepted friends.' });
+          }
+          return;
+        }
+
+        const message = await Message.create({
+          sender: userId,
+          recipient: recipientId,
+          content: content.trim(),
+        });
+
+        const safeMessage = message.toSafeObject();
+
+        // Broadcast to recipient user room
+        ioInstance.to(`user:${recipientId}`).emit('chat:message', {
+          ...safeMessage,
+          senderUser: {
+            id: socket.user._id.toString(),
+            name: socket.user.name,
+            avatar: socket.user.avatar || null,
+          },
+        });
+
+        // Broadcast to sender user room (for multi-tab / self sync)
+        ioInstance.to(`user:${userId}`).emit('chat:message', safeMessage);
+
+        if (typeof ack === 'function') ack({ success: true, message: safeMessage });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ success: false, error: err.message });
+      }
+    });
+
+    // 9. Chat Typing Indicator
+    socket.on('chat:typing', ({ recipientId, isTyping }) => {
+      if (recipientId) {
+        ioInstance.to(`user:${recipientId}`).emit('chat:typing', {
+          senderId: userId,
+          isTyping: !!isTyping,
+        });
+      }
+    });
+
+    // 10. Room Invitation via Socket
+    socket.on('room:invite', async ({ roomCode, friendId }, ack) => {
+      try {
+        if (!roomCode || !friendId) {
+          if (typeof ack === 'function') ack({ success: false, error: 'Room code and friend ID required.' });
+          return;
+        }
+
+        const room = roomService.getRoom(roomCode);
+        if (!room) {
+          if (typeof ack === 'function') ack({ success: false, error: 'Active room not found.' });
+          return;
+        }
+
+        // Inviter must be inside room
+        const isMember = room.members.some((m) => m.userId === userId);
+        if (!isMember) {
+          if (typeof ack === 'function') {
+            ack({ success: false, error: 'You must be inside the room to invite friends.' });
+          }
+          return;
+        }
+
+        // Must be accepted friends
+        const isFriend = await Friendship.areFriends(userId, friendId);
+        if (!isFriend) {
+          if (typeof ack === 'function') {
+            ack({ success: false, error: 'You can only invite accepted friends.' });
+          }
+          return;
+        }
+
+        // Check if friend is already inside room
+        const alreadyIn = room.members.some((m) => m.userId === friendId.toString());
+        if (alreadyIn) {
+          if (typeof ack === 'function') {
+            ack({ success: false, error: 'Friend is already in this room.' });
+          }
+          return;
+        }
+
+        const invitation = await RoomInvitation.create({
+          roomCode: room.code,
+          roomName: room.name,
+          sender: userId,
+          recipient: friendId,
+          status: 'pending',
+        });
+
+        ioInstance.to(`user:${friendId}`).emit('room:invitation_received', {
+          invitationId: invitation._id.toString(),
+          roomCode: room.code,
+          roomName: room.name,
+          sender: {
+            id: socket.user._id.toString(),
+            name: socket.user.name,
+            avatar: socket.user.avatar || null,
+          },
+          createdAt: invitation.createdAt,
+        });
+
+        if (typeof ack === 'function') ack({ success: true, invitationId: invitation._id.toString() });
+      } catch (err) {
+        if (typeof ack === 'function') ack({ success: false, error: err.message });
+      }
+    });
+
+    // 11. Handle Disconnect
     socket.on('disconnect', () => {
       console.log(`🔌 [Socket.IO] Client disconnected: ${socket.user.name} (${socket.id})`);
 
