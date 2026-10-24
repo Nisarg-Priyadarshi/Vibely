@@ -69,12 +69,12 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000000]/80 backdrop-blur-xs">
+      <div className="w-full max-w-md bg-[#1e1e1e] border border-[rgba(255,255,255,0.1)] rounded-[4px] shadow-2xl p-6 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-[4px] text-[#999999] hover:text-[#ffffff] hover:bg-[#282828] transition-colors"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -85,11 +85,11 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
           <img
             src={song.coverUrl}
             alt={song.title}
-            className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-800 shadow"
+            className="w-12 h-12 rounded-[4px] object-cover shrink-0 bg-[#282828]"
           />
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-white truncate">Add to Playlist</h3>
-            <p className="text-xs text-slate-400 truncate">
+            <h3 className="text-sm font-bold text-[#ffffff] truncate">Add to Playlist</h3>
+            <p className="text-xs text-[#999999] truncate">
               {song.title} &bull; {song.artist}
             </p>
           </div>
@@ -97,14 +97,14 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
 
         {/* Feedback alerts */}
         {successMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="mb-4 p-3 rounded-[4px] bg-[#122b1f] border border-[#00e599]/30 text-[#00e599] text-xs flex items-center gap-2">
+            <Check className="w-4 h-4 text-[#00e599] shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-[4px] bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -113,54 +113,54 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
         {/* Body content */}
         {!user ? (
           <div className="text-center py-6 space-y-3">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#999999]">
               Please sign in to save songs and manage your playlists.
             </p>
             <Link
               to="/login"
               onClick={onClose}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
+              className="btn-white text-xs px-4 py-2"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              Log In
+              <LogIn className="w-3.5 h-3.5 mr-1.5" />
+              Sign In
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
             {/* Create new playlist toggle/form */}
             {showCreate ? (
-              <form onSubmit={handleCreateAndAdd} className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-3">
+              <form onSubmit={handleCreateAndAdd} className="p-3.5 rounded-[4px] bg-[#161616] border border-[rgba(255,255,255,0.08)] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200">New Playlist</span>
+                  <span className="text-xs font-semibold text-[#ffffff]">New Playlist</span>
                   <button
                     type="button"
                     onClick={() => setShowCreate(false)}
-                    className="text-[11px] text-slate-500 hover:text-slate-300"
+                    className="text-[11px] text-[#999999] hover:text-[#ffffff]"
                   >
                     Cancel
                   </button>
                 </div>
                 <input
                   type="text"
-                  placeholder="e.g. Chill Wave Vibes"
+                  placeholder="e.g. Late Night Drives"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
                   autoFocus
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full input-flat text-xs py-2"
                 />
                 <button
                   type="submit"
                   disabled={creating || !newPlaylistName.trim()}
-                  className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="w-full btn-white text-xs py-2 flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                  Create & Add Track
+                  Create and Add Track
                 </button>
               </form>
             ) : (
               <button
                 onClick={() => setShowCreate(true)}
-                className="w-full py-2.5 px-3 rounded-xl border border-dashed border-slate-700 hover:border-emerald-500/60 bg-slate-950/40 hover:bg-slate-800/40 text-slate-300 hover:text-emerald-400 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full py-2.5 px-3 rounded-[4px] border border-dashed border-[rgba(255,255,255,0.15)] hover:border-[#ffffff] bg-[#161616] text-[#cccccc] hover:text-[#ffffff] text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Create New Playlist
@@ -170,7 +170,7 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
             {/* Playlists list */}
             <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
               {playlists.length === 0 ? (
-                <div className="text-center py-4 text-xs text-slate-500">
+                <div className="text-center py-4 text-xs text-[#777777]">
                   No playlists yet. Create your first playlist above.
                 </div>
               ) : (
@@ -184,25 +184,25 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
                       key={plId}
                       onClick={() => handleAddToPlaylist(plId)}
                       disabled={isAdding}
-                      className="w-full p-2.5 rounded-xl bg-slate-950/50 hover:bg-slate-800/80 border border-slate-800/80 hover:border-slate-700 flex items-center justify-between transition-all group text-left cursor-pointer"
+                      className="w-full p-2.5 rounded-[4px] bg-[#161616] hover:bg-[#252525] border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] flex items-center justify-between transition-colors group text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 shrink-0">
+                        <div className="w-8 h-8 rounded-[3px] bg-[#222222] flex items-center justify-center text-[#999999] group-hover:text-[#ffffff] shrink-0">
                           <ListMusic className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <div className="text-xs font-bold text-slate-200 truncate group-hover:text-white">
+                          <div className="text-xs font-semibold text-[#f2f2f2] truncate group-hover:text-[#ffffff]">
                             {pl.name}
                           </div>
-                          <div className="text-[10px] text-slate-500 font-mono">
+                          <div className="text-[10px] text-[#777777] font-mono">
                             {songCount} {songCount === 1 ? 'track' : 'tracks'}
                           </div>
                         </div>
                       </div>
 
-                      <div className="shrink-0 text-slate-500 group-hover:text-emerald-400">
+                      <div className="shrink-0 text-[#777777] group-hover:text-[#ffffff]">
                         {isAdding ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#00e599]" />
                         ) : (
                           <Plus className="w-4 h-4" />
                         )}

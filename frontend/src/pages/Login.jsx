@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Login = () => {
@@ -39,12 +39,12 @@ export const Login = () => {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'filled_black',
         size: 'large',
-        width: googleButtonRef.current.offsetWidth || 400,
+        width: googleButtonRef.current.offsetWidth || 380,
         text: 'continue_with',
         shape: 'rectangular',
       });
     };
-    // GSI script may still be loading (async defer), retry until available
+
     const interval = setInterval(() => {
       if (window.google?.accounts?.id) {
         clearInterval(interval);
@@ -103,28 +103,20 @@ export const Login = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-        {/* Decorative backdrop glow */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              Welcome Back
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-              Log in to Vibely
+    <div className="flex-1 flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 sm:p-10 shadow-2xl relative">
+        <div className="space-y-6">
+          <div className="text-center space-y-1.5">
+            <h1 className="text-2xl font-bold text-[#ffffff] tracking-tight">
+              Sign In to Vibely
             </h1>
-            <p className="text-xs md:text-sm text-slate-400">
-              Continue your synchronized listening sessions
+            <p className="text-xs text-[#999999]">
+              Access your library, playlists, and synchronized listening rooms
             </p>
           </div>
 
           {serverError && (
-            <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 flex items-start gap-3 text-rose-300 text-xs">
+            <div className="p-3.5 rounded-[4px] bg-rose-950/40 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{serverError}</span>
             </div>
@@ -133,25 +125,22 @@ export const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Mail className="w-4 h-4" />
-                </div>
                 <input
                   type="email"
                   name="email"
                   id="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="you@example.com"
+                  placeholder="name@example.com"
                   disabled={submitting}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
                     validationErrors.email
-                      ? 'border-rose-500/60 focus:ring-rose-500/40'
-                      : 'border-slate-800 focus:border-emerald-500/80 focus:ring-emerald-500/20'
+                      ? 'border-rose-500/60'
+                      : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
                   }`}
                 />
               </div>
@@ -162,13 +151,10 @@ export const Login = () => {
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Lock className="w-4 h-4" />
-                </div>
                 <input
                   type="password"
                   name="password"
@@ -177,10 +163,10 @@ export const Login = () => {
                   onChange={handleChange}
                   placeholder="Enter your password"
                   disabled={submitting}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
                     validationErrors.password
-                      ? 'border-rose-500/60 focus:ring-rose-500/40'
-                      : 'border-slate-800 focus:border-emerald-500/80 focus:ring-emerald-500/20'
+                      ? 'border-rose-500/60'
+                      : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
                   }`}
                 />
               </div>
@@ -192,39 +178,36 @@ export const Login = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all duration-150 disabled:opacity-60 cursor-pointer"
+              className="w-full mt-2 btn-white py-2.5 text-xs font-bold"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Logging in...</span>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  <span>Signing In...</span>
                 </>
               ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+                <span>Sign In</span>
               )}
             </button>
           </form>
 
-          <div className="text-center pt-2 border-t border-slate-800/60">
-            <p className="text-xs text-slate-400">
+          {/* Google Sign-In */}
+          <div className="space-y-3 pt-2">
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" />
+              <span className="text-[11px] text-[#777777] font-medium">or continue with</span>
+              <div className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" />
+            </div>
+            <div ref={googleButtonRef} className="w-full flex justify-center overflow-hidden rounded-[4px]" />
+          </div>
+
+          <div className="text-center pt-2 border-t border-[rgba(255,255,255,0.08)]">
+            <p className="text-xs text-[#999999]">
               Don't have an account?{' '}
-              <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2">
+              <Link to="/register" className="text-[#ffffff] hover:underline font-semibold">
                 Create one now
               </Link>
             </p>
-          </div>
-
-          {/* Google Sign-In */}
-          <div className="space-y-3">
-            <div className="relative flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-800" />
-              <span className="text-[11px] text-slate-500 font-medium">or continue with</span>
-              <div className="flex-1 h-px bg-slate-800" />
-            </div>
-            <div ref={googleButtonRef} className="w-full flex justify-center overflow-hidden rounded-xl" />
           </div>
         </div>
       </div>

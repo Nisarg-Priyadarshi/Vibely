@@ -21,7 +21,7 @@ function App() {
       <PlayerProvider>
         <RoomProvider>
           <PlaylistProvider>
-            <div className="min-h-screen bg-gradient-to-b from-slate-950 via-[#0e1322] to-slate-950 text-slate-100 flex flex-col font-sans relative">
+            <div className="min-h-screen bg-[#121212] text-[#f2f2f2] flex flex-col font-sans relative selection:bg-[#00e599] selection:text-[#121212]">
               <Navbar />
 
               <main className="flex-1 flex flex-col">
@@ -39,8 +39,16 @@ function App() {
                 </Routes>
               </main>
 
-              <footer className="border-t border-slate-800/80 py-6 mb-24 text-center text-xs text-slate-500">
-                Vibely &copy; {new Date().getFullYear()} &bull; Collaborative Music Streaming Platform
+              <footer className="border-t border-[rgba(255,255,255,0.07)] py-8 mb-24 text-center text-xs text-[#777777] bg-[#121212]">
+                <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold tracking-wider text-sm text-[#ffffff]">VIBELY</span>
+                    <span className="text-[11px] text-[#777777]">/ Concert-grade audio rooms</span>
+                  </div>
+                  <div className="text-[11px] text-[#777777]">
+                    &copy; {new Date().getFullYear()} Vibely. All rights reserved.
+                  </div>
+                </div>
               </footer>
 
               {/* Persistent Floating Bottom Audio Player */}

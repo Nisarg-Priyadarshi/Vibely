@@ -64,10 +64,10 @@ export const PlayerBar = () => {
     : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 border-t border-slate-800/90 backdrop-blur-xl px-4 py-3 sm:px-6 shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-[rgba(255,255,255,0.08)] px-4 py-3 sm:px-8 shadow-2xl">
       {/* Playback Alert / Error Banner */}
       {playbackError && (
-        <div className="max-w-7xl mx-auto mb-2 px-3 py-1.5 rounded-lg bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+        <div className="max-w-7xl mx-auto mb-2 px-3 py-1.5 rounded-[4px] bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
           <span className="truncate">{playbackError}</span>
         </div>
@@ -75,59 +75,59 @@ export const PlayerBar = () => {
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Left: Track Information */}
-        <div className="flex items-center gap-3 w-full md:w-1/4 min-w-0">
+        <div className="flex items-center gap-3.5 w-full md:w-1/4 min-w-0">
           <img
             src={currentTrack.coverUrl}
             alt={currentTrack.title}
-            className="w-12 h-12 rounded-xl object-cover shrink-0 shadow-md border border-slate-800"
+            className="w-11 h-11 rounded-[4px] object-cover shrink-0 bg-[#222222]"
           />
           <div className="min-w-0">
-            <h4 className="text-sm font-bold text-slate-100 truncate hover:text-emerald-400 transition-colors">
+            <h4 className="text-xs font-bold text-[#ffffff] truncate">
               {currentTrack.title}
             </h4>
-            <p className="text-xs text-slate-400 truncate">
+            <p className="text-[11px] text-[#999999] truncate">
               {currentTrack.artist}
             </p>
           </div>
         </div>
 
-        {/* Center: Controls & Progress Scrubber */}
+        {/* Center: Controls & Scrubber */}
         <div className="flex flex-col items-center w-full md:w-2/4 max-w-xl">
           {/* Action Buttons */}
-          <div className="flex items-center gap-4 mb-1">
+          <div className="flex items-center gap-5 mb-1.5">
             <button
               onClick={prevTrack}
               aria-label="Previous Track"
-              className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
             >
-              <SkipBack className="w-5 h-5 fill-current" />
+              <SkipBack className="w-4 h-4 fill-current" />
             </button>
 
             <button
               onClick={togglePlay}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center shadow-lg shadow-emerald-500/25 transition-transform active:scale-95 cursor-pointer"
+              className="w-9 h-9 rounded-full bg-[#ffffff] hover:scale-105 active:scale-95 text-[#121212] flex items-center justify-center transition-all cursor-pointer shadow-md"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#121212]" />
               ) : isPlaying ? (
-                <Pause className="w-5 h-5 fill-current" />
+                <Pause className="w-4 h-4 fill-current text-[#121212]" />
               ) : (
-                <Play className="w-5 h-5 fill-current ml-0.5" />
+                <Play className="w-4 h-4 fill-current ml-0.5 text-[#121212]" />
               )}
             </button>
 
             <button
               onClick={nextTrack}
               aria-label="Next Track"
-              className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
             >
-              <SkipForward className="w-5 h-5 fill-current" />
+              <SkipForward className="w-4 h-4 fill-current" />
             </button>
           </div>
 
           {/* Scrubber Bar */}
-          <div className="w-full flex items-center gap-3 text-[11px] font-mono text-slate-400">
+          <div className="w-full flex items-center gap-3 text-[11px] font-mono text-[#999999]">
             <span className="w-9 text-right shrink-0">{formatTime(seekValue)}</span>
 
             <div className="relative flex-1 flex items-center group cursor-pointer">
@@ -140,8 +140,10 @@ export const PlayerBar = () => {
                 onChange={handleSeekChange}
                 onMouseUp={handleSeekCommit}
                 onTouchEnd={handleSeekCommit}
-                style={{ background: `linear-gradient(to right, #34d399 ${progressPercent}%, #1e293b ${progressPercent}%)` }}
-                className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-emerald-400 hover:h-2 transition-all focus:outline-none"
+                style={{
+                  background: `linear-gradient(to right, #ffffff ${progressPercent}%, #2e2e2e ${progressPercent}%)`,
+                }}
+                className="w-full h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] hover:h-1.5 transition-all focus:outline-none"
               />
             </div>
 
@@ -150,39 +152,44 @@ export const PlayerBar = () => {
         </div>
 
         {/* Right: Volume & Queue Position */}
-        <div className="hidden md:flex items-center justify-end gap-3 w-1/4">
+        <div className="hidden md:flex items-center justify-end gap-4 w-1/4">
           {queue && queue.length > 0 && (
-            <div className="flex items-center gap-1 text-[11px] font-mono text-slate-500 mr-2">
-              <ListMusic className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#777777] mr-1">
+              <ListMusic className="w-3.5 h-3.5 text-[#999999]" />
               <span>
                 {queueIndex + 1}/{queue.length}
               </span>
             </div>
           )}
 
-          <button
-            onClick={toggleMute}
-            aria-label={isMuted ? 'Unmute' : 'Mute'}
-            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-          >
-            {isMuted || volume === 0 ? (
-              <VolumeX className="w-4 h-4 text-rose-400" />
-            ) : volume < 0.5 ? (
-              <Volume1 className="w-4 h-4" />
-            ) : (
-              <Volume2 className="w-4 h-4" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX className="w-4 h-4 text-rose-400" />
+              ) : volume < 0.5 ? (
+                <Volume1 className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </button>
 
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.02"
-            value={isMuted ? 0 : volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-20 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
-          />
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.02"
+              value={isMuted ? 0 : volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              style={{
+                background: `linear-gradient(to right, #cccccc ${(isMuted ? 0 : volume) * 100}%, #2e2e2e ${(isMuted ? 0 : volume) * 100}%)`,
+              }}
+              className="w-20 h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] focus:outline-none"
+            />
+          </div>
         </div>
       </div>
     </div>

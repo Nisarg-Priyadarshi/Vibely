@@ -14,11 +14,6 @@ import {
   AlertCircle,
   Loader2,
   Trash2,
-  Smile,
-  Shield,
-  ArrowRight,
-  LogOut,
-  Mail,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRoom } from '../context/RoomContext';
@@ -179,76 +174,66 @@ export const Social = () => {
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for incoming chat messages
-    const handleChatMessage = (msg) => {
-      // If currently chatting with this user or we sent it
+    const handlePrivateMessage = (payload) => {
+      const { message } = payload;
       if (
-        (activeFriendId && msg.sender === activeFriendId) ||
-        (activeFriendId && msg.recipient === activeFriendId)
+        message &&
+        activeFriendId &&
+        (message.sender === activeFriendId || message.recipient === activeFriendId)
       ) {
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => [...prev, message]);
       }
       fetchConversationsOverview();
     };
 
-    // Listen for friend request updates
-    const handleRequestReceived = () => {
+    const handleFriendRequestReceived = () => {
       fetchRequests();
-      showSuccess('New friend request received!');
+      showSuccess('You have a new friend request!');
     };
 
-    const handleRequestAccepted = (data) => {
+    const handleFriendRequestAccepted = () => {
       fetchFriends();
       fetchRequests();
-      fetchConversationsOverview();
-      showSuccess(`${data.user?.name || 'A user'} accepted your friend request!`);
+      showSuccess('A friend request was accepted.');
     };
 
-    const handleFriendRemoved = () => {
-      fetchFriends();
-      fetchConversationsOverview();
-      if (activeFriendId) {
-        setActiveFriendId(null);
-      }
-    };
-
-    const handleRoomInvite = (invitation) => {
+    const handleRoomInvite = (payload) => {
       fetchRoomInvitations();
-      showSuccess(`Room Invite: ${invitation.sender?.name} invited you to "${invitation.roomName}"!`);
+      showSuccess(`You were invited to room #${payload.roomCode}`);
     };
 
-    socket.on('chat:message', handleChatMessage);
-    socket.on('friend:request_received', handleRequestReceived);
-    socket.on('friend:request_accepted', handleRequestAccepted);
-    socket.on('friend:removed', handleFriendRemoved);
-    socket.on('room:invitation_received', handleRoomInvite);
+    socket.on('private_message', handlePrivateMessage);
+    socket.on('friend_request_received', handleFriendRequestReceived);
+    socket.on('friend_request_accepted', handleFriendRequestAccepted);
+    socket.on('room_invitation_received', handleRoomInvite);
 
     return () => {
-      socket.off('chat:message', handleChatMessage);
-      socket.off('friend:request_received', handleRequestReceived);
-      socket.off('friend:request_accepted', handleRequestAccepted);
-      socket.off('friend:removed', handleFriendRemoved);
-      socket.off('room:invitation_received', handleRoomInvite);
+      socket.off('private_message', handlePrivateMessage);
+      socket.off('friend_request_received', handleFriendRequestReceived);
+      socket.off('friend_request_accepted', handleFriendRequestAccepted);
+      socket.off('room_invitation_received', handleRoomInvite);
     };
-  }, [socket, activeFriendId, fetchFriends, fetchRequests, fetchConversationsOverview, fetchRoomInvitations]);
+  }, [socket, activeFriendId, fetchConversationsOverview, fetchFriends, fetchRequests, fetchRoomInvitations]);
 
   // Handle Search Users
   const handleSearch = async (e) => {
-    e?.preventDefault();
+    e.preventDefault();
     if (!searchQuery.trim()) return;
 
     setSearching(true);
+    setErrorMsg(null);
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/friends/search?q=${encodeURIComponent(searchQuery.trim())}`,
-        { credentials: 'include' }
-      );
+      const res = await fetch(`${API_BASE_URL}/friends/search?q=${encodeURIComponent(searchQuery.trim())}`, {
+        credentials: 'include',
+      });
       const data = await res.json();
       if (data.success) {
         setSearchResults(data.users || []);
+      } else {
+        showError(data.error?.message || 'Search failed.');
       }
     } catch (err) {
-      showError('Failed to search users.');
+      showError(err.message);
     } finally {
       setSearching(false);
     }
@@ -257,7 +242,7 @@ export const Social = () => {
   // Handle Send Friend Request
   const handleSendFriendRequest = async (recipientId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/requests`, {
+      const res = await fetch(`${API_BASE_URL}/friends/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -267,43 +252,45 @@ export const Social = () => {
       if (!res.ok || !data.success) {
         throw new Error(data.error?.message || 'Failed to send request.');
       }
-      showSuccess(data.message || 'Friend request sent!');
-      fetchRequests();
-      // Update status in search results if present
+      showSuccess('Friend request sent!');
       setSearchResults((prev) =>
         prev.map((u) => (u.id === recipientId ? { ...u, relationshipStatus: 'pending_sent' } : u))
       );
+      fetchRequests();
     } catch (err) {
       showError(err.message);
     }
   };
 
-  // Handle Accept Request
+  // Handle Accept Friend Request
   const handleAcceptRequest = async (requestId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/requests/${requestId}/accept`, {
+      const res = await fetch(`${API_BASE_URL}/friends/respond`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ requestId, action: 'accept' }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error?.message || 'Failed to accept request.');
       }
-      showSuccess('Friend request accepted!');
+      showSuccess('Friend request accepted.');
       fetchFriends();
       fetchRequests();
-      fetchConversationsOverview();
     } catch (err) {
       showError(err.message);
     }
   };
 
-  // Handle Decline Request
+  // Handle Reject Friend Request
   const handleRejectRequest = async (requestId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/requests/${requestId}/reject`, {
+      const res = await fetch(`${API_BASE_URL}/friends/respond`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ requestId, action: 'reject' }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -316,7 +303,7 @@ export const Social = () => {
     }
   };
 
-  // Handle Cancel Request
+  // Handle Cancel Outgoing Friend Request
   const handleCancelRequest = async (requestId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/friends/requests/${requestId}`, {
@@ -334,9 +321,8 @@ export const Social = () => {
     }
   };
 
-  // Handle Unfriend
+  // Handle Remove Friend
   const handleRemoveFriend = async (friendId) => {
-    if (!window.confirm('Are you sure you want to remove this friend?')) return;
     try {
       const res = await fetch(`${API_BASE_URL}/friends/${friendId}`, {
         method: 'DELETE',
@@ -346,7 +332,7 @@ export const Social = () => {
       if (!res.ok || !data.success) {
         throw new Error(data.error?.message || 'Failed to remove friend.');
       }
-      showSuccess('Friend removed.');
+      showSuccess('Friend removed from your contacts.');
       if (activeFriendId === friendId) setActiveFriendId(null);
       fetchFriends();
       fetchConversationsOverview();
@@ -375,11 +361,10 @@ export const Social = () => {
       if (!res.ok || !data.success) {
         throw new Error(data.error?.message || 'Failed to send message.');
       }
-      // Note: socket will also emit, but we can optimistically append or let socket update
       fetchConversationsOverview();
     } catch (err) {
       showError(err.message);
-      setMessageText(content); // Restore draft on failure
+      setMessageText(content);
     } finally {
       setSendingMessage(false);
     }
@@ -427,18 +412,18 @@ export const Social = () => {
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
-          <Users className="w-12 h-12 text-slate-600 mx-auto" />
-          <h2 className="text-xl font-bold text-white">Sign In Required</h2>
-          <p className="text-xs text-slate-400">
+        <div className="max-w-md w-full bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 text-center space-y-4 shadow-2xl">
+          <Users className="w-10 h-10 text-[#666666] mx-auto" />
+          <h2 className="text-xl font-bold text-[#ffffff]">Sign In Required</h2>
+          <p className="text-xs text-[#999999]">
             Please log in to chat with friends and receive room invitations.
           </p>
           <div className="pt-2">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
+              className="btn-white text-xs px-5 py-2.5"
             >
-              Go to Login
+              Sign In
             </Link>
           </div>
         </div>
@@ -447,42 +432,40 @@ export const Social = () => {
   }
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6 pb-28">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6 pb-36">
       {/* Social Hub Top Navigation Header */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 relative">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Community Hub
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
-              Social & Direct Chat
+            <div className="text-[11px] font-mono uppercase tracking-widest text-[#00e599]">
+              Social Network
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] tracking-tight mt-1">
+              Community and Direct Messages
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Connect with fellow listeners, chat in real-time, and invite friends to Vibely Rooms.
+            <p className="text-xs text-[#999999] mt-0.5">
+              Connect with fellow listeners, coordinate listening sessions, and share room invitations.
             </p>
           </div>
 
           {/* Social Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800">
+          <div className="flex flex-wrap items-center gap-1 bg-[#121212] p-1 rounded-[4px] border border-[rgba(255,255,255,0.08)]">
             <button
               onClick={() => {
                 setActiveTab('chat');
                 setSearchParams({ tab: 'chat' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'chat'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-[#ffffff] text-[#121212]'
+                  : 'text-[#999999] hover:text-[#ffffff]'
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              Friends & Chat
+              Direct Messages
               {friends.length > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  activeTab === 'chat' ? 'bg-slate-950/30 text-slate-950' : 'bg-slate-800 text-slate-300'
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                  activeTab === 'chat' ? 'bg-[#121212] text-[#ffffff]' : 'bg-[#222222] text-[#cccccc]'
                 }`}>
                   {friends.length}
                 </span>
@@ -494,16 +477,16 @@ export const Social = () => {
                 setActiveTab('requests');
                 setSearchParams({ tab: 'requests' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'requests'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-[#ffffff] text-[#121212]'
+                  : 'text-[#999999] hover:text-[#ffffff]'
               }`}
             >
               <UserCheck className="w-3.5 h-3.5" />
               Requests
               {receivedRequests.length > 0 && (
-                <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-mono animate-pulse">
+                <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded font-mono">
                   {receivedRequests.length}
                 </span>
               )}
@@ -514,10 +497,10 @@ export const Social = () => {
                 setActiveTab('search');
                 setSearchParams({ tab: 'search' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'search'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-[#ffffff] text-[#121212]'
+                  : 'text-[#999999] hover:text-[#ffffff]'
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -529,16 +512,16 @@ export const Social = () => {
                 setActiveTab('invitations');
                 setSearchParams({ tab: 'invitations' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-[3px] text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'invitations'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-[#ffffff] text-[#121212]'
+                  : 'text-[#999999] hover:text-[#ffffff]'
               }`}
             >
               <Radio className="w-3.5 h-3.5" />
               Room Invites
               {roomInvites.length > 0 && (
-                <span className="text-[10px] bg-cyan-500 text-slate-950 font-bold px-1.5 py-0.2 rounded-full font-mono">
+                <span className="text-[10px] bg-[#00e599] text-[#121212] font-mono px-1.5 py-0.2 rounded font-bold">
                   {roomInvites.length}
                 </span>
               )}
@@ -549,54 +532,52 @@ export const Social = () => {
 
       {/* Floating Status & Error Alerts */}
       {statusMsg && (
-        <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 shadow-lg animate-in fade-in">
-          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="p-3 rounded-[4px] bg-[#122b1f] border border-[#00e599]/30 text-[#00e599] text-xs flex items-center gap-2">
+          <Check className="w-4 h-4 text-[#00e599] shrink-0" />
           <span>{statusMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-3.5 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2 shadow-lg animate-in fade-in">
+        <div className="p-3 rounded-[4px] bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 1: FRIENDS & PRIVATE CHAT                                  */}
-      {/* ============================================================== */}
+      {/* TAB 1: FRIENDS & PRIVATE CHAT */}
       {activeTab === 'chat' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
           {/* Left Column: Friends List & Conversations Sidebar */}
-          <div className="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl backdrop-blur-xl flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="lg:col-span-4 bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-bold text-white">Your Friends</h3>
+                <Users className="w-4 h-4 text-[#cccccc]" />
+                <h3 className="text-sm font-bold text-[#ffffff]">Your Friends</h3>
               </div>
               <button
                 onClick={() => {
                   setActiveTab('search');
                   setSearchParams({ tab: 'search' });
                 }}
-                className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                className="text-[11px] font-semibold text-[#00e599] hover:underline flex items-center gap-1"
               >
                 <UserPlus className="w-3 h-3" />
                 Add More
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
               {loadingFriends ? (
-                <div className="py-16 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+                <div className="py-16 text-center text-[#999999] text-xs flex flex-col items-center gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
                   <span>Loading friends...</span>
                 </div>
               ) : friends.length === 0 ? (
                 <div className="py-16 text-center space-y-3 px-4">
-                  <Users className="w-12 h-12 text-slate-700 mx-auto" />
-                  <p className="text-xs text-slate-400 font-semibold">No friends added yet</p>
-                  <p className="text-[11px] text-slate-500">
+                  <Users className="w-10 h-10 text-[#666666] mx-auto" />
+                  <p className="text-xs text-[#cccccc] font-semibold">No friends added yet</p>
+                  <p className="text-[11px] text-[#777777]">
                     Search for listeners to start private chats and invite them into listening rooms.
                   </p>
                   <button
@@ -604,9 +585,9 @@ export const Social = () => {
                       setActiveTab('search');
                       setSearchParams({ tab: 'search' });
                     }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
+                    className="btn-white text-xs px-4 py-2 mt-2"
                   >
-                    <Search className="w-3.5 h-3.5" />
+                    <Search className="w-3.5 h-3.5 mr-1" />
                     Find Listeners
                   </button>
                 </div>
@@ -619,15 +600,15 @@ export const Social = () => {
                     <div
                       key={friend.id}
                       onClick={() => setActiveFriendId(friend.id)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+                      className={`p-2.5 rounded-[4px] border transition-colors cursor-pointer flex items-center justify-between gap-3 group ${
                         isSelected
-                          ? 'bg-slate-800/90 border-emerald-500/40 shadow-lg shadow-emerald-500/10'
-                          : 'bg-slate-950/40 border-slate-800/80 hover:bg-slate-800/50 hover:border-slate-700'
+                          ? 'bg-[#222222] border-[rgba(255,255,255,0.2)]'
+                          : 'bg-[#161616] border-[rgba(255,255,255,0.06)] hover:bg-[#202020]'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         {/* Friend Avatar */}
-                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-bold text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
+                        <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
                           {friend.avatar ? (
                             <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
                           ) : (
@@ -636,10 +617,10 @@ export const Social = () => {
                         </div>
 
                         <div className="min-w-0">
-                          <h4 className="text-xs font-bold text-slate-200 truncate group-hover:text-white">
+                          <h4 className="text-xs font-semibold text-[#ffffff] truncate">
                             {friend.name}
                           </h4>
-                          <p className="text-[11px] text-slate-400 truncate">
+                          <p className="text-[11px] text-[#777777] truncate">
                             {conv?.lastMessage?.content || friend.email}
                           </p>
                         </div>
@@ -647,7 +628,7 @@ export const Social = () => {
 
                       <div className="flex items-center gap-1.5 shrink-0">
                         {conv && conv.unreadCount > 0 && (
-                          <span className="text-[10px] font-bold bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full font-mono">
+                          <span className="text-[10px] font-bold bg-[#00e599] text-[#121212] px-1.5 py-0.2 rounded font-mono">
                             {conv.unreadCount}
                           </span>
                         )}
@@ -656,7 +637,7 @@ export const Social = () => {
                             e.stopPropagation();
                             handleRemoveFriend(friend.id);
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-rose-950 hover:text-rose-400 text-slate-500 transition-all cursor-pointer"
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-rose-950 hover:text-rose-400 text-[#777777] transition-all cursor-pointer"
                           title="Remove Friend"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -670,13 +651,13 @@ export const Social = () => {
           </div>
 
           {/* Right Column: Active 1-to-1 Chat Window */}
-          <div className="lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between min-h-[540px]">
+          <div className="lg:col-span-8 bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 flex flex-col justify-between min-h-[540px]">
             {activeConversation ? (
               <>
                 {/* Chat Top Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+                <div className="flex items-center justify-between pb-4 border-b border-[rgba(255,255,255,0.08)] shrink-0">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                    <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
                       {activeConversation.avatar ? (
                         <img src={activeConversation.avatar} alt={activeConversation.name} className="w-full h-full object-cover" />
                       ) : (
@@ -684,38 +665,38 @@ export const Social = () => {
                       )}
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-[#ffffff] flex items-center gap-2">
                         {activeConversation.name}
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#00e599]"></span>
                       </h3>
-                      <p className="text-[10px] text-slate-400 font-mono">{activeConversation.email}</p>
+                      <p className="text-[10px] text-[#777777] font-mono">{activeConversation.email}</p>
                     </div>
                   </div>
 
                   {currentRoom && (
                     <button
                       onClick={() => navigate(`/rooms/${currentRoom.code}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-semibold transition-all cursor-pointer"
+                      className="btn-graphite text-xs px-3 py-1.5"
                     >
-                      <Radio className="w-3.5 h-3.5" />
+                      <Radio className="w-3.5 h-3.5 mr-1 text-[#00e599]" />
                       In Room: {currentRoom.name}
                     </button>
                   )}
                 </div>
 
                 {/* Messages Stream */}
-                <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2 min-h-[340px]">
+                <div className="flex-1 overflow-y-auto py-4 space-y-2.5 pr-2 min-h-[340px]">
                   {loadingMessages ? (
-                    <div className="py-20 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-                      <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-                      <span>Loading conversation history...</span>
+                    <div className="py-20 text-center text-[#999999] text-xs flex flex-col items-center gap-2">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
+                      <span>Loading messages...</span>
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="py-24 text-center space-y-2">
-                      <MessageSquare className="w-10 h-10 text-slate-700 mx-auto" />
-                      <p className="text-xs font-bold text-slate-300">No messages yet</p>
-                      <p className="text-[11px] text-slate-500">
-                        Send a friendly message to {activeConversation.name} to start the conversation!
+                      <MessageSquare className="w-8 h-8 text-[#666666] mx-auto" />
+                      <p className="text-xs font-semibold text-[#cccccc]">No messages yet</p>
+                      <p className="text-[11px] text-[#777777]">
+                        Send a message to start communicating with {activeConversation.name}!
                       </p>
                     </div>
                   ) : (
@@ -724,10 +705,10 @@ export const Social = () => {
                       return (
                         <div
                           key={m.id || m._id}
-                          className={`flex items-end gap-2.5 ${isMe ? 'justify-end' : 'justify-start'}`}
+                          className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
                         >
                           {!isMe && (
-                            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-bold text-[10px] uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
+                            <div className="w-6 h-6 rounded-[2px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-[9px] uppercase shrink-0 overflow-hidden">
                               {activeConversation.avatar ? (
                                 <img src={activeConversation.avatar} alt={activeConversation.name} className="w-full h-full object-cover" />
                               ) : (
@@ -737,16 +718,16 @@ export const Social = () => {
                           )}
 
                           <div
-                            className={`max-w-[75%] p-3.5 rounded-2xl text-xs space-y-1 shadow-md ${
+                            className={`max-w-[75%] p-3 rounded-[4px] text-xs space-y-1 ${
                               isMe
-                                ? 'bg-emerald-500 text-slate-950 font-medium rounded-br-none'
-                                : 'bg-slate-950 border border-slate-800 text-slate-100 rounded-bl-none'
+                                ? 'bg-[#262626] border border-[rgba(255,255,255,0.12)] text-[#ffffff]'
+                                : 'bg-[#141414] border border-[rgba(255,255,255,0.06)] text-[#e5e5e5]'
                             }`}
                           >
                             <p className="whitespace-pre-wrap break-words">{m.content}</p>
                             <span
                               className={`block text-[9px] font-mono ${
-                                isMe ? 'text-emerald-950 text-right font-semibold' : 'text-slate-500 text-left'
+                                isMe ? 'text-[#999999] text-right' : 'text-[#777777] text-left'
                               }`}
                             >
                               {new Date(m.createdAt || Date.now()).toLocaleTimeString([], {
@@ -757,7 +738,7 @@ export const Social = () => {
                           </div>
 
                           {isMe && (
-                            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-bold text-[10px] uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
+                            <div className="w-6 h-6 rounded-[2px] bg-[#333333] flex items-center justify-center text-[#ffffff] font-bold text-[9px] uppercase shrink-0 overflow-hidden">
                               {user.avatar ? (
                                 <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                               ) : (
@@ -773,25 +754,25 @@ export const Social = () => {
                 </div>
 
                 {/* Message Input Form */}
-                <form onSubmit={handleSendMessage} className="pt-3 border-t border-slate-800 flex items-center gap-2 shrink-0">
+                <form onSubmit={handleSendMessage} className="pt-3 border-t border-[rgba(255,255,255,0.08)] flex items-center gap-2 shrink-0">
                   <input
                     type="text"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     placeholder={`Message ${activeConversation.name}...`}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:border-emerald-500"
+                    className="flex-1 input-flat text-xs py-2"
                   />
                   <button
                     type="submit"
                     disabled={!messageText.trim() || sendingMessage}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-500/20"
+                    className="btn-white text-xs px-4 py-2 disabled:opacity-40"
                   >
                     {sendingMessage ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       <>
-                        <Send className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Send</span>
+                        <Send className="w-3.5 h-3.5 mr-1" />
+                        <span>Send</span>
                       </>
                     )}
                   </button>
@@ -799,12 +780,12 @@ export const Social = () => {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-                <div className="w-16 h-16 rounded-3xl bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-600 shadow-inner">
-                  <MessageSquare className="w-8 h-8 text-emerald-500/50" />
+                <div className="w-12 h-12 rounded-[4px] bg-[#141414] border border-[rgba(255,255,255,0.08)] flex items-center justify-center text-[#666666]">
+                  <MessageSquare className="w-6 h-6 text-[#999999]" />
                 </div>
-                <h3 className="text-base font-bold text-white">Select a Friend to Chat</h3>
-                <p className="text-xs text-slate-400 max-w-sm">
-                  Choose a friend from the left sidebar to start private messaging, share track recommendations, or coordinate Vibely listening rooms.
+                <h3 className="text-sm font-semibold text-[#ffffff]">Select a Friend to Chat</h3>
+                <p className="text-xs text-[#999999] max-w-sm">
+                  Choose a contact from the left list to start private direct messages or coordinate live sessions.
                 </p>
               </div>
             )}
@@ -812,41 +793,39 @@ export const Social = () => {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 2: FRIEND REQUESTS                                         */}
-      {/* ============================================================== */}
+      {/* TAB 2: FRIEND REQUESTS */}
       {activeTab === 'requests' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Incoming Requests */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
               <div className="flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Incoming Requests</h3>
+                <UserCheck className="w-4 h-4 text-[#00e599]" />
+                <h3 className="text-sm font-bold text-[#ffffff]">Incoming Requests</h3>
               </div>
-              <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] font-mono bg-[#122b1f] text-[#00e599] border border-[#00e599]/30 px-2 py-0.5 rounded-[2px]">
                 {receivedRequests.length}
               </span>
             </div>
 
             {loadingRequests ? (
-              <div className="py-12 flex justify-center text-slate-400 text-xs">
-                <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+              <div className="py-12 flex justify-center text-[#999999] text-xs">
+                <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
               </div>
             ) : receivedRequests.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-500 space-y-2">
-                <UserCheck className="w-8 h-8 text-slate-700 mx-auto" />
+              <div className="py-12 text-center text-xs text-[#777777] space-y-2">
+                <UserCheck className="w-8 h-8 text-[#555555] mx-auto" />
                 <p>No incoming friend requests right now.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {receivedRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3 rounded-[4px] bg-[#161616] border border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-bold text-xs uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
                         {req.user?.avatar ? (
                           <img src={req.user.avatar} alt={req.user.name} className="w-full h-full object-cover" />
                         ) : (
@@ -854,24 +833,24 @@ export const Social = () => {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-slate-200 truncate">{req.user?.name}</h4>
-                        <p className="text-[10px] text-slate-400 font-mono truncate">{req.user?.email}</p>
+                        <h4 className="text-xs font-semibold text-[#ffffff] truncate">{req.user?.name}</h4>
+                        <p className="text-[10px] text-[#777777] font-mono truncate">{req.user?.email}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => handleAcceptRequest(req.id)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer"
+                        className="btn-white text-xs px-3 py-1"
                       >
-                        <Check className="w-3.5 h-3.5" />
+                        <Check className="w-3.5 h-3.5 mr-1" />
                         Accept
                       </button>
                       <button
                         onClick={() => handleRejectRequest(req.id)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-400 font-semibold text-xs transition-colors cursor-pointer"
+                        className="btn-graphite text-xs px-3 py-1 text-rose-400"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-3.5 h-3.5 mr-1" />
                         Decline
                       </button>
                     </div>
@@ -882,35 +861,35 @@ export const Social = () => {
           </div>
 
           {/* Sent Requests */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400" />
-                <h3 className="text-base font-bold text-white">Sent Requests</h3>
+                <Clock className="w-4 h-4 text-[#cccccc]" />
+                <h3 className="text-sm font-bold text-[#ffffff]">Sent Requests</h3>
               </div>
-              <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
+              <span className="text-[11px] font-mono bg-[#222222] text-[#cccccc] px-2 py-0.5 rounded-[2px] border border-[rgba(255,255,255,0.06)]">
                 {sentRequests.length}
               </span>
             </div>
 
             {loadingRequests ? (
-              <div className="py-12 flex justify-center text-slate-400 text-xs">
-                <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+              <div className="py-12 flex justify-center text-[#999999] text-xs">
+                <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
               </div>
             ) : sentRequests.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-500 space-y-2">
-                <Clock className="w-8 h-8 text-slate-700 mx-auto" />
+              <div className="py-12 text-center text-xs text-[#777777] space-y-2">
+                <Clock className="w-8 h-8 text-[#555555] mx-auto" />
                 <p>No outgoing pending requests.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {sentRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3 rounded-[4px] bg-[#161616] border border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-bold text-xs uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
                         {req.user?.avatar ? (
                           <img src={req.user.avatar} alt={req.user.name} className="w-full h-full object-cover" />
                         ) : (
@@ -918,14 +897,14 @@ export const Social = () => {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-slate-200 truncate">{req.user?.name}</h4>
-                        <p className="text-[10px] text-slate-400 font-mono truncate">{req.user?.email}</p>
+                        <h4 className="text-xs font-semibold text-[#ffffff] truncate">{req.user?.name}</h4>
+                        <p className="text-[10px] text-[#777777] font-mono truncate">{req.user?.email}</p>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleCancelRequest(req.id)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                      className="btn-graphite text-xs px-3 py-1"
                     >
                       Cancel
                     </button>
@@ -937,46 +916,44 @@ export const Social = () => {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 3: USER SEARCH / ADD FRIENDS                               */}
-      {/* ============================================================== */}
+      {/* TAB 3: USER SEARCH */}
       {activeTab === 'search' && (
-        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl space-y-6 max-w-3xl mx-auto w-full">
+        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 space-y-6 max-w-3xl mx-auto w-full">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base font-bold text-[#ffffff] flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-[#00e599]" />
               Discover Vibely Listeners
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-[#999999] mt-1">
               Search by display name or email to connect with friends and expand your musical network.
             </p>
           </div>
 
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#777777] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or email address..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:outline-none focus:border-emerald-500"
+                className="w-full input-flat text-xs pl-10"
               />
             </div>
             <button
               type="submit"
               disabled={!searchQuery.trim() || searching}
-              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-500/20"
+              className="btn-white text-xs px-5 py-2.5 disabled:opacity-50"
             >
               {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
             </button>
           </form>
 
           {/* Search Results */}
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2.5 pt-2">
             {searching ? (
-              <div className="py-12 flex justify-center text-slate-400 text-xs">
-                <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+              <div className="py-12 flex justify-center text-[#999999] text-xs">
+                <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
               </div>
             ) : searchResults.length > 0 ? (
               searchResults.map((u) => {
@@ -984,10 +961,10 @@ export const Social = () => {
                 return (
                   <div
                     key={u.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3 rounded-[4px] bg-[#161616] border border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
                         {u.avatar ? (
                           <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
                         ) : (
@@ -995,15 +972,15 @@ export const Social = () => {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-white truncate">{u.name}</h4>
-                        <p className="text-[11px] text-slate-400 font-mono truncate">{u.email}</p>
+                        <h4 className="text-xs font-semibold text-[#ffffff] truncate">{u.name}</h4>
+                        <p className="text-[10px] text-[#777777] font-mono truncate">{u.email}</p>
                       </div>
                     </div>
 
                     <div className="shrink-0">
                       {status === 'friends' ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold flex items-center gap-1">
+                          <span className="text-[10px] bg-[#122b1f] text-[#00e599] border border-[#00e599]/30 px-2 py-0.5 rounded-[2px] font-semibold flex items-center gap-1">
                             <Check className="w-3 h-3" /> Friends
                           </span>
                           <button
@@ -1011,30 +988,30 @@ export const Social = () => {
                               setActiveTab('chat');
                               setActiveFriendId(u.id);
                             }}
-                            className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
+                            className="btn-graphite text-xs px-2.5 py-1"
                           >
-                            <MessageSquare className="w-3 h-3" /> Chat
+                            <MessageSquare className="w-3 h-3 mr-1" /> Chat
                           </button>
                         </div>
                       ) : status === 'pending_sent' ? (
-                        <span className="text-[11px] bg-slate-800 text-slate-400 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5">
+                        <span className="text-[11px] bg-[#222222] text-[#777777] px-2.5 py-1 rounded-[2px] font-mono flex items-center gap-1.5 border border-[rgba(255,255,255,0.06)]">
                           <Clock className="w-3.5 h-3.5 text-amber-400" />
                           Pending Request
                         </span>
                       ) : status === 'pending_received' ? (
                         <button
                           onClick={() => handleAcceptRequest(u.friendshipId)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md shadow-emerald-500/20"
+                          className="btn-white text-xs px-3 py-1"
                         >
-                          <Check className="w-3.5 h-3.5" />
+                          <Check className="w-3.5 h-3.5 mr-1" />
                           Accept Request
                         </button>
                       ) : (
                         <button
                           onClick={() => handleSendFriendRequest(u.id)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md shadow-emerald-500/20 transition-all"
+                          className="btn-white text-xs px-3.5 py-1"
                         >
-                          <UserPlus className="w-3.5 h-3.5" />
+                          <UserPlus className="w-3.5 h-3.5 mr-1" />
                           Add Friend
                         </button>
                       )}
@@ -1043,7 +1020,7 @@ export const Social = () => {
                 );
               })
             ) : searchQuery.trim() ? (
-              <div className="py-12 text-center text-xs text-slate-500">
+              <div className="py-12 text-center text-xs text-[#777777]">
                 No listeners found matching &quot;{searchQuery}&quot;.
               </div>
             ) : null}
@@ -1051,42 +1028,40 @@ export const Social = () => {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 4: ROOM INVITATIONS                                        */}
-      {/* ============================================================== */}
+      {/* TAB 4: ROOM INVITATIONS */}
       {activeTab === 'invitations' && (
-        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl space-y-6 max-w-3xl mx-auto w-full">
+        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 space-y-6 max-w-3xl mx-auto w-full">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Radio className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base font-bold text-[#ffffff] flex items-center gap-2">
+              <Radio className="w-4 h-4 text-[#00e599]" />
               Incoming Room Invitations
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Join active listening rooms invited by your accepted friends.
+            <p className="text-xs text-[#999999] mt-1">
+              Join active listening rooms invited by your contacts.
             </p>
           </div>
 
           {loadingInvites ? (
-            <div className="py-16 flex justify-center text-slate-400 text-xs">
-              <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+            <div className="py-16 flex justify-center text-[#999999] text-xs">
+              <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
             </div>
           ) : roomInvites.length === 0 ? (
             <div className="py-16 text-center space-y-3">
-              <Radio className="w-12 h-12 text-slate-700 mx-auto" />
-              <p className="text-xs font-bold text-slate-300">No active room invitations</p>
-              <p className="text-[11px] text-slate-500 max-w-md mx-auto">
-                When your friends start or host a Vibely Room and invite you, their invitations will appear here in real time.
+              <Radio className="w-10 h-10 text-[#555555] mx-auto" />
+              <p className="text-xs font-semibold text-[#cccccc]">No active room invitations</p>
+              <p className="text-[11px] text-[#777777] max-w-md mx-auto">
+                When friends host a Vibely Room and invite you, invitations will appear here in real time.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {roomInvites.map((inv) => (
                 <div
                   key={inv.id}
-                  className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner"
+                  className="p-4 rounded-[4px] bg-[#161616] border border-[rgba(255,255,255,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
                       {inv.sender?.avatar ? (
                         <img src={inv.sender.avatar} alt={inv.sender.name} className="w-full h-full object-cover" />
                       ) : (
@@ -1095,13 +1070,13 @@ export const Social = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-bold text-white truncate">{inv.roomName}</h4>
-                        <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <h4 className="text-xs font-semibold text-[#ffffff] truncate">{inv.roomName}</h4>
+                        <span className="text-[10px] font-mono bg-[#122b1f] text-[#00e599] px-2 py-0.5 rounded-[2px] border border-[#00e599]/30">
                           {inv.roomCode}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Invited by <strong className="text-slate-200">{inv.sender?.name}</strong> &bull; {inv.memberCount} listener{inv.memberCount === 1 ? '' : 's'}
+                      <p className="text-[11px] text-[#777777] mt-0.5">
+                        Invited by <strong className="text-[#cccccc]">{inv.sender?.name}</strong> &bull; {inv.memberCount} listener{inv.memberCount === 1 ? '' : 's'}
                       </p>
                     </div>
                   </div>
@@ -1109,14 +1084,14 @@ export const Social = () => {
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleAcceptRoomInvite(inv.id)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                      className="btn-white text-xs px-3.5 py-1.5"
                     >
-                      <Radio className="w-3.5 h-3.5" />
+                      <Radio className="w-3.5 h-3.5 mr-1" />
                       Join Room
                     </button>
                     <button
                       onClick={() => handleDeclineRoomInvite(inv.id)}
-                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-400 text-xs font-semibold transition-all cursor-pointer"
+                      className="btn-graphite text-xs px-3 py-1.5 text-rose-400"
                     >
                       Decline
                     </button>

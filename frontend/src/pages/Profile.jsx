@@ -15,7 +15,6 @@ import {
   Music,
   Camera,
   Trash2,
-  Upload,
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
@@ -35,22 +34,21 @@ export const Profile = () => {
   const [successMsg, setSuccessMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
-
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
-          <User className="w-12 h-12 text-slate-600 mx-auto" />
-          <h2 className="text-xl font-bold text-white">Sign In Required</h2>
-          <p className="text-xs text-slate-400">
-            Please log in to view and manage your account settings.
+        <div className="max-w-md w-full bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 text-center space-y-4 shadow-2xl">
+          <User className="w-10 h-10 text-[#666666] mx-auto" />
+          <h2 className="text-xl font-bold text-[#ffffff]">Sign In Required</h2>
+          <p className="text-xs text-[#999999]">
+            Please sign in to view and manage your account settings.
           </p>
           <div className="pt-2">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs"
+              className="btn-white text-xs px-5 py-2.5"
             >
-              Go to Login
+              Sign In
             </Link>
           </div>
         </div>
@@ -88,7 +86,7 @@ export const Profile = () => {
         throw new Error(data.error?.message || 'Failed to update profile.');
       }
 
-      await checkAuth(); // Sync AuthContext user state
+      await checkAuth();
       setSuccessMsg('Display name updated successfully.');
       setIsEditing(false);
       setTimeout(() => setSuccessMsg(null), 3000);
@@ -103,7 +101,6 @@ export const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset input value so selecting the same file again triggers change event
     e.target.value = '';
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -136,7 +133,7 @@ export const Profile = () => {
         throw new Error(data.error?.message || 'Failed to upload profile picture.');
       }
 
-      await checkAuth(); // Sync AuthContext user state across the entire application
+      await checkAuth();
       setSuccessMsg('Profile picture updated successfully!');
       setTimeout(() => setSuccessMsg(null), 3500);
     } catch (err) {
@@ -164,7 +161,7 @@ export const Profile = () => {
         throw new Error(data.error?.message || 'Failed to remove profile picture.');
       }
 
-      await checkAuth(); // Sync AuthContext user state
+      await checkAuth();
       setSuccessMsg('Profile picture removed successfully.');
       setTimeout(() => setSuccessMsg(null), 3500);
     } catch (err) {
@@ -180,59 +177,57 @@ export const Profile = () => {
   };
 
   return (
-    <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8 pb-32">
-      {/* Profile Header */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
-          {/* Avatar Container with Cloudinary Upload UI */}
+    <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8 pb-36">
+      {/* Profile Header (Obsidian Surface with Hairline Inset) */}
+      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 relative">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          {/* Avatar Container (4px radius, utilitarian) */}
           <div className="flex flex-col items-center gap-2.5 shrink-0">
-            <div className="relative group w-28 h-28 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10 ring-2 ring-emerald-500/20 hover:ring-emerald-400/50 transition-all bg-slate-950 flex items-center justify-center">
+            <div className="relative group w-24 h-24 rounded-[4px] overflow-hidden bg-[#242424] flex items-center justify-center border border-[rgba(255,255,255,0.1)]">
               {user.avatar ? (
                 <img
                   src={user.avatar}
                   alt={user.name}
-                  className="w-full h-full object-cover rounded-3xl"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-3xl uppercase shadow-xl shadow-emerald-500/20">
+                <div className="w-full h-full bg-[#2a2a2a] flex items-center justify-center text-[#ffffff] font-bold text-2xl uppercase">
                   {user.name.charAt(0)}
                 </div>
               )}
 
-              {/* Hover Overlay Button to Change Avatar */}
+              {/* Hover Change Button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar || deletingAvatar}
-                className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                title="Click to change profile picture"
+                className="absolute inset-0 bg-[#000000]/75 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                title="Change profile picture"
               >
-                <Camera className="w-6 h-6 text-emerald-400" />
-                <span className="text-[10px] font-bold text-slate-200 uppercase tracking-wider">
+                <Camera className="w-5 h-5 text-[#ffffff]" />
+                <span className="text-[10px] font-semibold text-[#cccccc] uppercase tracking-wider">
                   {user.avatar ? 'Change' : 'Upload'}
                 </span>
               </button>
 
-              {/* Uploading Spinner Overlay */}
+              {/* Uploading Spinner */}
               {uploadingAvatar && (
-                <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-1.5 z-20">
-                  <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-                  <span className="text-[10px] font-semibold text-emerald-300">Uploading...</span>
+                <div className="absolute inset-0 bg-[#000000]/80 flex flex-col items-center justify-center gap-1 z-20">
+                  <Loader2 className="w-5 h-5 text-[#00e599] animate-spin" />
+                  <span className="text-[10px] text-[#00e599]">Uploading...</span>
                 </div>
               )}
 
-              {/* Deleting Spinner Overlay */}
+              {/* Deleting Spinner */}
               {deletingAvatar && (
-                <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-1.5 z-20">
-                  <Loader2 className="w-6 h-6 text-rose-400 animate-spin" />
-                  <span className="text-[10px] font-semibold text-rose-300">Removing...</span>
+                <div className="absolute inset-0 bg-[#000000]/80 flex flex-col items-center justify-center gap-1 z-20">
+                  <Loader2 className="w-5 h-5 text-rose-400 animate-spin" />
+                  <span className="text-[10px] text-rose-300">Removing...</span>
                 </div>
               )}
             </div>
 
-            {/* Hidden Native File Input */}
+            {/* Hidden Input */}
             <input
               type="file"
               ref={fileInputRef}
@@ -247,9 +242,9 @@ export const Profile = () => {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar || deletingAvatar}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50"
+                className="btn-graphite text-[11px] px-2.5 py-1"
               >
-                <Camera className="w-3 h-3 text-emerald-400" />
+                <Camera className="w-3 h-3 mr-1 text-[#00e599]" />
                 {user.avatar ? 'Change' : 'Upload'}
               </button>
 
@@ -258,39 +253,35 @@ export const Profile = () => {
                   type="button"
                   onClick={handleDeleteAvatar}
                   disabled={uploadingAvatar || deletingAvatar}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-950/30 hover:bg-rose-950/60 text-rose-400 hover:text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50"
-                  title="Remove profile picture"
+                  className="btn-graphite text-[11px] px-2.5 py-1 text-rose-400 hover:text-rose-300"
+                  title="Remove picture"
                 >
                   <Trash2 className="w-3 h-3" />
-                  Remove
                 </button>
               )}
             </div>
-            <span className="text-[10px] text-slate-500 text-center font-mono">
-              JPEG, PNG, WebP • Max 5MB
-            </span>
           </div>
 
           <div className="flex-1 space-y-2 text-center sm:text-left">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Verified Listener
-            </span>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#00e599]">
+              Verified Account
+            </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight text-[#ffffff]">
               {user.name}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-400 font-mono">
+            <p className="text-xs text-[#999999] font-mono">
               {user.email}
             </p>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-[#999999]">
               <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                <Calendar className="w-3.5 h-3.5 text-[#cccccc]" />
                 Joined {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently'}
               </span>
               <span className="flex items-center gap-1.5">
-                <ListMusic className="w-3.5 h-3.5 text-cyan-400" />
+                <ListMusic className="w-3.5 h-3.5 text-[#cccccc]" />
                 {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'}
               </span>
             </div>
@@ -298,20 +289,20 @@ export const Profile = () => {
 
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 text-xs font-semibold transition-all self-center sm:self-start cursor-pointer"
+            className="btn-graphite text-xs px-3.5 py-2 self-center sm:self-start text-[#999999] hover:text-rose-400"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-3.5 h-3.5 mr-1.5" />
             Sign Out
           </button>
         </div>
       </div>
 
-      {/* Edit Profile Form & Settings */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      {/* Account Details & Settings */}
+      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-4">
           <div>
-            <h2 className="text-base font-bold text-white">Account Details</h2>
-            <p className="text-xs text-slate-400">Manage your public listener credentials</p>
+            <h2 className="text-sm font-bold text-[#ffffff]">Account Details</h2>
+            <p className="text-xs text-[#999999]">Manage your public credentials and profile settings</p>
           </div>
 
           {!isEditing && (
@@ -320,23 +311,23 @@ export const Profile = () => {
                 setName(user.name);
                 setIsEditing(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+              className="btn-graphite text-xs px-3 py-1.5"
             >
-              <Edit2 className="w-3.5 h-3.5" />
-              Edit Display Name
+              <Edit2 className="w-3 h-3 mr-1.5" />
+              Edit Name
             </button>
           )}
         </div>
 
         {successMsg && (
-          <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="p-3 rounded-[4px] bg-[#122b1f] border border-[#00e599]/30 text-[#00e599] text-xs flex items-center gap-2">
+            <Check className="w-4 h-4 text-[#00e599] shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-[4px] bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -345,7 +336,7 @@ export const Profile = () => {
         {isEditing ? (
           <form onSubmit={handleUpdateProfile} className="space-y-4 max-w-md">
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Display Name
               </label>
               <input
@@ -354,21 +345,21 @@ export const Profile = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your full name"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full input-flat text-xs"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-400">
+              <label className="block text-xs font-semibold text-[#777777]">
                 Email Address (read-only)
               </label>
               <input
                 type="email"
                 disabled
                 value={user.email}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/50 border border-slate-800/60 text-slate-500 text-sm cursor-not-allowed"
+                className="w-full input-flat text-xs text-[#777777] bg-[#1a1a1a] cursor-not-allowed"
               />
-              <span className="text-[10px] text-slate-500">
+              <span className="text-[10px] text-[#777777]">
                 Email addresses are immutable to safeguard room permissions and auth integrity.
               </span>
             </div>
@@ -380,64 +371,64 @@ export const Profile = () => {
                   setIsEditing(false);
                   setErrorMsg(null);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                className="btn-ghost text-xs px-3 py-2"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving || !name.trim()}
-                className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+                className="btn-white text-xs px-4 py-2 disabled:opacity-50"
               >
-                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
                 Save Changes
               </button>
             </div>
           </form>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
-              <span className="text-slate-500 block">Display Name</span>
-              <span className="font-bold text-slate-200 text-sm">{user.name}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
+              <span className="text-[#777777] block text-[11px]">Display Name</span>
+              <span className="font-semibold text-[#ffffff] text-sm">{user.name}</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
-              <span className="text-slate-500 block">Email Address</span>
-              <span className="font-mono text-slate-200 text-sm">{user.email}</span>
+            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
+              <span className="text-[#777777] block text-[11px]">Email Address</span>
+              <span className="font-mono text-[#ffffff] text-xs">{user.email}</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
-              <span className="text-slate-500 block">Unique User ID</span>
-              <span className="font-mono text-slate-400">{user.id}</span>
+            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
+              <span className="text-[#777777] block text-[11px]">User Identifier</span>
+              <span className="font-mono text-[#999999] text-xs">{user.id}</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
-              <span className="text-slate-500 block">Session Protection</span>
-              <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <ShieldCheck className="w-4 h-4" />
+            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
+              <span className="text-[#777777] block text-[11px]">Session Protection</span>
+              <span className="text-[#00e599] font-medium flex items-center gap-1 text-xs">
+                <ShieldCheck className="w-3.5 h-3.5" />
                 HTTP-Only Cookie Encrypted
               </span>
             </div>
           </div>
         )}
 
-        {/* Quick Links */}
-        <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center gap-3">
+        {/* Quick Navigation Links */}
+        <div className="pt-4 border-t border-[rgba(255,255,255,0.08)] flex flex-wrap items-center gap-3">
           <Link
             to="/library"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+            className="btn-graphite text-xs px-3.5 py-2"
           >
-            <ListMusic className="w-3.5 h-3.5" />
-            Go to Your Library
-            <ArrowRight className="w-3 h-3" />
+            <ListMusic className="w-3.5 h-3.5 mr-1.5" />
+            Go to Library
+            <ArrowRight className="w-3 h-3 ml-1.5" />
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+            className="btn-graphite text-xs px-3.5 py-2"
           >
-            <Music className="w-3.5 h-3.5" />
-            Explore Music Catalogue
-            <ArrowRight className="w-3 h-3" />
+            <Music className="w-3.5 h-3.5 mr-1.5" />
+            Explore Catalogue
+            <ArrowRight className="w-3 h-3 ml-1.5" />
           </Link>
         </div>
       </div>

@@ -10,7 +10,6 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
-  Sparkles,
   ShieldCheck,
   Disc,
 } from 'lucide-react';
@@ -116,21 +115,21 @@ export const Rooms = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
-            <Radio className="w-7 h-7" />
+      <div className="flex-1 flex items-center justify-center px-4 py-20">
+        <div className="max-w-md w-full bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 text-center space-y-4 shadow-2xl">
+          <div className="w-10 h-10 rounded-[4px] bg-[#222222] text-[#cccccc] flex items-center justify-center mx-auto border border-[rgba(255,255,255,0.1)]">
+            <Radio className="w-5 h-5" />
           </div>
-          <h2 className="text-2xl font-black text-white">Vibely Rooms</h2>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-xl font-bold text-[#ffffff]">Vibely Rooms</h2>
+          <p className="text-xs text-[#999999] leading-relaxed">
             Collaborative listening sessions with real-time audio synchronization. Sign in to create your own room or join with a room code.
           </p>
           <div className="pt-2">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all"
+              className="btn-white text-xs px-5 py-2.5"
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-4 h-4 mr-1.5" />
               Sign In to Enter Rooms
             </Link>
           </div>
@@ -140,40 +139,38 @@ export const Rooms = () => {
   }
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 pb-36">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            Real-Time Audio Sync
+          <div className="text-[11px] font-mono uppercase tracking-widest text-[#00e599] mb-1">
+            Real-Time Sync
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            <Radio className="w-8 h-8 text-emerald-400" />
-            Vibely Rooms
+          <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight text-[#ffffff] flex items-center gap-3">
+            Listening Rooms
           </h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-xl">
-            Stream music simultaneously with friends. The host directs playback while members can request their favorite tracks.
+          <p className="text-xs text-[#999999] mt-1 max-w-xl">
+            Stream audio simultaneously with other listeners. Hosts control the deck while members can request tracks in real time.
           </p>
         </div>
 
         {/* Real-time Connection Indicator */}
-        <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-2xl shadow-inner self-start md:self-auto">
+        <div className="flex items-center gap-2 bg-[#181818] border border-[rgba(255,255,255,0.08)] px-3.5 py-1.5 rounded-[4px] self-start md:self-auto">
           <span
-            className={`w-2.5 h-2.5 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               socketStatus === 'connected'
-                ? 'bg-emerald-400 shadow-sm shadow-emerald-400/80 animate-pulse'
+                ? 'bg-[#00e599]'
                 : socketStatus === 'connecting' || socketStatus === 'reconnecting'
-                ? 'bg-amber-400 animate-ping'
+                ? 'bg-amber-400 animate-pulse'
                 : 'bg-rose-400'
             }`}
           />
           <div className="text-xs">
-            <span className="font-semibold text-slate-300">Socket Status: </span>
+            <span className="text-[#999999]">Gateway: </span>
             <span
-              className={`capitalize font-bold ${
+              className={`capitalize font-mono text-[11px] font-semibold ${
                 socketStatus === 'connected'
-                  ? 'text-emerald-400'
+                  ? 'text-[#ffffff]'
                   : socketStatus === 'connecting' || socketStatus === 'reconnecting'
                   ? 'text-amber-400'
                   : 'text-rose-400'
@@ -188,20 +185,18 @@ export const Rooms = () => {
       {/* Action Cards: Create & Join */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Card 1: Create a Room */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors pointer-events-none" />
-
+        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 flex flex-col justify-between">
           <div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
-              <Plus className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-[4px] bg-[#222222] border border-[rgba(255,255,255,0.08)] text-[#ffffff] flex items-center justify-center mb-4">
+              <Plus className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-bold text-white">Create a New Room</h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Become the host and guide the playback. You can approve or reject track change requests.
+            <h2 className="text-base font-bold text-[#ffffff]">Host a Room</h2>
+            <p className="text-xs text-[#999999] mt-1">
+              Start your own broadcast stage. Control the queue and curate tracks for your audience.
             </p>
 
             {createError && (
-              <div className="mt-3 p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+              <div className="mt-3 p-2.5 rounded-[4px] bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{createError}</span>
               </div>
@@ -209,46 +204,46 @@ export const Rooms = () => {
 
             <form onSubmit={handleCreateRoom} className="mt-5 space-y-3.5">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                  Room Name *
+                <label className="block text-[11px] font-semibold text-[#cccccc] mb-1">
+                  Room Title *
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Midnight Beats & Chill"
+                  placeholder="e.g. Midnight Synthwave Studio"
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   maxLength={50}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full input-flat text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-[#cccccc] mb-1">
                   Description (Optional)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Lo-Fi session with the crew"
+                  placeholder="e.g. Ambient electronic and chill instrumentals"
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
                   maxLength={100}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full input-flat text-xs"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isCreating}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer mt-2"
+                className="w-full btn-white text-xs py-2.5 mt-2"
               >
                 {isCreating ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
                     Creating Room...
                   </>
                 ) : (
                   <>
-                    <Radio className="w-4 h-4" />
+                    <Radio className="w-4 h-4 mr-1.5" />
                     Launch Room as Host
                   </>
                 )}
@@ -258,20 +253,18 @@ export const Rooms = () => {
         </div>
 
         {/* Card 2: Join via Code */}
-        <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between relative overflow-hidden group hover:border-cyan-500/30 transition-all">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-colors pointer-events-none" />
-
+        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 flex flex-col justify-between">
           <div>
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4">
-              <Users className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-[4px] bg-[#222222] border border-[rgba(255,255,255,0.08)] text-[#ffffff] flex items-center justify-center mb-4">
+              <Users className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-bold text-white">Join with Room Code</h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Have a shareable code from a host? Enter it below to join the listening party instantly.
+            <h2 className="text-base font-bold text-[#ffffff]">Join with Room Code</h2>
+            <p className="text-xs text-[#999999] mt-1">
+              Have an invite code from another listener? Enter the 4–6 character code to connect.
             </p>
 
             {joinError && (
-              <div className="mt-3 p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+              <div className="mt-3 p-2.5 rounded-[4px] bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{joinError}</span>
               </div>
@@ -279,8 +272,8 @@ export const Rooms = () => {
 
             <form onSubmit={handleJoinByCode} className="mt-5 space-y-3.5">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                  Room Code (6 Characters) *
+                <label className="block text-[11px] font-semibold text-[#cccccc] mb-1">
+                  Room Code *
                 </label>
                 <input
                   type="text"
@@ -288,24 +281,24 @@ export const Rooms = () => {
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                   maxLength={10}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-base font-mono uppercase tracking-widest text-center text-cyan-400 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors font-bold"
+                  className="w-full input-flat text-sm font-mono tracking-widest text-center text-[#ffffff] uppercase font-bold"
                 />
               </div>
 
-              <div className="pt-9">
+              <div className="pt-8">
                 <button
                   type="submit"
                   disabled={isJoining}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 disabled:opacity-50 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
+                  className="w-full btn-graphite text-xs py-2.5 text-[#ffffff] hover:border-[rgba(255,255,255,0.25)]"
                 >
                   {isJoining ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
                       Connecting...
                     </>
                   ) : (
                     <>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 mr-1.5" />
                       Join Room
                     </>
                   )}
@@ -320,9 +313,9 @@ export const Rooms = () => {
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Disc className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-xl font-bold text-white">Active Vibely Rooms</h2>
-            <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
+            <Disc className="w-4 h-4 text-[#00e599]" />
+            <h2 className="text-lg font-bold text-[#ffffff]">Active Listening Sessions</h2>
+            <span className="text-[11px] font-mono bg-[#222222] text-[#cccccc] px-2 py-0.5 rounded-[2px] border border-[rgba(255,255,255,0.06)]">
               {activeRooms.length}
             </span>
           </div>
@@ -330,24 +323,24 @@ export const Rooms = () => {
           <button
             onClick={fetchRooms}
             disabled={loadingRooms}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+            className="btn-graphite text-xs px-3 py-1.5"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loadingRooms ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingRooms ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
 
         {loadingRooms ? (
-          <div className="py-12 flex flex-col items-center justify-center text-slate-400 space-y-2">
-            <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-            <p className="text-xs">Discovering active rooms...</p>
+          <div className="py-12 flex flex-col items-center justify-center text-[#999999] space-y-2">
+            <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
+            <p className="text-xs">Locating live sessions...</p>
           </div>
         ) : activeRooms.length === 0 ? (
-          <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl p-10 text-center space-y-3">
-            <Radio className="w-8 h-8 text-slate-600 mx-auto" />
-            <h3 className="text-base font-bold text-slate-300">No Active Rooms Found</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              There are currently no active public sessions. Be the first to start a room and invite your friends!
+          <div className="bg-[#181818] border border-dashed border-[rgba(255,255,255,0.08)] rounded-[4px] p-10 text-center space-y-3">
+            <Radio className="w-8 h-8 text-[#666666] mx-auto" />
+            <h3 className="text-sm font-semibold text-[#ffffff]">No Active Rooms Online</h3>
+            <p className="text-xs text-[#999999] max-w-sm mx-auto">
+              There are currently no active public listening sessions. Launch a new room above to stream music with friends.
             </p>
           </div>
         ) : (
@@ -355,36 +348,36 @@ export const Rooms = () => {
             {activeRooms.map((room) => (
               <div
                 key={room.code}
-                className="bg-slate-900/70 border border-slate-800/80 hover:border-emerald-500/40 rounded-2xl p-5 shadow-lg flex flex-col justify-between group transition-all"
+                className="bg-[#181818] border border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.2)] rounded-[4px] p-5 flex flex-col justify-between transition-colors"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                    <span className="font-mono text-xs font-bold text-[#00e599] bg-[#122b1f] px-2 py-0.5 rounded-[2px] border border-[#00e599]/30">
                       #{room.code}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-950 px-2 py-0.5 rounded-full border border-slate-800">
-                      <Users className="w-3 h-3 text-emerald-400" />
+                    <span className="inline-flex items-center gap-1 text-[11px] text-[#999999]">
+                      <Users className="w-3 h-3 text-[#cccccc]" />
                       {room.memberCount} listening
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                  <h3 className="text-sm font-bold text-[#ffffff] truncate">
                     {room.name}
                   </h3>
                   {room.description && (
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-xs text-[#999999] mt-1 line-clamp-2">
                       {room.description}
                     </p>
                   )}
 
-                  <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Host: <strong className="text-slate-200">{room.hostName}</strong></span>
+                  <div className="flex items-center gap-1.5 mt-3 text-xs text-[#777777]">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#cccccc]" />
+                    <span>Host: <strong className="text-[#cccccc]">{room.hostName}</strong></span>
                   </div>
 
                   {room.state?.currentSong && (
-                    <div className="mt-3 p-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2 text-xs text-slate-300">
-                      <Music2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <div className="mt-3 p-2 rounded-[3px] bg-[#121212] border border-[rgba(255,255,255,0.06)] flex items-center gap-2 text-xs text-[#cccccc]">
+                      <Music2 className="w-3.5 h-3.5 text-[#00e599] shrink-0" />
                       <span className="truncate">
                         {room.state.currentSong.title} &bull; {room.state.currentSong.artist}
                       </span>
@@ -394,10 +387,10 @@ export const Rooms = () => {
 
                 <button
                   onClick={() => handleJoinExisting(room.code)}
-                  className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-200 text-xs font-bold transition-all cursor-pointer"
+                  className="mt-4 w-full btn-graphite text-xs py-2 hover:bg-[#ffffff] hover:text-[#121212] transition-colors"
                 >
                   Join Session
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </button>
               </div>
             ))}

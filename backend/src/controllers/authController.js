@@ -1,5 +1,10 @@
 import User from '../models/User.js';
 import { signToken, setAuthCookie, clearAuthCookie } from '../services/authService.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
+import { uploadAvatarToCloudinary, deleteAvatarFromCloudinary } from '../services/cloudinaryService.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
@@ -304,11 +309,202 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Authenticate with Google ID token.
+ * POST /api/auth/google
+ */
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Google credential is required.',
+          status: 400,
+        },
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    let user = await User.findOne({
+      $or: [{ googleId }, { email: normalizedEmail }],
+    });
+
+    if (!user) {
+      user = await User.create({
+        name: name || 'Music Lover',
+        email: normalizedEmail,
+        googleId,
+        avatar: picture || null,
+      });
+    } else if (!user.googleId) {
+      user.googleId = googleId;
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+      }
+      await user.save();
+    }
+
+    const token = signToken({ id: user._id.toString(), email: user.email });
+    setAuthCookie(res, token);
+
+    res.status(200).json({
+      success: true,
+      message: 'Google login successful.',
+      user: user.toSafeObject(),
+      token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Upload avatar image for authenticated user.
+ * POST /api/auth/profile/avatar
+ */
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'No image file provided.',
+          status: 400,
+        },
+      });
+    }
+
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Cloudinary configuration is missing.',
+          status: 500,
+        },
+      });
+    }
+
+    const mime = (req.file.mimetype || '').toLowerCase();
+    if (!ALLOWED_MIME_TYPES.has(mime) || !isValidImageBuffer(req.file.buffer)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.',
+          status: 400,
+        },
+      });
+    }
+
+    if (req.file.size > MAX_AVATAR_SIZE) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'File size exceeds the 5 MB limit.',
+          status: 400,
+        },
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found.',
+          status: 404,
+        },
+      });
+    }
+
+    const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (oldPublicId) {
+      try {
+        await deleteAvatarFromCloudinary(oldPublicId);
+      } catch (e) {
+        console.warn('Failed to delete previous avatar from Cloudinary:', e.message);
+      }
+    }
+
+    const uploadResult = await uploadAvatarToCloudinary(req.file.buffer, {
+      public_id: `avatar_${user._id}_${Date.now()}`,
+    });
+
+    user.avatar = uploadResult.secure_url;
+    user.avatarPublicId = uploadResult.public_id;
+    user.cloudinaryPublicId = uploadResult.public_id;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Avatar uploaded successfully.',
+      avatar: user.avatar,
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete avatar for authenticated user.
+ * DELETE /api/auth/profile/avatar
+ */
+export const deleteAvatar = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found.',
+          status: 404,
+        },
+      });
+    }
+
+    const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (oldPublicId && isCloudinaryConfigured()) {
+      try {
+        await deleteAvatarFromCloudinary(oldPublicId);
+      } catch (e) {
+        console.warn('Failed to delete avatar from Cloudinary:', e.message);
+      }
+    }
+
+    user.avatar = null;
+    user.avatarPublicId = null;
+    user.cloudinaryPublicId = null;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Avatar deleted successfully.',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
   logout,
   getMe,
   updateProfile,
+  googleAuth,
+  uploadAvatar,
+  deleteAvatar,
 };
+
 

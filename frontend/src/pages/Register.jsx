@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, User, Mail, Lock, AlertCircle, ArrowRight, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Register = () => {
@@ -41,7 +41,7 @@ export const Register = () => {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'filled_black',
         size: 'large',
-        width: googleButtonRef.current.offsetWidth || 400,
+        width: googleButtonRef.current.offsetWidth || 380,
         text: 'signup_with',
         shape: 'rectangular',
       });
@@ -117,28 +117,20 @@ export const Register = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-        {/* Glow */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              Join the Vibe
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-              Create an account
+    <div className="flex-1 flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 sm:p-10 shadow-2xl relative">
+        <div className="space-y-6">
+          <div className="text-center space-y-1.5">
+            <h1 className="text-2xl font-bold text-[#ffffff] tracking-tight">
+              Create an Account
             </h1>
-            <p className="text-xs md:text-sm text-slate-400">
-              Start streaming and listening with friends in real-time
+            <p className="text-xs text-[#999999]">
+              Join the concert rooms and stream in sync with listeners worldwide
             </p>
           </div>
 
           {serverError && (
-            <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 flex items-start gap-3 text-rose-300 text-xs">
+            <div className="p-3.5 rounded-[4px] bg-rose-950/40 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{serverError}</span>
             </div>
@@ -147,28 +139,23 @@ export const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Full Name
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <User className="w-4 h-4" />
-                </div>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Alex Rivers"
-                  disabled={submitting}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    validationErrors.name
-                      ? 'border-rose-500/60 focus:ring-rose-500/40'
-                      : 'border-slate-800 focus:border-emerald-500/80 focus:ring-emerald-500/20'
-                  }`}
-                />
-              </div>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Alex Rivers"
+                disabled={submitting}
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
+                  validationErrors.name
+                    ? 'border-rose-500/60'
+                    : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
+                }`}
+              />
               {validationErrors.name && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.name}</p>
               )}
@@ -176,28 +163,23 @@ export const Register = () => {
 
             {/* Email Address */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Email Address
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="alex@example.com"
-                  disabled={submitting}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    validationErrors.email
-                      ? 'border-rose-500/60 focus:ring-rose-500/40'
-                      : 'border-slate-800 focus:border-emerald-500/80 focus:ring-emerald-500/20'
-                  }`}
-                />
-              </div>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="alex@example.com"
+                disabled={submitting}
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
+                  validationErrors.email
+                    ? 'border-rose-500/60'
+                    : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
+                }`}
+              />
               {validationErrors.email && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.email}</p>
               )}
@@ -205,28 +187,23 @@ export const Register = () => {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Password
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="At least 6 characters"
-                  disabled={submitting}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    validationErrors.password
-                      ? 'border-rose-500/60 focus:ring-rose-500/40'
-                      : 'border-slate-800 focus:border-emerald-500/80 focus:ring-emerald-500/20'
-                  }`}
-                />
-              </div>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="At least 6 characters"
+                disabled={submitting}
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
+                  validationErrors.password
+                    ? 'border-rose-500/60'
+                    : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
+                }`}
+              />
               {validationErrors.password && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.password}</p>
               )}
@@ -234,28 +211,23 @@ export const Register = () => {
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-[#cccccc]">
                 Confirm Password
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  id="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Repeat your password"
-                  disabled={submitting}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/80 border text-slate-100 placeholder-slate-600 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    validationErrors.confirmPassword
-                      ? 'border-rose-500/60 focus:ring-rose-500/40'
-                      : 'border-slate-800 focus:border-emerald-500/80 focus:ring-emerald-500/20'
-                  }`}
-                />
-              </div>
+              <input
+                type="password"
+                name="confirmPassword"
+                id="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Repeat your password"
+                disabled={submitting}
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
+                  validationErrors.confirmPassword
+                    ? 'border-rose-500/60'
+                    : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
+                }`}
+              />
               {validationErrors.confirmPassword && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.confirmPassword}</p>
               )}
@@ -264,39 +236,36 @@ export const Register = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-3 py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all duration-150 disabled:opacity-60 cursor-pointer"
+              className="w-full mt-3 btn-white py-2.5 text-xs font-bold"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   <span>Creating Account...</span>
                 </>
               ) : (
-                <>
-                  <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+                <span>Create Account</span>
               )}
             </button>
           </form>
 
-          <div className="text-center pt-2 border-t border-slate-800/60">
-            <p className="text-xs text-slate-400">
-              Already have an account?{' '}
-              <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2">
-                Log in instead
-              </Link>
-            </p>
+          {/* Google Sign-Up */}
+          <div className="space-y-3 pt-1">
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" />
+              <span className="text-[11px] text-[#777777] font-medium">or continue with</span>
+              <div className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" />
+            </div>
+            <div ref={googleButtonRef} className="w-full flex justify-center overflow-hidden rounded-[4px]" />
           </div>
 
-          {/* Google Sign-Up */}
-          <div className="space-y-3">
-            <div className="relative flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-800" />
-              <span className="text-[11px] text-slate-500 font-medium">or continue with</span>
-              <div className="flex-1 h-px bg-slate-800" />
-            </div>
-            <div ref={googleButtonRef} className="w-full flex justify-center overflow-hidden rounded-xl" />
+          <div className="text-center pt-2 border-t border-[rgba(255,255,255,0.08)]">
+            <p className="text-xs text-[#999999]">
+              Already have an account?{' '}
+              <Link to="/login" className="text-[#ffffff] hover:underline font-semibold">
+                Sign in instead
+              </Link>
+            </p>
           </div>
         </div>
       </div>

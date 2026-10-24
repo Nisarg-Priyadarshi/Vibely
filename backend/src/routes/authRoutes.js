@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, logout, getMe, updateProfile } from '../controllers/authController.js';
+import { register, login, logout, getMe, updateProfile, googleAuth, uploadAvatar, deleteAvatar } from '../controllers/authController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { handleAvatarUpload } from '../middleware/uploadMiddleware.js';
 
