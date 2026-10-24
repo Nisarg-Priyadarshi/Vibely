@@ -1,8 +1,19 @@
 import 'dotenv/config';
+import dns from 'dns';
 import http from 'http';
 import app from './app.js';
 import { connectDB } from './config/db.js';
 import { initializeSocket } from './sockets/socket.js';
+
+// Configure DNS resolvers to avoid querySrv ECONNREFUSED on MongoDB Atlas connections
+try {
+  const dnsServers = process.env.DNS_SERVERS
+    ? process.env.DNS_SERVERS.split(',').map((s) => s.trim())
+    : ['8.8.8.8', '8.8.4.4', '1.1.1.1'];
+  dns.setServers(dnsServers);
+} catch (err) {
+  console.warn('⚠️  [DNS] Could not set custom DNS servers:', err.message);
+}
 
 const PORT = process.env.PORT || 5000;
 

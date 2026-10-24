@@ -1,4 +1,15 @@
+import dns from 'dns';
 import mongoose from 'mongoose';
+
+// Fix for Node.js / Windows querySrv ECONNREFUSED when resolving MongoDB Atlas SRV records
+try {
+  const dnsServers = process.env.DNS_SERVERS
+    ? process.env.DNS_SERVERS.split(',').map((s) => s.trim())
+    : ['8.8.8.8', '8.8.4.4', '1.1.1.1'];
+  dns.setServers(dnsServers);
+} catch (err) {
+  console.warn('⚠️  [DNS] Could not set custom DNS servers:', err.message);
+}
 
 /**
  * Connects to MongoDB using the URI specified in MONGODB_URI.

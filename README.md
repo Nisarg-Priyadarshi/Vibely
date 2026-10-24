@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Vibely 🎵
 
 A full-stack music streaming web application inspired by Spotify, featuring **Vibely Rooms** for real-time collaborative listening.
