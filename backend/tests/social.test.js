@@ -86,10 +86,19 @@ async function runTests() {
       'Search results exclude current user (Alice)'
     );
 
-    // 3. Friend Request Validations
-    console.log(colors.yellow('\n3. Testing friend request creation & validations:'));
-    // Self request
-    const selfRes = await fetch(`${BASE_URL}/friends/requests`, {
+    // 3. Friend Request Validations & Endpoint Testing (/api/friends/request and /api/friends/requests)
+    console.log(colors.yellow('\n3. Testing friend request creation & validations (/api/friends/request and /requests):'));
+
+    // 3a. Unauthenticated request rejected (HTTP 401)
+    const unauthReqRes = await fetch(`${BASE_URL}/friends/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientId: userB.user.id }),
+    });
+    assert(unauthReqRes.status === 401, 'Unauthenticated POST /api/friends/request rejected with HTTP 401');
+
+    // 3b. Self request rejected via /api/friends/request (HTTP 400)
+    const selfRes = await fetch(`${BASE_URL}/friends/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -97,10 +106,10 @@ async function runTests() {
       },
       body: JSON.stringify({ recipientId: userA.user.id }),
     });
-    assert(selfRes.status === 400, 'Sending friend request to self rejected with HTTP 400');
+    assert(selfRes.status === 400, 'Sending friend request to self via /api/friends/request rejected with HTTP 400');
 
-    // Invalid recipient ID
-    const invalidIdRes = await fetch(`${BASE_URL}/friends/requests`, {
+    // 3c. Invalid recipient ID rejected (HTTP 400)
+    const invalidIdRes = await fetch(`${BASE_URL}/friends/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -110,8 +119,8 @@ async function runTests() {
     });
     assert(invalidIdRes.status === 400, 'Invalid recipient ID rejected with HTTP 400');
 
-    // Alice sends friend request to Bob
-    const sendReqRes = await fetch(`${BASE_URL}/friends/requests`, {
+    // 3d. Alice sends friend request to Bob via /api/friends/request (HTTP 201)
+    const sendReqRes = await fetch(`${BASE_URL}/friends/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,12 +129,20 @@ async function runTests() {
       body: JSON.stringify({ recipientId: userB.user.id }),
     });
     const sendReqData = await sendReqRes.json();
-    assert(sendReqRes.status === 201, 'Alice sent friend request to Bob (HTTP 201)');
+    assert(sendReqRes.status === 201, 'POST /api/friends/request creates pending friend request (HTTP 201)');
     assert(sendReqData.status === 'pending', 'Friendship status marked as pending');
+    assert(!!sendReqData.friendshipId, 'Friendship ID returned from request creation');
     const firstRequestId = sendReqData.friendshipId;
 
-    // Duplicate request rejection
-    const dupReqRes = await fetch(`${BASE_URL}/friends/requests`, {
+    // Verify persistence in MongoDB
+    const persistedFriendship = await Friendship.findById(firstRequestId);
+    assert(
+      persistedFriendship && persistedFriendship.status === 'pending',
+      'Friend request persisted in MongoDB with pending status'
+    );
+
+    // 3e. Duplicate request rejection via /api/friends/request (HTTP 400)
+    const dupReqRes = await fetch(`${BASE_URL}/friends/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,6 +151,20 @@ async function runTests() {
       body: JSON.stringify({ recipientId: userB.user.id }),
     });
     assert(dupReqRes.status === 400, 'Duplicate pending friend request rejected with HTTP 400');
+
+    // 3f. Sending request via plural /api/friends/requests also works for compatibility
+    const charlieReqRes = await fetch(`${BASE_URL}/friends/requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userA.token}`,
+      },
+      body: JSON.stringify({ recipientId: userC.user.id }),
+    });
+    assert(charlieReqRes.status === 201, 'POST /api/friends/requests works identically (HTTP 201)');
+    const charlieReqData = await charlieReqRes.json();
+    // Clean up Alice -> Charlie request so it doesn't interfere
+    await Friendship.findByIdAndDelete(charlieReqData.friendshipId);
 
     // 4. Pending Requests List
     console.log(colors.yellow('\n4. Testing pending friend requests listing:'));
@@ -197,6 +228,56 @@ async function runTests() {
     const acceptData = await acceptRes.json();
     assert(acceptRes.status === 200, 'Bob accepts Alice friend request (HTTP 200)');
     assert(acceptData.success === true, 'Accept returns success: true');
+
+    // 6b. Test /api/friends/respond unified endpoint
+    console.log(colors.yellow('\n6b. Testing POST /api/friends/respond endpoint:'));
+    // Charlie sends friend request to Bob
+    const charlieToBob = await fetch(`${BASE_URL}/friends/request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userC.token}`,
+      },
+      body: JSON.stringify({ recipientId: userB.user.id }),
+    }).then((r) => r.json());
+
+    // Bob rejects via /api/friends/respond
+    const rejectRespondRes = await fetch(`${BASE_URL}/friends/respond`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userB.token}`,
+      },
+      body: JSON.stringify({ requestId: charlieToBob.friendshipId, action: 'reject' }),
+    });
+    assert(rejectRespondRes.status === 200, 'POST /api/friends/respond with action: reject returns HTTP 200');
+
+    // Charlie re-sends to Bob
+    const charlieToBob2 = await fetch(`${BASE_URL}/friends/request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userC.token}`,
+      },
+      body: JSON.stringify({ recipientId: userB.user.id }),
+    }).then((r) => r.json());
+
+    // Bob accepts via /api/friends/respond
+    const acceptRespondRes = await fetch(`${BASE_URL}/friends/respond`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userB.token}`,
+      },
+      body: JSON.stringify({ requestId: charlieToBob2.friendshipId, action: 'accept' }),
+    });
+    assert(acceptRespondRes.status === 200, 'POST /api/friends/respond with action: accept returns HTTP 200');
+
+    // Clean up Bob-Charlie friendship so Bob only has Alice as friend for remaining tests
+    await fetch(`${BASE_URL}/friends/${userC.user.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${userB.token}` },
+    });
 
     // Check friends list for both users
     const aliceFriends = await fetch(`${BASE_URL}/friends`, {

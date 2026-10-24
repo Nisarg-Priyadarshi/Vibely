@@ -95,13 +95,18 @@ export const RoomDetail = () => {
   const [inviteError, setInviteError] = useState(null);
 
   // Auto-join room on mount if not currently connected to this room
+  const hasAttemptedJoin = useRef(false);
   useEffect(() => {
-    if (code && (!currentRoom || currentRoom.code !== code.toUpperCase())) {
-      joinRoom(code).catch((err) => {
-        console.warn('Auto-join room error:', err.message);
-      });
+    if (code && !hasAttemptedJoin.current) {
+      hasAttemptedJoin.current = true;
+      if (!currentRoom || currentRoom.code !== code.toUpperCase()) {
+        joinRoom(code).catch((err) => {
+          console.warn('Auto-join room error:', err.message);
+          navigate('/rooms');
+        });
+      }
     }
-  }, [code, currentRoom, joinRoom]);
+  }, [code, currentRoom, joinRoom, navigate]);
 
   // Load songs catalogue for track selection/requests
   useEffect(() => {
@@ -182,7 +187,7 @@ export const RoomDetail = () => {
   // Host playback controls
   const handleHostTogglePlay = async () => {
     if (!isHost) return;
-    const action = roomState?.isPlaying ? 'pause' : 'play';
+    const action = isPlaying ? 'pause' : 'play';
     const payload = { position: currentTime };
     await hostControl({ action, payload });
   };
@@ -270,13 +275,15 @@ export const RoomDetail = () => {
         <div
           className={`px-4 py-3 rounded-[4px] border text-xs font-semibold flex items-center justify-between shadow-lg transition-all ${roomNotification.type === 'error'
               ? 'bg-rose-950/90 border-rose-500/50 text-rose-200'
-              : roomNotification.type === 'success'
-                ? 'bg-[#122b1f] border-[#00e599]/50 text-[#00e599]'
-                : 'bg-[#1e1e1e] border-[rgba(255,255,255,0.1)] text-[#ffffff]'
+              : roomNotification.type === 'warning'
+                ? 'bg-amber-950/90 border-amber-500/50 text-amber-200'
+                : roomNotification.type === 'success'
+                  ? 'bg-[#122b1f] border-[#00e599]/50 text-[#00e599]'
+                  : 'bg-[#1e1e1e] border-[rgba(255,255,255,0.1)] text-[#ffffff]'
             }`}
         >
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-[#00e599] shrink-0" />
+            <Sparkles className={`w-4 h-4 shrink-0 ${roomNotification.type === 'warning' ? 'text-amber-400' : 'text-[#00e599]'}`} />
             <span>{roomNotification.message}</span>
           </div>
         </div>

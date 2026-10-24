@@ -12,6 +12,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Disc,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRoom } from '../context/RoomContext';
@@ -19,7 +20,7 @@ import { API_BASE_URL } from '../config/api';
 
 export const Rooms = () => {
   const { user } = useAuth();
-  const { createRoom, joinRoom, socketStatus } = useRoom();
+  const { createRoom, joinRoom, socketStatus, roomNotification } = useRoom();
   const navigate = useNavigate();
 
   // Create Room state
@@ -140,6 +141,26 @@ export const Rooms = () => {
 
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-[2rem] sm:px-[3rem] pt-[3rem] pb-[4rem] space-y-[2rem]">
+      {/* Transient Notification Banner */}
+      {roomNotification && (
+        <div
+          className={`px-4 py-3 rounded-[4px] border text-xs font-semibold flex items-center justify-between shadow-lg transition-all ${
+            roomNotification.type === 'error'
+              ? 'bg-rose-950/90 border-rose-500/50 text-rose-200'
+              : roomNotification.type === 'warning'
+                ? 'bg-amber-950/90 border-amber-500/50 text-amber-200'
+                : roomNotification.type === 'success'
+                  ? 'bg-[#122b1f] border-[#00e599]/50 text-[#00e599]'
+                  : 'bg-[#1e1e1e] border-[rgba(255,255,255,0.1)] text-[#ffffff]'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Sparkles className={`w-4 h-4 shrink-0 ${roomNotification.type === 'warning' ? 'text-amber-400' : 'text-[#00e599]'}`} />
+            <span>{roomNotification.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] pb-[1.5rem]">
         <div>

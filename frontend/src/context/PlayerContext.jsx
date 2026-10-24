@@ -16,6 +16,43 @@ export const PlayerProvider = ({ children }) => {
   const [queue, setQueue] = useState([]);
   const [queueIndex, setQueueIndex] = useState(-1);
 
+  const currentTrackRef = useRef(null);
+  const currentTimeRef = useRef(0);
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => {
+    currentTrackRef.current = currentTrack;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Safely attempt audio.play() with proper AbortError rejection handling
+  const safePlay = useCallback((audio) => {
+    if (!audio) return Promise.resolve();
+    setPlaybackError(null);
+    const p = audio.play();
+    if (p !== undefined && typeof p.catch === 'function') {
+      p.catch((err) => {
+        // Interrupted by pause() or new load - normal audio lifecycle, NOT a blocked error
+        if (err.name === 'AbortError') {
+          return;
+        }
+        console.warn('Playback error or autoplay prevented:', err.name, err.message);
+        isPlayingRef.current = false;
+        setIsPlaying(false);
+        setIsLoading(false);
+        setPlaybackError('Playback was blocked. Click play to start listening.');
+      });
+    }
+    return p;
+  }, []);
+
   // Initialize Audio element once
   useEffect(() => {
     const audio = new Audio();
@@ -24,6 +61,7 @@ export const PlayerProvider = ({ children }) => {
     audioRef.current = audio;
 
     const onTimeUpdate = () => {
+      currentTimeRef.current = audio.currentTime;
       setCurrentTime(audio.currentTime);
     };
 
@@ -37,16 +75,19 @@ export const PlayerProvider = ({ children }) => {
     };
 
     const onPlaying = () => {
+      isPlayingRef.current = true;
       setIsLoading(false);
       setIsPlaying(true);
       setPlaybackError(null);
     };
 
     const onPause = () => {
+      isPlayingRef.current = false;
       setIsPlaying(false);
     };
 
     const onError = () => {
+      isPlayingRef.current = false;
       setIsLoading(false);
       setIsPlaying(false);
       setPlaybackError('Failed to load or play audio track. Please check network connection.');
@@ -70,6 +111,61 @@ export const PlayerProvider = ({ children }) => {
     };
   }, []);
 
+  // Load a track without necessarily playing it
+  const loadTrack = useCallback((track, { autoPlay = false, startTime = 0 } = {}) => {
+    if (!track || !track.audioUrl) return;
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const currentId = currentTrackRef.current ? (currentTrackRef.current.id || currentTrackRef.current._id)?.toString() : null;
+    const newId = (track.id || track._id)?.toString();
+
+    // If the same track is already loaded
+    if (currentId === newId && audio.src) {
+      if (typeof startTime === 'number' && Math.abs(audio.currentTime - startTime) > 2) {
+        audio.currentTime = startTime;
+        currentTimeRef.current = startTime;
+        setCurrentTime(startTime);
+      }
+      if (autoPlay) {
+        if (audio.paused) {
+          safePlay(audio);
+        }
+      } else {
+        if (!audio.paused) {
+          audio.pause();
+        }
+      }
+      return;
+    }
+
+    // New track
+    setCurrentTrack(track);
+    currentTrackRef.current = track;
+    currentTimeRef.current = startTime || 0;
+    setCurrentTime(startTime || 0);
+    setDuration(track.duration || 0);
+    setIsLoading(true);
+    setPlaybackError(null);
+
+    audio.src = track.audioUrl;
+    audio.load();
+
+    if (startTime > 0) {
+      audio.currentTime = startTime;
+    }
+
+    if (autoPlay) {
+      safePlay(audio);
+    } else {
+      audio.pause();
+      isPlayingRef.current = false;
+      setIsPlaying(false);
+      setIsLoading(false);
+    }
+  }, [safePlay]);
+
   // Play a specific track
   const playTrack = useCallback((track, newQueue = null) => {
     if (!track || !track.audioUrl) return;
@@ -77,83 +173,58 @@ export const PlayerProvider = ({ children }) => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    setPlaybackError(null);
-
     // If queue is provided, update queue and index
     if (newQueue && Array.isArray(newQueue) && newQueue.length > 0) {
       setQueue(newQueue);
-      const index = newQueue.findIndex((s) => (s.id || s._id) === (track.id || track._id));
+      const index = newQueue.findIndex((s) => (s.id || s._id)?.toString() === (track.id || track._id)?.toString());
       setQueueIndex(index >= 0 ? index : 0);
     }
 
-    // If clicking the current track, toggle playback
-    const currentId = currentTrack ? currentTrack.id || currentTrack._id : null;
-    const newId = track.id || track._id;
+    const currentId = currentTrackRef.current ? (currentTrackRef.current.id || currentTrackRef.current._id)?.toString() : null;
+    const newId = (track.id || track._id)?.toString();
 
     if (currentId === newId) {
       if (audio.paused) {
-        audio.play().catch((err) => {
-          console.warn('Autoplay prevented:', err.message);
-          setPlaybackError('Playback restricted by browser. Click play to listen.');
-        });
+        safePlay(audio);
       } else {
         audio.pause();
       }
       return;
     }
 
-    // Load and play new track
-    setCurrentTrack(track);
-    setCurrentTime(0);
-    setDuration(track.duration || 0);
-    setIsLoading(true);
-
-    audio.src = track.audioUrl;
-    audio.load();
-
-    audio.play().catch((err) => {
-      console.warn('Playback error or autoplay prevented:', err.message);
-      setIsPlaying(false);
-      setIsLoading(false);
-      setPlaybackError('Playback was blocked. Click play to start listening.');
-    });
-  }, [currentTrack]);
+    loadTrack(track, { autoPlay: true, startTime: 0 });
+  }, [loadTrack, safePlay]);
 
   // Toggle Play / Pause
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
+    if (!audio || !currentTrackRef.current) return;
 
     if (audio.paused) {
-      setPlaybackError(null);
-      audio.play().catch((err) => {
-        console.warn('Play error:', err.message);
-        setPlaybackError('Could not start playback.');
-      });
+      safePlay(audio);
     } else {
       audio.pause();
     }
-  }, [currentTrack]);
+  }, [safePlay]);
 
-  // Force play (for room synchronization)
+  // Force play (for room synchronization - only called on explicit play command)
   const forcePlay = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
+    if (!audio || !currentTrackRef.current) return;
     if (audio.paused) {
-      setPlaybackError(null);
-      audio.play().catch((err) => {
-        console.warn('Playback prevented or play error:', err.message);
-      });
+      safePlay(audio);
     }
-  }, [currentTrack]);
+  }, [safePlay]);
 
-  // Force pause (for room synchronization)
+  // Force pause (for room synchronization - must never trigger play)
   const forcePause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     if (!audio.paused) {
       audio.pause();
     }
+    isPlayingRef.current = false;
+    setIsPlaying(false);
   }, []);
 
   // Next Track
@@ -248,6 +319,7 @@ export const PlayerProvider = ({ children }) => {
         playbackError,
         queue,
         queueIndex,
+        loadTrack,
         playTrack,
         togglePlay,
         forcePlay,
@@ -257,6 +329,8 @@ export const PlayerProvider = ({ children }) => {
         toggleMute,
         nextTrack,
         prevTrack,
+        currentTrackRef,
+        currentTimeRef,
       }}
     >
       {children}

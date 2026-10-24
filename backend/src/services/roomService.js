@@ -5,6 +5,7 @@ import Song from '../models/Song.js';
 // Note: Active rooms reside in-memory for this single-instance deployment and reset on server restart.
 const rooms = new Map(); // code -> room object
 const socketToRoom = new Map(); // socketId -> room code
+const cancelledRooms = new Set(); // codes of cancelled rooms that cannot be rejoined
 
 const ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // Unambiguous chars
 const MAX_MEMBERS_PER_ROOM = 50;
@@ -27,7 +28,7 @@ export const generateRoomCode = () => {
       part2 += ALPHABET[bytes[i] % ALPHABET.length];
     }
     code = `${part1}${part2}`;
-  } while (rooms.has(code));
+  } while (rooms.has(code) || cancelledRooms.has(code));
   return code;
 };
 
@@ -152,9 +153,14 @@ export const joinRoom = ({ code, user, socketId }) => {
   }
 
   const normalizedCode = code.trim().toUpperCase();
+
+  if (cancelledRooms.has(normalizedCode)) {
+    throw new Error('This room has been closed.');
+  }
+
   const room = rooms.get(normalizedCode);
 
-  if (!room) {
+  if (!room || room.isCancelled) {
     throw new Error(`Room with code "${normalizedCode}" not found.`);
   }
 
@@ -189,44 +195,79 @@ export const joinRoom = ({ code, user, socketId }) => {
 };
 
 /**
- * Leave a room. Reassigns host if host left, or deletes room if empty.
+ * Leave a room.
+ * When the host leaves, the room is cancelled and closed, and all members are removed.
+ * When an ordinary member leaves, only that member is removed; the room stays active.
  */
 export const leaveRoom = ({ code, userId, socketId }) => {
   const normalizedCode = code ? code.trim().toUpperCase() : socketToRoom.get(socketId);
   if (!normalizedCode) return null;
 
+  if (cancelledRooms.has(normalizedCode)) {
+    return null;
+  }
+
   const room = rooms.get(normalizedCode);
-  if (!room) return null;
+  if (!room || room.isCancelled) return null;
 
   const strUserId = userId.toString();
+  const isHost = room.hostId === strUserId;
+  const isMember = room.members.some((m) => m.userId === strUserId);
 
-  // Remove member
+  if (!isHost && !isMember) {
+    return null;
+  }
+
+  // If the departing user is the host: cancel and close the room completely
+  if (isHost) {
+    room.isCancelled = true;
+    cancelledRooms.add(normalizedCode);
+    rooms.delete(normalizedCode);
+
+    const affectedMembers = [...room.members];
+
+    // Clean up socketToRoom mappings for all room members and host
+    for (const m of affectedMembers) {
+      if (m.socketId) {
+        socketToRoom.delete(m.socketId);
+      }
+    }
+    if (socketId) {
+      socketToRoom.delete(socketId);
+    }
+
+    // Clean up room state, pending requests, and messages
+    room.requests.clear();
+    room.messages = [];
+    room.state.isPlaying = false;
+
+    return {
+      cancelled: true,
+      code: normalizedCode,
+      reason: 'The host left. This room has been closed.',
+      members: affectedMembers,
+    };
+  }
+
+  // Non-host member leaves: remove only that member
   room.members = room.members.filter((m) => m.userId !== strUserId);
-  socketToRoom.delete(socketId);
+  if (socketId) {
+    socketToRoom.delete(socketId);
+  }
 
   // If room is now empty, delete it
   if (room.members.length === 0) {
     rooms.delete(normalizedCode);
-    return { deleted: true, code: normalizedCode };
-  }
-
-  let newHost = null;
-
-  // If host departed, assign new host deterministically to the oldest remaining member
-  if (room.hostId === strUserId) {
-    const nextHostMember = room.members[0];
-    room.hostId = nextHostMember.userId;
-    room.hostName = nextHostMember.name;
-    room.state.hostId = nextHostMember.userId;
-    newHost = {
-      userId: nextHostMember.userId,
-      name: nextHostMember.name,
+    return {
+      deleted: true,
+      code: normalizedCode,
+      reason: 'Room was closed because all listeners left.',
     };
   }
 
   return {
+    cancelled: false,
     deleted: false,
-    newHost,
     room: serializeRoom(room),
   };
 };
@@ -406,7 +447,10 @@ export const respondToRequest = async ({ code, hostUserId, requestId, approved }
  */
 export const getRoom = (code) => {
   if (!code) return null;
-  const room = rooms.get(code.trim().toUpperCase());
+  const normalizedCode = code.trim().toUpperCase();
+  if (cancelledRooms.has(normalizedCode)) return null;
+  const room = rooms.get(normalizedCode);
+  if (!room || room.isCancelled) return null;
   return serializeRoom(room);
 };
 
@@ -414,13 +458,32 @@ export const getRoom = (code) => {
  * Get list of active rooms.
  */
 export const getAllRooms = () => {
-  return Array.from(rooms.values()).map(serializeRoom);
+  return Array.from(rooms.values())
+    .filter((r) => !r.isCancelled && !cancelledRooms.has(r.code))
+    .map(serializeRoom);
 };
 
 /**
  * Helper to get code by socket ID.
  */
 export const getCodeBySocket = (socketId) => socketToRoom.get(socketId);
+
+/**
+ * Helper to check if a room code was cancelled.
+ */
+export const isRoomCancelled = (code) => {
+  if (!code) return false;
+  return cancelledRooms.has(code.trim().toUpperCase());
+};
+
+/**
+ * Test utility to reset all room state.
+ */
+export const _resetRooms = () => {
+  rooms.clear();
+  socketToRoom.clear();
+  cancelledRooms.clear();
+};
 
 export default {
   createRoom,
@@ -432,4 +495,6 @@ export default {
   getRoom,
   getAllRooms,
   getCodeBySocket,
+  isRoomCancelled,
+  _resetRooms,
 };

@@ -314,6 +314,59 @@ async function runRoomTests() {
     assert(syncRes.success === true, 'room:sync_request succeeds');
     assert(syncRes.state.position === 45.5, 'Synchronized state reflects current position');
 
+    // 5f. Host pauses playback directly -> Broadcast pause to all room members
+    const memberPausePromise = waitForEvent(member1Socket, 'room:state_updated');
+    const memberPauseEventPromise = waitForEvent(member1Socket, 'room:pause');
+    const pauseRes = await emitWithAck(hostSocket, 'room:host_control', {
+      code: createdRoomCode,
+      action: 'pause',
+      payload: { position: 45.5 },
+    });
+    assert(
+      pauseRes.success === true && pauseRes.state.isPlaying === false,
+      'Host pauses playback successfully (isPlaying: false)'
+    );
+
+    const memberPauseUpdate = await memberPausePromise;
+    assert(
+      memberPauseUpdate.state.isPlaying === false && memberPauseUpdate.action === 'pause',
+      'Member 1 received room:state_updated with isPlaying: false and action: pause'
+    );
+
+    const memberPauseEvent = await memberPauseEventPromise;
+    assert(
+      memberPauseEvent.state.isPlaying === false,
+      'Member 1 received room:pause broadcast event'
+    );
+
+    const syncAfterPause = await emitWithAck(member1Socket, 'room:sync_request', { code: createdRoomCode });
+    assert(syncAfterPause.state.isPlaying === false, 'Synchronized state reflects paused playback');
+
+    // 5g. Host resumes playback directly -> Broadcast play to all room members
+    const memberPlayPromise = waitForEvent(member1Socket, 'room:state_updated');
+    const memberPlayEventPromise = waitForEvent(member1Socket, 'room:play');
+    const playRes = await emitWithAck(hostSocket, 'room:host_control', {
+      code: createdRoomCode,
+      action: 'play',
+      payload: { position: 45.5 },
+    });
+    assert(
+      playRes.success === true && playRes.state.isPlaying === true,
+      'Host resumes playback successfully (isPlaying: true)'
+    );
+
+    const memberPlayUpdate = await memberPlayPromise;
+    assert(
+      memberPlayUpdate.state.isPlaying === true && memberPlayUpdate.action === 'play',
+      'Member 1 received room:state_updated with isPlaying: true and action: play'
+    );
+
+    const memberPlayEvent = await memberPlayEventPromise;
+    assert(
+      memberPlayEvent.state.isPlaying === true,
+      'Member 1 received room:play broadcast event'
+    );
+
     // 6. Member Playback Requests & Host Approval/Rejection
     console.log(colors.yellow('\n6. Testing Member Playback Requests & Host Responses:'));
 
@@ -376,8 +429,8 @@ async function runRoomTests() {
     const stateAfterApproval = await memberStateAfterApprovalPromise;
     assert(stateAfterApproval.state.isPlaying === false, 'Room state updated to paused after host approval');
 
-    // 7. Member Join, Host Departure, and Deterministic Host Reassignment
-    console.log(colors.yellow('\n7. Testing Host Departure & Reassignment:'));
+    // 7. Non-host leaves: only that member is removed; room remains active
+    console.log(colors.yellow('\n7. Testing Non-Host Leave (Room Remains Active):'));
 
     member2Socket = io(SOCKET_URL, {
       auth: { token: member2Token },
@@ -392,45 +445,102 @@ async function runRoomTests() {
     });
 
     await emitWithAck(member2Socket, 'room:join', { code: createdRoomCode });
-    assert(member2Socket.connected, 'Member 2 joined room (3 total members)');
+    assert(member2Socket.connected, 'Member 2 joined room (3 total members: Host, Member 1, Member 2)');
 
-    // Host A leaves room
-    const member1HostChangedPromise = waitForEvent(member1Socket, 'room:host_changed');
-    const member1MemberUpdatePromise = waitForEvent(member1Socket, 'room:members_updated');
+    const member1UpdatePromise = waitForEvent(member1Socket, 'room:members_updated');
 
+    // Member 2 (non-host) leaves
+    const member2LeaveRes = await emitWithAck(member2Socket, 'room:leave', { code: createdRoomCode });
+    assert(member2LeaveRes.success === true, 'Member 2 (non-host) leaves successfully');
+
+    const updateAfterMember2Leave = await member1UpdatePromise;
+    assert(
+      updateAfterMember2Leave.members.length === 2 && updateAfterMember2Leave.hostId === hostId,
+      'Room remains active with 2 members and original host ID preserved'
+    );
+
+    const roomStillActiveRes = await fetch(`${BASE_URL}/rooms/${createdRoomCode}`, {
+      headers: { Authorization: `Bearer ${hostToken}` },
+    });
+    assert(roomStillActiveRes.status === 200, 'Room remains active and accessible via REST API (HTTP 200)');
+
+    // 8. Host intentionally leaves: room closes, all members receive cancellation event, and room code cannot be reused
+    console.log(colors.yellow('\n8. Testing Host Intentional Leave & Room Cancellation:'));
+
+    const member1RoomClosedPromise = waitForEvent(member1Socket, 'room:closed');
+
+    // Host leaves room intentionally
     const hostLeaveRes = await emitWithAck(hostSocket, 'room:leave', { code: createdRoomCode });
-    assert(hostLeaveRes.success === true, 'Host leaves room successfully');
+    assert(hostLeaveRes.success === true, 'Host leaves room intentionally with success');
 
-    const hostChangedEvent = await member1HostChangedPromise;
+    const roomClosedEvent = await member1RoomClosedPromise;
     assert(
-      hostChangedEvent.newHostId === member1Id,
-      'Host role deterministically reassigned to oldest remaining member (Member 1)'
+      roomClosedEvent.reason === 'The host left. This room has been closed.',
+      'Remaining member received room:closed with reason "The host left. This room has been closed."'
     );
 
-    const membersAfterHostLeave = await member1MemberUpdatePromise;
+    // Cancelled room cannot be rejoined with old code
+    const rejoinAttempt = await emitWithAck(member1Socket, 'room:join', { code: createdRoomCode });
     assert(
-      membersAfterHostLeave.members.length === 2 && membersAfterHostLeave.hostId === member1Id,
-      'Member list updated after host leave with new hostId'
+      rejoinAttempt.success === false && (rejoinAttempt.error.includes('closed') || rejoinAttempt.error.includes('not found')),
+      'Attempt to rejoin cancelled room with old code is rejected'
     );
 
-    // 8. Room Cleanup When Empty
-    console.log(colors.yellow('\n8. Testing Room Deletion When Empty:'));
-
-    await emitWithAck(member2Socket, 'room:leave', { code: createdRoomCode });
-    await emitWithAck(member1Socket, 'room:leave', { code: createdRoomCode });
-
-    const emptyRoomRes = await fetch(`${BASE_URL}/rooms/${createdRoomCode}`, {
+    // Cancelled room is removed from active registry
+    const cancelledRoomRest = await fetch(`${BASE_URL}/rooms/${createdRoomCode}`, {
       headers: { Authorization: `Bearer ${hostToken}` },
     });
-    assert(emptyRoomRes.status === 404, 'Room was deleted from registry after all members left (HTTP 404)');
+    assert(cancelledRoomRest.status === 404, 'Cancelled room is removed from registry (HTTP 404)');
 
-    const restCheckDeleted = await fetch(`${BASE_URL}/rooms`, {
+    const allRoomsRest = await fetch(`${BASE_URL}/rooms`, {
       headers: { Authorization: `Bearer ${hostToken}` },
     });
-    const restCheckDeletedData = await restCheckDeleted.json();
+    const cancelledCheckData = await allRoomsRest.json();
     assert(
-      !restCheckDeletedData.data.some((r) => r.code === createdRoomCode),
-      'Deleted room is no longer in active rooms list'
+      !cancelledCheckData.data.some((r) => r.code === createdRoomCode),
+      'Cancelled room is no longer in active rooms list'
+    );
+
+    // Repeated leave/disconnect does not crash or emit duplicate errors
+    const repeatedLeaveRes = await emitWithAck(hostSocket, 'room:leave', { code: createdRoomCode });
+    assert(repeatedLeaveRes.success === true, 'Repeated leave request completes safely without errors');
+
+    // 9. Host unexpectedly disconnects: room closes and all remaining members receive cancellation event
+    console.log(colors.yellow('\n9. Testing Host Unexpected Disconnect & Automatic Room Cancellation:'));
+
+    // Host creates a second room
+    const createRoom2Res = await emitWithAck(hostSocket, 'room:create', {
+      name: 'Host Disconnect Test Room',
+      description: 'Testing disconnect cancellation',
+    });
+    assert(createRoom2Res.success === true && createRoom2Res.room?.code, 'Host created Room 2 for disconnect test');
+    const room2Code = createRoom2Res.room.code;
+
+    // Member 1 joins Room 2
+    const joinRoom2Res = await emitWithAck(member1Socket, 'room:join', { code: room2Code });
+    assert(joinRoom2Res.success === true, 'Member 1 joined Room 2');
+
+    const member1Room2ClosedPromise = waitForEvent(member1Socket, 'room:closed');
+
+    // Host unexpectedly disconnects socket
+    hostSocket.disconnect();
+
+    const room2ClosedEvent = await member1Room2ClosedPromise;
+    assert(
+      room2ClosedEvent.reason === 'The host left. This room has been closed.',
+      'Member 1 received room:closed event when host unexpectedly disconnected'
+    );
+
+    // Verify Room 2 is deleted and cannot be rejoined
+    const room2Rest = await fetch(`${BASE_URL}/rooms/${room2Code}`, {
+      headers: { Authorization: `Bearer ${member1Token}` },
+    });
+    assert(room2Rest.status === 404, 'Room 2 was removed from registry on host disconnect (HTTP 404)');
+
+    const rejoinRoom2Attempt = await emitWithAck(member1Socket, 'room:join', { code: room2Code });
+    assert(
+      rejoinRoom2Attempt.success === false,
+      'Rejoining Room 2 after host disconnect is rejected'
     );
   } catch (err) {
     console.error('Fatal test error:', err);

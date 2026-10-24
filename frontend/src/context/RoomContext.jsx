@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../config/api';
 import { useAuth } from './AuthContext';
@@ -7,10 +8,12 @@ import { usePlayer } from './PlayerContext';
 const RoomContext = createContext(null);
 
 export const RoomProvider = ({ children }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const {
     currentTrack,
     currentTime,
+    loadTrack,
     playTrack,
     forcePlay,
     forcePause,
@@ -30,6 +33,33 @@ export const RoomProvider = ({ children }) => {
   const [roomNotification, setRoomNotification] = useState(null);
   const [roomInvitations, setRoomInvitations] = useState([]);
 
+  // Active refs to avoid stale closure issues in socket handlers
+  const currentTrackRef = useRef(currentTrack);
+  useEffect(() => {
+    currentTrackRef.current = currentTrack;
+  }, [currentTrack]);
+
+  const currentTimeRef = useRef(currentTime);
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
+
+  const currentRoomRef = useRef(currentRoom);
+  useEffect(() => {
+    currentRoomRef.current = currentRoom;
+  }, [currentRoom]);
+
+  const roomStateRef = useRef(roomState);
+  useEffect(() => {
+    roomStateRef.current = roomState;
+  }, [roomState]);
+
+  // Helper to safely get string song ID
+  const getTrackId = (track) => {
+    if (!track) return null;
+    const id = track.id || track._id;
+    return id ? id.toString() : null;
+  };
 
   // Clear transient room notification
   const notify = useCallback((message, type = 'info') => {
@@ -48,11 +78,16 @@ export const RoomProvider = ({ children }) => {
 
       // 1. If song changed or no track loaded
       if (currentSong && currentSong.audioUrl) {
-        const curId = currentTrack ? (currentTrack.id || currentTrack._id) : null;
-        const newId = currentSong.id || currentSong._id;
+        const curId = getTrackId(currentTrackRef.current);
+        const newId = getTrackId(currentSong);
 
         if (curId !== newId) {
-          playTrack(currentSong);
+          // Song changed: ONLY autoPlay if room state is currently playing!
+          if (isPlaying) {
+            playTrack(currentSong);
+          } else {
+            loadTrack(currentSong, { autoPlay: false, startTime: position || 0 });
+          }
         }
       }
 
@@ -60,20 +95,27 @@ export const RoomProvider = ({ children }) => {
       const elapsedSinceUpdate = updatedAt ? Math.max(0, (Date.now() - updatedAt) / 1000) : 0;
       const estimatedPosition = isPlaying ? (position || 0) + elapsedSinceUpdate : (position || 0);
 
+      const currentPos = currentTimeRef.current;
       // Seek only if drift exceeds 2.0s to avoid audio stutter
-      if (typeof position === 'number' && Math.abs(currentTime - estimatedPosition) > 2.0) {
+      if (typeof position === 'number' && Math.abs(currentPos - estimatedPosition) > 2.0) {
         seek(estimatedPosition);
       }
 
       // 3. Play / Pause state sync
+      // CRITICAL: A pause state must ALWAYS pause and NEVER trigger play()
       if (isPlaying) {
         forcePlay();
       } else {
         forcePause();
       }
     },
-    [currentTrack, currentTime, playTrack, forcePlay, forcePause, seek]
+    [playTrack, loadTrack, forcePlay, forcePause, seek]
   );
+
+  const applyRoomSyncRef = useRef(applyRoomSync);
+  useEffect(() => {
+    applyRoomSyncRef.current = applyRoomSync;
+  }, [applyRoomSync]);
 
   // Initialize Socket connection
   useEffect(() => {
@@ -110,13 +152,14 @@ export const RoomProvider = ({ children }) => {
       setConnectionError(null);
 
       // If user was in a room before disconnect, re-sync state
-      if (currentRoom?.code) {
-        socket.emit('room:join', { code: currentRoom.code }, (res) => {
+      const activeRoom = currentRoomRef.current;
+      if (activeRoom?.code) {
+        socket.emit('room:join', { code: activeRoom.code }, (res) => {
           if (res?.success) {
             setRoomMembers(res.room.members || []);
             setRoomState(res.room.state || null);
             setChatMessages(res.messages || []);
-            applyRoomSync(res.room.state);
+            applyRoomSyncRef.current?.(res.room.state);
             notify('Reconnected to room successfully.', 'success');
           }
         });
@@ -159,11 +202,21 @@ export const RoomProvider = ({ children }) => {
 
     socket.on('room:state_updated', ({ state, action }) => {
       setRoomState(state);
-      applyRoomSync(state);
+      applyRoomSyncRef.current?.(state);
       if (action) {
         const actionLabel = action.replace('_', ' ');
         notify(`Playback updated: ${actionLabel}`, 'info');
       }
+    });
+
+    socket.on('room:pause', ({ state }) => {
+      if (state) setRoomState(state);
+      forcePause();
+    });
+
+    socket.on('room:play', ({ state }) => {
+      if (state) setRoomState(state);
+      forcePlay();
     });
 
     socket.on('room:request_received', (request) => {
@@ -182,12 +235,15 @@ export const RoomProvider = ({ children }) => {
     });
 
     socket.on('room:closed', ({ reason }) => {
-      notify(reason || 'The room has been closed.', 'warning');
+      forcePause();
+      const message = reason || 'The host left. This room has been closed.';
+      notify(message, 'warning');
       setCurrentRoom(null);
       setRoomMembers([]);
       setRoomState(null);
       setPendingRequests([]);
       setChatMessages([]);
+      navigate('/rooms');
     });
 
     socket.on('room:invitation_received', (invitation) => {
@@ -250,18 +306,19 @@ export const RoomProvider = ({ children }) => {
           setRoomState(res.room.state || null);
           setPendingRequests(res.room.requests || []);
           setChatMessages(res.messages || []);
-          applyRoomSync(res.room.state);
+          applyRoomSyncRef.current?.(res.room.state);
           notify(`Joined room "${res.room.name}"`, 'success');
           resolve(res.room);
         });
       });
     },
-    [applyRoomSync, notify]
+    [notify]
   );
 
   // Leave Room
   const leaveRoom = useCallback(() => {
     return new Promise((resolve) => {
+      forcePause();
       if (socketRef.current && currentRoom) {
         socketRef.current.emit('room:leave', { code: currentRoom.code }, () => {
           setCurrentRoom(null);
@@ -281,7 +338,7 @@ export const RoomProvider = ({ children }) => {
         resolve();
       }
     });
-  }, [currentRoom, notify]);
+  }, [currentRoom, forcePause, notify]);
 
   const sendChatMessage = useCallback((text) => new Promise((resolve, reject) => {
     if (!socketRef.current?.connected || !currentRoom) return reject(new Error('Not connected to a room.'));
@@ -309,13 +366,13 @@ export const RoomProvider = ({ children }) => {
               return reject(new Error(errMsg));
             }
             setRoomState(res.state);
-            applyRoomSync(res.state);
+            applyRoomSyncRef.current?.(res.state);
             resolve(res.state);
           }
         );
       });
     },
-    [currentRoom, applyRoomSync, notify]
+    [currentRoom, notify]
   );
 
   // Member Request Playback Action
@@ -382,12 +439,12 @@ export const RoomProvider = ({ children }) => {
           return reject(new Error(res?.error || 'Sync failed.'));
         }
         setRoomState(res.state);
-        applyRoomSync(res.state);
+        applyRoomSyncRef.current?.(res.state);
         notify('Synchronized with host playback.', 'success');
         resolve(res.state);
       });
     });
-  }, [currentRoom, applyRoomSync, notify]);
+  }, [currentRoom, notify]);
 
   // Check if current user is host
   const isHost = Boolean(

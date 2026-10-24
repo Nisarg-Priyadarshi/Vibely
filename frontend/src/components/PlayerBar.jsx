@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { useSongLists } from '../context/SongListContext';
+import { useRoom } from '../context/RoomContext';
 import { formatTime } from '../utils/format';
 
 export const PlayerBar = () => {
@@ -39,6 +40,7 @@ export const PlayerBar = () => {
   } = usePlayer();
 
   const { isFavorite, toggleFavorite, isInPlayLater, togglePlayLater } = useSongLists();
+  const { currentRoom, isHost, roomState, hostControl } = useRoom();
 
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
@@ -53,19 +55,42 @@ export const PlayerBar = () => {
     return null;
   }
 
+  const isPlayerPlaying = currentRoom ? (roomState?.isPlaying ?? isPlaying) : isPlaying;
+
   const sId = (currentTrack.id || currentTrack._id || '').toString();
   const fav = isFavorite(sId);
   const playLater = isInPlayLater(sId);
+
+  const handleTogglePlay = async () => {
+    if (currentRoom && isHost) {
+      const action = isPlayerPlaying ? 'pause' : 'play';
+      const payload = { position: currentTime };
+      try {
+        await hostControl({ action, payload });
+      } catch (err) {
+        console.warn('Host control toggle failed:', err.message);
+      }
+      return;
+    }
+    togglePlay();
+  };
 
   const handleSeekChange = (e) => {
     setIsSeeking(true);
     setSeekValue(parseFloat(e.target.value));
   };
 
-  const handleSeekCommit = (e) => {
+  const handleSeekCommit = async (e) => {
     const newTime = parseFloat(e.target.value);
     seek(newTime);
     setIsSeeking(false);
+    if (currentRoom && isHost) {
+      try {
+        await hostControl({ action: 'seek', payload: { position: newTime } });
+      } catch (err) {
+        console.warn('Host control seek failed:', err.message);
+      }
+    }
   };
 
   const currentDuration = duration || currentTrack.duration || 0;
@@ -148,13 +173,13 @@ export const PlayerBar = () => {
             </button>
 
             <button
-              onClick={togglePlay}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
+              onClick={handleTogglePlay}
+              aria-label={isPlayerPlaying ? 'Pause' : 'Play'}
               className="w-11 h-11 rounded-full bg-white hover:scale-105 active:scale-95 text-[#121212] flex items-center justify-center transition-all cursor-pointer shadow-md"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-[#121212]" />
-              ) : isPlaying ? (
+              ) : isPlayerPlaying ? (
                 <Pause className="w-5 h-5 fill-current text-[#121212]" />
               ) : (
                 <Play className="w-5 h-5 fill-current ml-0.5 text-[#121212]" />

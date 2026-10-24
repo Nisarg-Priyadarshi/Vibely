@@ -247,7 +247,7 @@ export const Social = () => {
   // Handle Send Friend Request
   const handleSendFriendRequest = async (recipientId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/request`, {
+      const res = await fetch(`${API_BASE_URL}/friends/requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -270,11 +270,10 @@ export const Social = () => {
   // Handle Accept Friend Request
   const handleAcceptRequest = async (requestId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/respond`, {
+      const res = await fetch(`${API_BASE_URL}/friends/requests/${requestId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ requestId, action: 'accept' }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -291,11 +290,10 @@ export const Social = () => {
   // Handle Reject Friend Request
   const handleRejectRequest = async (requestId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/respond`, {
+      const res = await fetch(`${API_BASE_URL}/friends/requests/${requestId}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ requestId, action: 'reject' }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {

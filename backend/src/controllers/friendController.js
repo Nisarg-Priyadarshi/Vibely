@@ -517,6 +517,36 @@ export const removeFriend = async (req, res, next) => {
   }
 };
 
+/**
+ * Respond to a friend request (accept or reject).
+ * POST /api/friends/respond
+ */
+export const respondToFriendRequest = async (req, res, next) => {
+  try {
+    const { requestId, action } = req.body;
+    if (!requestId || !action) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'requestId and action ("accept" or "reject") are required.', status: 400 },
+      });
+    }
+
+    req.params = { ...req.params, id: requestId };
+    if (action === 'accept') {
+      return acceptFriendRequest(req, res, next);
+    } else if (action === 'reject') {
+      return rejectFriendRequest(req, res, next);
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: { message: `Unsupported action: "${action}". Must be "accept" or "reject".`, status: 400 },
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   searchUsers,
   getFriends,
@@ -526,4 +556,5 @@ export default {
   rejectFriendRequest,
   cancelFriendRequest,
   removeFriend,
+  respondToFriendRequest,
 };

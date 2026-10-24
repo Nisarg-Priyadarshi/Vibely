@@ -188,28 +188,40 @@ export const initializeSocket = (server) => {
           socketId: socket.id,
         });
 
-        if (targetCode) {
-          socket.leave(targetCode);
-        }
-
         if (result) {
-          if (result.deleted) {
+          if (result.cancelled) {
+            // Host intentionally left: broadcast cancellation event to all members before removing them
             ioInstance.to(result.code).emit('room:closed', {
-              reason: 'Room was closed because all listeners left.',
+              reason: result.reason,
+              code: result.code,
             });
-          } else {
+            ioInstance.in(result.code).socketsLeave(result.code);
+            if (Array.isArray(result.members)) {
+              for (const m of result.members) {
+                const s = ioInstance.sockets.sockets.get(m.socketId);
+                if (s) s.leave(result.code);
+              }
+            }
+            socket.leave(result.code);
+          } else if (result.deleted) {
+            ioInstance.to(result.code).emit('room:closed', {
+              reason: result.reason || 'Room was closed because all listeners left.',
+              code: result.code,
+            });
+            ioInstance.in(result.code).socketsLeave(result.code);
+            socket.leave(result.code);
+          } else if (result.room) {
+            // Non-host left: only this member leaves, room stays active
+            if (targetCode) {
+              socket.leave(targetCode);
+            }
             ioInstance.to(targetCode).emit('room:members_updated', {
               members: result.room.members,
               hostId: result.room.hostId,
             });
-
-            if (result.newHost) {
-              ioInstance.to(targetCode).emit('room:host_changed', {
-                newHostId: result.newHost.userId,
-                newHostName: result.newHost.name,
-              });
-            }
           }
+        } else if (targetCode) {
+          socket.leave(targetCode);
         }
 
         if (typeof ack === 'function') ack({ success: true });
@@ -228,11 +240,25 @@ export const initializeSocket = (server) => {
           payload,
         });
 
+        const targetCode = code.trim().toUpperCase();
+
         // Broadcast synchronized state to ALL room members
-        ioInstance.to(code.trim().toUpperCase()).emit('room:state_updated', {
+        ioInstance.to(targetCode).emit('room:state_updated', {
           state: result.state,
           action: result.action,
         });
+
+        if (result.action === 'pause') {
+          ioInstance.to(targetCode).emit('room:pause', {
+            state: result.state,
+            position: result.state.position,
+          });
+        } else if (result.action === 'play') {
+          ioInstance.to(targetCode).emit('room:play', {
+            state: result.state,
+            position: result.state.position,
+          });
+        }
 
         if (typeof ack === 'function') ack({ success: true, state: result.state });
       } catch (err) {
@@ -279,6 +305,18 @@ export const initializeSocket = (server) => {
             state: result.state,
             action: result.requestItem.action,
           });
+
+          if (result.requestItem.action === 'pause') {
+            ioInstance.to(targetCode).emit('room:pause', {
+              state: result.state,
+              position: result.state.position,
+            });
+          } else if (result.requestItem.action === 'play') {
+            ioInstance.to(targetCode).emit('room:play', {
+              state: result.state,
+              position: result.state.position,
+            });
+          }
         }
 
         // Broadcast resolution notification
@@ -443,22 +481,31 @@ export const initializeSocket = (server) => {
         });
 
         if (result) {
-          if (result.deleted) {
+          if (result.cancelled) {
+            // Host unexpectedly disconnected: broadcast cancellation event to all remaining members
             ioInstance.to(result.code).emit('room:closed', {
-              reason: 'Room was closed because all listeners left.',
+              reason: result.reason,
+              code: result.code,
             });
-          } else {
+            ioInstance.in(result.code).socketsLeave(result.code);
+            if (Array.isArray(result.members)) {
+              for (const m of result.members) {
+                const s = ioInstance.sockets.sockets.get(m.socketId);
+                if (s) s.leave(result.code);
+              }
+            }
+          } else if (result.deleted) {
+            ioInstance.to(result.code).emit('room:closed', {
+              reason: result.reason || 'Room was closed because all listeners left.',
+              code: result.code,
+            });
+            ioInstance.in(result.code).socketsLeave(result.code);
+          } else if (result.room) {
+            // Non-host disconnected: update member list
             ioInstance.to(code).emit('room:members_updated', {
               members: result.room.members,
               hostId: result.room.hostId,
             });
-
-            if (result.newHost) {
-              ioInstance.to(code).emit('room:host_changed', {
-                newHostId: result.newHost.userId,
-                newHostName: result.newHost.name,
-              });
-            }
           }
         }
       }
