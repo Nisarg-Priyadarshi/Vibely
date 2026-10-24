@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Vibely 🎵
 
 A full-stack music streaming web application inspired by Spotify, featuring **Vibely Rooms** for real-time collaborative listening.
@@ -155,3 +156,6 @@ node src/tests/player.test.js
 =======
 # Music-Area
 >>>>>>> origin/main
+=======
+# Vibely
+>>>>>>> submission/main
