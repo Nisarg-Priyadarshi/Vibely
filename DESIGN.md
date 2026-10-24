@@ -1,11 +1,11 @@
-# SoundCloud — Style Reference
-> concert darkroom with neon blue signal — a near-black gallery where album art and one cool accent color do all the work, and the chrome around them stays invisible.
+# Vibely — Orange Signal
+> A black listening space with a warm orange signal. Album artwork carries the variety; orange marks actions, active states, and playback progress.
 
 **Theme:** dark
 
 Source measurements are normalized; roles and recommendations are interpreted. Font summary lists are independent, not paired by position. HTML examples are reconstructions, not source components.
 
-SoundCloud is a dark-stage media environment: near-black canvas (#121212) sets the venue, album artwork and photography carry the color, and a single cool blue (#699fff) punctuates links and interactive moments. The interface stays flat and almost shadowless — definition comes from inset hairlines and gray scale shifts rather than elevation, which keeps the focus on the visuals (artists, track artwork, lifestyle photography). Typography is a custom geometric sans (Söhne) with an unusually wide weight range including a 100-weight for whisper-thin display moments, paired with comfortable 8–16px padding and squared 4px corners that feel utilitarian and unfussy. Components are rectangular and content-dense — buttons are flat fills, cards are bare containers for cover art, inputs are minimal — letting the music content be the visual hero.
+Vibely uses a near-black canvas (#121212), graphite surfaces, and orange (#ff7a1a) for key interactions. Album artwork supplies the broader color; orange stays focused on primary actions, links, selection, and playback. Keep the chrome flat, with gray-scale surface shifts and hairline borders. Use the existing geometric sans and squared 4px corners to keep controls direct and readable.
 
 ## Tokens — Colors
 
@@ -18,7 +18,7 @@ SoundCloud is a dark-stage media environment: near-black canvas (#121212) sets t
 | Silver | `#cccccc` | `--color-silver` | Hairline borders, subtle dividers between dark surface tiers |
 | Bone | `#f2f2f2` | `--color-bone` | Light supporting surface for subtle backgrounds and section separation. Do not promote it to the primary CTA color |
 | White | `#ffffff` | `--color-white` | Primary text, primary filled buttons, headings, input text on dark — the dominant high-contrast tone |
-| Signal Blue | `#699fff` | `--color-signal-blue` | Violet supporting accent for decorative details and low-frequency emphasis. Do not promote it to the primary CTA color |
+| Signal Orange | `#ff7a1a` | `--color-signal-orange` | Primary accent for actions, links, selected states, and playback progress |
 
 ## Tokens — Typography
 
@@ -92,12 +92,12 @@ SoundCloud is a dark-stage media environment: near-black canvas (#121212) sets t
 ### Promotional Banner
 **Role:** Top-of-page announcement strip
 
-Full-width #121212 bar, 4px vertical padding, single-line message. Uses small orange dot icon (#ff5500 not in palette) as live indicator, inline text in white at 14px, inline link in #699fff. Close × icon on the right in #999999.
+Full-width #121212 bar, 4px vertical padding, single-line message. Use an orange dot (#ff7a1a) as the live indicator, white text at 14px, and a #ff7a1a inline link. Close × icon on the right in #999999.
 
 ### Top Navigation Bar
 **Role:** Global site navigation
 
-Transparent over hero, switches to #121212 solid on scroll. Left: SoundCloud wordmark + waveform icon in white. Right cluster: 'Sign In' text link in #999999, 'Create account' filled white button (4px radius, #ffffff background, #121212 text, 600 weight, ~8px 16px padding), 'For Artists' text link in #999999.
+Transparent over hero, switches to #121212 solid on scroll. Left: Vibely wordmark in white. Right cluster: 'Sign In' text link in #999999, 'Create account' filled orange button (4px radius, #ff7a1a background, #121212 text, 600 weight, ~8px 16px padding).
 
 ### Hero Section
 **Role:** Above-the-fold brand pitch
@@ -117,7 +117,7 @@ Bare container — no card background, no border, no shadow. Square cover art th
 ### Trending Grid Section
 **Role:** Browse trending content
 
-Section heading 'Hear what's trending for free in the SoundCloud community' at 22px white, centered. 6-column grid of Track Cards with 16px row gap and 16px column gap. Centered 'Explore trending playlists' white filled button below grid.
+Section heading 'Trending Catalogue' at 22px white. 6-column grid of Track Cards with 16px row gap and 16px column gap.
 
 ### Primary Filled Button
 **Role:** Main call-to-action
@@ -157,16 +157,16 @@ Three small circles, 8px diameter. Active dot in #ffffff, inactive dots in #9999
 - Render buttons as flat fills with no drop shadow — use inset hairlines (rgba(18,18,18,0.1) 0 0 0 1px inset) for boundary definition
 - Use Söhne weight 100 at display scale (60px) for hero headlines to create editorial restraint; switch to 600–700 for body and UI
 - Let photography and album artwork supply all color in content sections; keep the surrounding chrome achromatic
-- Use #699fff exclusively for inline links and accent strokes — never as a button fill
+- Use #ff7a1a for primary actions, inline links, active states, and playback progress
 - Maintain a 6-column grid for content tiles with 16px row and column gaps on desktop
 
 ### Don't
 - Do not introduce drop shadows on cards or buttons — the system is flat by design
-- Do not use #699fff as a CTA background or button fill — the action color is white (#ffffff)
+- Keep orange focused on the action or state that needs attention; use white and gray for secondary controls
 - Do not use border-radius larger than 4px on interactive elements; the squared corner is part of the identity
 - Do not add gradients to buttons, cards, or background surfaces — the page is flat black
 - Do not set body text below 14px or use weight 100 for anything smaller than display scale
-- Do not use multiple saturated accent colors — the system is monochromatic with one blue signal
+- Do not use multiple saturated accent colors — orange is the interface signal, while album artwork carries additional color
 - Do not add elevation tiers beyond the gray scale shifts (#121212 → #303030 → #666666) — there is no shadow stack
 
 ## Surfaces
@@ -197,12 +197,12 @@ Full-bleed dark canvas with a max-width ~1200px content column. The hero is a sp
 - text: #ffffff (primary), #999999 (muted), #121212 (on light)
 - background: #121212 (page), #303030 (elevated dark), #f2f2f2 (light band)
 - border: rgba(18,18,18,0.1) inset 1px (dark surfaces), #cccccc (light surfaces)
-- accent: #699fff (links only)
-- primary action: no distinct CTA color
+- accent: #ff7a1a (actions, links, active states)
+- primary action: orange fill with obsidian text
 
 **Example Component Prompts**
 
-1. Create a navigation bar: transparent over hero. Left — SoundCloud wordmark in #ffffff at 17px Söhne weight 600 with a small waveform icon. Right cluster — 'Sign In' as ghost text link in #999999 14px, then a white filled button labeled 'Create account' (#ffffff background, #121212 text, 4px radius, 8px 16px padding, weight 700), then 'For Artists' ghost link in #999999.
+1. Create a navigation bar for Vibely. Left — wordmark in #ffffff at 17px Söhne weight 600. Right cluster — 'Sign In' as ghost text link in #999999 14px, then an orange filled 'Create account' button (#ff7a1a background, #121212 text, 4px radius, 8px 16px padding, weight 700).
 
 2. Create a hero section: full-bleed editorial photograph background with a subtle dark gradient overlay. Left-aligned content — display headline at 60px Söhne weight 100 in #ffffff, two lines. Below at 17px Söhne weight 400, a short white subhead. Below that, a white filled 'Get Started' button (#ffffff bg, #121212 text, 4px radius, 8px 24px padding, weight 700).
 
@@ -234,7 +234,8 @@ Full-bleed dark canvas with a max-width ~1200px content column. The hero is a sp
   --color-silver: #cccccc;
   --color-bone: #f2f2f2;
   --color-white: #ffffff;
-  --color-signal-blue: #699fff;
+  --color-signal-orange: #ff7a1a;
+  --color-signal-orange-hover: #ff9a52;
 
   /* Typography — Font Families */
   --font-shne-custom: 'Söhne (custom)', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -317,7 +318,8 @@ Full-bleed dark canvas with a max-width ~1200px content column. The hero is a sp
   --color-silver: #cccccc;
   --color-bone: #f2f2f2;
   --color-white: #ffffff;
-  --color-signal-blue: #699fff;
+  --color-signal-orange: #ff7a1a;
+  --color-signal-orange-hover: #ff9a52;
 
   /* Typography */
   --font-shne-custom: 'Söhne (custom)', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

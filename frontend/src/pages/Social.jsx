@@ -417,16 +417,16 @@ export const Social = () => {
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
-          <Users className="w-12 h-12 text-slate-600 mx-auto" />
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-white/10 rounded-[6px] p-8 text-center space-y-4 shadow-2xl">
+          <Users className="w-12 h-12 text-[#666666] mx-auto" />
           <h2 className="text-xl font-bold text-white">Sign In Required</h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#999999]">
             Please log in to chat with friends and receive room invitations.
           </p>
           <div className="pt-2">
             <Link
               to="/login"
-              className="btn-white text-xs px-5 py-2.5"
+              className="btn-accent text-xs px-5 py-2.5"
             >
               Sign In
             </Link>
@@ -442,7 +442,7 @@ export const Social = () => {
       <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 relative">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="text-[11px] font-mono uppercase tracking-widest text-[#00e599]">
+            <div className="text-[11px] font-mono uppercase tracking-widest text-[#ff7a1a] font-bold">
               Social Network
             </div>
             <h1 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] tracking-tight mt-1">
@@ -454,16 +454,17 @@ export const Social = () => {
           </div>
 
           {/* Social Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#141414] p-1.5 rounded-[4px] border border-white/10">
             <button
               onClick={() => {
                 setActiveTab('chat');
                 setSearchParams({ tab: 'chat' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'chat'
-                  ? 'bg-[#ffffff] text-[#121212]'
-                  : 'text-[#999999] hover:text-[#ffffff]'
-                }`}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[3px] text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'chat'
+                  ? 'bg-white text-[#121212] shadow-sm'
+                  : 'text-[#999999] hover:text-white'
+              }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
               Friends & Chat
@@ -480,10 +481,11 @@ export const Social = () => {
                 setActiveTab('requests');
                 setSearchParams({ tab: 'requests' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'requests'
-                  ? 'bg-[#ffffff] text-[#121212]'
-                  : 'text-[#999999] hover:text-[#ffffff]'
-                }`}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[3px] text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'requests'
+                  ? 'bg-white text-[#121212] shadow-sm'
+                  : 'text-[#999999] hover:text-white'
+              }`}
             >
               <UserCheck className="w-3.5 h-3.5 shrink-0" />
               <span>Requests</span>
@@ -499,10 +501,11 @@ export const Social = () => {
                 setActiveTab('search');
                 setSearchParams({ tab: 'search' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'search'
-                  ? 'bg-[#ffffff] text-[#121212]'
-                  : 'text-[#999999] hover:text-[#ffffff]'
-                }`}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[3px] text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'search'
+                  ? 'bg-white text-[#121212] shadow-sm'
+                  : 'text-[#999999] hover:text-white'
+              }`}
             >
               <UserPlus className="w-3.5 h-3.5 shrink-0" />
               <span>Find Friends</span>
@@ -513,15 +516,16 @@ export const Social = () => {
                 setActiveTab('invitations');
                 setSearchParams({ tab: 'invitations' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === 'invitations'
-                  ? 'bg-[#ffffff] text-[#121212]'
-                  : 'text-[#999999] hover:text-[#ffffff]'
-                }`}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[3px] text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'invitations'
+                  ? 'bg-white text-[#121212] shadow-sm'
+                  : 'text-[#999999] hover:text-white'
+              }`}
             >
               <Radio className="w-3.5 h-3.5 shrink-0" />
               <span>Room Invites</span>
               {roomInvites.length > 0 && (
-                <span className="text-[10px] bg-[#00e599] text-[#121212] font-mono px-1.5 py-0.2 rounded font-bold">
+                <span className="text-[10px] bg-[#ff7a1a] text-[#121212] font-mono px-1.5 py-0.2 rounded font-bold">
                   {roomInvites.length}
                 </span>
               )}
@@ -549,8 +553,8 @@ export const Social = () => {
       {activeTab === 'chat' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
           {/* Left Column: Friends List & Conversations Sidebar */}
-          <div className="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl backdrop-blur-xl flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="lg:col-span-4 bg-[#181818] border border-white/[0.08] rounded-[6px] p-5 shadow-xl flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#cccccc]" />
                 <h3 className="text-sm font-bold text-[#ffffff]">Your Friends</h3>
@@ -651,13 +655,13 @@ export const Social = () => {
           </div>
 
           {/* Right Column: Active 1-to-1 Chat Window */}
-          <div className="lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between min-h-[540px]">
+          <div className="lg:col-span-8 bg-[#181818] border border-white/[0.08] rounded-[6px] p-6 shadow-xl flex flex-col justify-between min-h-[540px]">
             {activeConversation ? (
               <>
                 {/* Chat Top Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+                <div className="flex items-center justify-between pb-4 border-b border-white/[0.08] shrink-0">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                    <div className="w-10 h-10 rounded-[4px] bg-[#222222] border border-white/10 flex items-center justify-center text-white font-bold text-sm uppercase shrink-0 overflow-hidden">
                       {activeConversation.avatar ? (
                         <img src={activeConversation.avatar} alt={activeConversation.name} className="w-full h-full object-cover" />
                       ) : (
@@ -667,16 +671,16 @@ export const Social = () => {
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         {activeConversation.name}
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#ff7a1a] animate-pulse"></span>
                       </h3>
-                      <p className="text-[10px] text-slate-400 font-mono">{activeConversation.email}</p>
+                      <p className="text-[10px] text-[#999999] font-mono">{activeConversation.email}</p>
                     </div>
                   </div>
 
                   {currentRoom && (
                     <button
                       onClick={() => navigate(`/rooms/${currentRoom.code}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-semibold transition-all cursor-pointer"
+                      className="btn-accent text-xs py-1.5 px-3 flex items-center gap-1.5"
                     >
                       <Radio className="w-3.5 h-3.5" />
                       In Room: {currentRoom.name}
@@ -820,7 +824,7 @@ export const Social = () => {
                 {receivedRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3.5 rounded-[4px] bg-[#141414] border border-white/10 flex items-center justify-between gap-3 shadow-sm"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
@@ -839,14 +843,14 @@ export const Social = () => {
                     <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                       <button
                         onClick={() => handleAcceptRequest(req.id)}
-                        className="btn-white text-xs px-3 py-1"
+                        className="btn-accent text-xs px-3 py-1.5"
                       >
                         <Check className="w-3.5 h-3.5 mr-1" />
                         Accept
                       </button>
                       <button
                         onClick={() => handleRejectRequest(req.id)}
-                        className="btn-graphite text-xs px-3 py-1 text-rose-400"
+                        className="btn-graphite text-xs px-3 py-1.5 text-rose-400"
                       >
                         <X className="w-3.5 h-3.5 mr-1" />
                         Decline
@@ -872,7 +876,7 @@ export const Social = () => {
 
             {loadingRequests ? (
               <div className="py-12 flex justify-center text-[#999999] text-xs">
-                <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#ff7a1a]" />
               </div>
             ) : sentRequests.length === 0 ? (
               <div className="py-12 text-center text-xs text-[#777777] space-y-2">
@@ -884,7 +888,7 @@ export const Social = () => {
                 {sentRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3.5 rounded-[4px] bg-[#141414] border border-white/10 flex items-center justify-between gap-3 shadow-sm"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
@@ -902,7 +906,7 @@ export const Social = () => {
 
                     <button
                       onClick={() => handleCancelRequest(req.id)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                      className="btn-graphite text-xs px-3 py-1.5 cursor-pointer"
                     >
                       Cancel
                     </button>

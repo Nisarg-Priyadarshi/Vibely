@@ -37,7 +37,7 @@ export const PlayLater = () => {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
         <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-[4px] bg-[#303030] text-[#699fff] flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-[4px] bg-[#303030] text-[#ff7a1a] flex items-center justify-center mx-auto">
             <Bookmark className="w-7 h-7" />
           </div>
           <h2 className="text-xl font-medium text-white">Your Play Later Queue</h2>
@@ -75,7 +75,7 @@ export const PlayLater = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[4px] bg-[#303030] flex items-center justify-center shrink-0">
-              <Bookmark className="w-7 h-7 text-[#699fff]" />
+              <Bookmark className="w-7 h-7 text-[#ff7a1a]" />
             </div>
             <div className="space-y-0.5 min-w-0">
               <div className="text-[10px] font-mono uppercase tracking-widest text-[#999999]">
@@ -121,7 +121,7 @@ export const PlayLater = () => {
           <p className="text-xs text-rose-300">{errorPlayLater}</p>
           <button
             onClick={fetchPlayLater}
-            className="text-xs text-[#699fff] hover:underline font-medium"
+            className="text-xs text-[#ff7a1a] hover:underline font-medium"
           >
             Try Again
           </button>
@@ -202,7 +202,7 @@ export const PlayLater = () => {
                             to={`/songs/${sId}`}
                             onClick={(e) => e.stopPropagation()}
                             className={`font-semibold truncate hover:underline block ${
-                              isCurrent ? 'text-[#699fff]' : 'text-[#ffffff] group-hover:text-white'
+                              isCurrent ? 'text-[#ff7a1a]' : 'text-[#ffffff] group-hover:text-white'
                             }`}
                           >
                             {song.title}
@@ -251,7 +251,7 @@ export const PlayLater = () => {
                         <button
                           onClick={() => togglePlayLater(song)}
                           title="Remove from Play Later"
-                          className="p-1.5 rounded-[3px] text-[#699fff] hover:text-[#84b4ff] hover:bg-[#699fff]/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-[3px] text-[#ff7a1a] hover:text-[#ff9a52] hover:bg-[#ff7a1a]/10 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

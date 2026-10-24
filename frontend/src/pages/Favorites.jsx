@@ -115,7 +115,7 @@ export const Favorites = () => {
           <p className="text-xs text-rose-300">{errorFavorites}</p>
           <button
             onClick={fetchFavorites}
-            className="text-xs text-[#699fff] hover:underline font-medium"
+            className="text-xs text-[#ff7a1a] hover:underline font-medium"
           >
             Try Again
           </button>
@@ -200,7 +200,7 @@ export const Favorites = () => {
                             to={`/songs/${sId}`}
                             onClick={(e) => e.stopPropagation()}
                             className={`font-semibold truncate hover:underline block ${
-                              isCurrent ? 'text-[#699fff]' : 'text-[#ffffff] group-hover:text-white'
+                              isCurrent ? 'text-[#ff7a1a]' : 'text-[#ffffff] group-hover:text-white'
                             }`}
                           >
                             {song.title}
@@ -231,7 +231,7 @@ export const Favorites = () => {
                           title={inPlayLater ? 'In Play Later' : 'Add to Play Later'}
                           className={`p-1.5 rounded-[3px] transition-colors cursor-pointer ${
                             inPlayLater
-                              ? 'text-[#699fff] bg-[#699fff]/10'
+                              ? 'text-[#ff7a1a] bg-[#ff7a1a]/10'
                               : 'text-[#666666] hover:text-[#cccccc] hover:bg-[rgba(255,255,255,0.06)]'
                           }`}
                         >

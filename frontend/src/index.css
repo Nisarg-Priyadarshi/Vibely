@@ -14,7 +14,8 @@
   --color-silver: #cccccc;
   --color-bone: #f2f2f2;
   --color-white: #ffffff;
-  --color-signal-blue: #699fff;
+  --color-signal-orange: #ff7a1a;
+  --color-signal-orange-hover: #ff9a52;
 
   /* Typography — Inter is the free Söhne substitute (same weight range, geometric) */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -60,7 +61,8 @@
   --color-silver: #cccccc;
   --color-bone: #f2f2f2;
   --color-white: #ffffff;
-  --color-signal-blue: #699fff;
+  --color-signal-orange: #ff7a1a;
+  --color-signal-orange-hover: #ff9a52;
 
   /* Elevation inset hairlines */
   --hairline: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
@@ -68,6 +70,61 @@
 
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
+}
+
+.nav-stripe-bg {
+  background-color: #121212;
+  background-image:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 122, 26, 0.055), transparent 38%),
+    linear-gradient(105deg, rgba(255, 122, 26, 0.1) 0%, rgba(255, 122, 26, 0.035) 20%, transparent 42%),
+    linear-gradient(285deg, rgba(255, 122, 26, 0.1) 0%, rgba(255, 122, 26, 0.035) 20%, transparent 42%);
+}
+
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  background-color: #121212;
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: -20vh -15vw;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.12;
+  transform-origin: 50% 50%;
+  background: repeating-radial-gradient(
+    circle at 50% 50%,
+    transparent 0 58px,
+    rgba(88, 88, 88, 0.2) 59px 60px,
+    transparent 61px 112px
+  );
+}
+
+.app-shell-playing::before,
+.app-shell-playing::after {
+  animation: pageRingsRipple 12s ease-out infinite;
+}
+
+.app-shell::after {
+  animation-delay: -6s;
+}
+
+@keyframes pageRingsRipple {
+  0% { transform: scale(0.62); opacity: 0; }
+  12% { opacity: 0.45; }
+  100% { transform: scale(1.32); opacity: 0; }
+}
+
+.nav-stripe-bg::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 122, 26, 0.45) 18%, rgba(255, 122, 26, 0.12) 58%, transparent);
+  pointer-events: none;
 }
 
 /* ==========================================================================
@@ -101,7 +158,7 @@ body {
 
 /* Text selection */
 ::selection {
-  background-color: #699fff;
+  background-color: #ff7a1a;
   color: #121212;
 }
 
@@ -120,7 +177,7 @@ input[type="range"] { accent-color: #ffffff; }
 
 /* Accessible focus ring — single consistent style */
 :focus-visible {
-  outline: 2px solid #699fff;
+  outline: 2px solid #ff9a52;
   outline-offset: 2px;
 }
 
@@ -161,13 +218,13 @@ input[type="range"] { accent-color: #ffffff; }
   padding: 8px 16px;
   border: none;
   cursor: pointer;
-  transition: background-color 0.12s ease, transform 0.1s ease;
+  transition: background-color 0.22s ease-out, transform 0.22s ease-out, box-shadow 0.22s ease-out;
   white-space: nowrap;
   text-decoration: none;
   line-height: 1;
 }
-.btn-white:hover { background-color: #ebebeb; }
-.btn-white:active { transform: scale(0.98); }
+.btn-white:hover { background-color: #ebebeb; transform: translateY(-1px); }
+.btn-white:active { transform: translateY(0) scale(0.98); }
 .btn-white:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
 /* Secondary — graphite fill, inset hairline */
@@ -184,12 +241,13 @@ input[type="range"] { accent-color: #ffffff; }
   border: none;
   cursor: pointer;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition: background-color 0.22s ease-out, color 0.22s ease-out, transform 0.22s ease-out, box-shadow 0.22s ease-out;
   white-space: nowrap;
   text-decoration: none;
   line-height: 1;
 }
-.btn-graphite:hover { background-color: #3a3a3a; color: #ffffff; }
+.btn-graphite:hover { background-color: #3a3a3a; color: #ffffff; transform: translateY(-1px); }
+.btn-graphite:active { transform: translateY(0) scale(0.99); }
 .btn-graphite:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Ghost — no fill, fog text, hover to white */
@@ -205,30 +263,74 @@ input[type="range"] { accent-color: #ffffff; }
   padding: 8px 14px;
   border: none;
   cursor: pointer;
-  transition: color 0.12s ease;
+  transition: color 0.22s ease-out, background-color 0.22s ease-out, transform 0.22s ease-out;
   white-space: nowrap;
   text-decoration: none;
   line-height: 1;
 }
-.btn-ghost:hover { color: #ffffff; }
+.btn-ghost:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.05); transform: translateY(-1px); }
+.btn-ghost:active { transform: translateY(0); }
 
-/* Destructive ghost */
-.btn-danger {
+/* Signal Accent button */
+.btn-accent {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  color: #f87171;
-  font-weight: 500;
+  background-color: #ff7a1a;
+  color: #121212;
+  font-weight: 700;
   font-size: 14px;
   border-radius: 4px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: none;
   cursor: pointer;
-  transition: color 0.12s ease, background-color 0.12s ease;
+  transition: background-color 0.22s ease-out, color 0.22s ease-out, transform 0.22s ease-out, box-shadow 0.22s ease-out;
   white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
 }
-.btn-danger:hover { color: #fca5a5; background-color: rgba(239, 68, 68, 0.08); }
+.btn-accent:hover {
+  background-color: #ff9a52;
+  box-shadow: 0 0 16px rgba(255, 122, 26, 0.25);
+  transform: translateY(-1px);
+}
+.btn-accent:active { transform: translateY(0) scale(0.98); }
+
+/* Rose / Favorite button */
+.btn-rose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f43f5e;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 4px;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+}
+.btn-rose:hover {
+  background-color: #fb7185;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.4);
+  transform: translateY(-1px);
+}
+.btn-rose:active { transform: translateY(0) scale(0.98); }
+
+/* Visual glows */
+.glow-signal {
+  box-shadow: 0 0 25px -3px rgba(255, 122, 26, 0.3);
+}
+.glow-rose {
+  box-shadow: 0 0 25px -3px rgba(244, 63, 94, 0.35);
+}
+.glow-subtle {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
 
 /* ==========================================================================
    Input System — Graphite bg, 4px corners, inset hairline
@@ -254,7 +356,7 @@ input[type="range"] { accent-color: #ffffff; }
 
 /* ==========================================================================
    Loading Screen — Vibely Animation Suite
-   Strategy: Monochromatic white waveform bars on Obsidian, Signal Blue accent.
+   Strategy: Monochromatic white waveform bars on Obsidian, Signal Orange accent.
    No rainbow/neon — the brand is dark-stage minimal, not a rave.
    ========================================================================== */
 
@@ -323,6 +425,18 @@ input[type="range"] { accent-color: #ffffff; }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
+  .app-shell::before, .app-shell::after {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.12 !important;
+  }
+  .btn-white, .btn-graphite, .btn-ghost, .btn-accent {
+    transition: none !important;
+  }
+  .btn-white:hover, .btn-graphite:hover, .btn-graphite:active,
+  .btn-ghost:hover, .btn-ghost:active, .btn-accent:hover, .btn-accent:active {
+    transform: none !important;
+  }
   .vbar-1, .vbar-2, .vbar-3, .vbar-4, .vbar-5,
   .wordmark-reveal, .subtitle-reveal, .signal-ring {
     animation: none !important;

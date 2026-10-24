@@ -35,9 +35,9 @@ export const LoadingScreen = ({ error = null, onRetry = null }) => {
       aria-live="polite"
       aria-label="Loading Vibely"
     >
-      {/* Signal Blue ambient — one accent, restrained (R-13 dose cap: 1 element) */}
+      {/* Signal Orange ambient — one accent, kept restrained. */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-[#699fff]/8 blur-[80px] pointer-events-none signal-ring"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-[#ff7a1a]/8 blur-[80px] pointer-events-none signal-ring"
         aria-hidden="true"
       />
 
@@ -56,9 +56,14 @@ export const LoadingScreen = ({ error = null, onRetry = null }) => {
           ))}
         </div>
 
-        {/* Wordmark — weight 100 display scale per DESIGN.md */}
-        <div className="mt-8 text-center wordmark-reveal">
-          <h1 className="text-4xl sm:text-5xl font-thin tracking-[0.3em] text-[#ffffff] uppercase">
+        {/* Logo & Wordmark */}
+        <div className="mt-8 flex flex-col items-center wordmark-reveal">
+          <img
+            src="/vibely-logo.png"
+            alt="Vibely"
+            className="w-14 h-14 rounded-[8px] object-contain mb-3 shadow-2xl animate-pulse"
+          />
+          <h1 className="text-3xl sm:text-4xl font-extralight tracking-[0.3em] text-[#ffffff] uppercase font-sans">
             Vibely
           </h1>
         </div>

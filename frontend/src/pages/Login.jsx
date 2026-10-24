@@ -107,7 +107,12 @@ export const Login = () => {
       <div className="w-full max-w-md bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 sm:p-10 shadow-2xl relative">
         <div className="space-y-6">
           <div className="text-center space-y-1.5">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#00e599]">
+            <img
+              src="/vibely-logo.png"
+              alt="Vibely"
+              className="w-12 h-12 rounded-[6px] object-contain mx-auto mb-3 shadow-md"
+            />
+            <div className="text-[10px] font-mono uppercase tracking-widest text-[#ff7a1a] font-bold">
               Authentication
             </div>
             <h1 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] tracking-tight">

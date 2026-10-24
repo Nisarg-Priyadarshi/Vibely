@@ -302,10 +302,10 @@ export const RoomDetail = () => {
       )}
 
       {/* Room Header Card */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-[#181818] border border-white/[0.08] rounded-[6px] p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="font-mono text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 flex items-center gap-1.5">
+            <span className="font-mono text-xs font-bold text-[#ff7a1a] bg-[#26170f] px-3 py-1 rounded-[3px] border border-[#ff7a1a]/30 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5" />
               #{currentRoom?.code || code}
             </span>
@@ -317,8 +317,8 @@ export const RoomDetail = () => {
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#00e599] mr-1" />
-                  <span className="text-[#00e599]">Copied</span>
+                  <Check className="w-3.5 h-3.5 text-[#ff7a1a] mr-1" />
+                  <span className="text-[#ff7a1a]">Copied</span>
                 </>
               ) : (
                 <>
@@ -328,25 +328,25 @@ export const RoomDetail = () => {
               )}
             </button>
 
-            <span className="inline-flex items-center gap-1.5 text-xs text-[#999999] bg-[#222222] px-2.5 py-1 rounded-[2px] border border-[rgba(255,255,255,0.06)] font-mono">
+            <span className="inline-flex items-center gap-1.5 text-xs text-[#999999] bg-[#222222] px-2.5 py-1 rounded-[3px] border border-white/[0.06] font-mono">
               <Users className="w-3.5 h-3.5 text-[#cccccc]" />
               {roomMembers.length} {roomMembers.length === 1 ? 'member' : 'members'}
             </span>
 
             {isHost ? (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-[2px]">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-[3px]">
                 <Crown className="w-3.5 h-3.5 text-amber-400" />
                 Host
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-xl">
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                Host: <strong className="text-slate-200 ml-1">{currentRoom?.hostName || 'Host'}</strong>
+              <span className="inline-flex items-center gap-1 text-xs text-[#999999] bg-[#222222] border border-white/10 px-2.5 py-1 rounded-[3px]">
+                <Shield className="w-3.5 h-3.5 text-[#ff7a1a]" />
+                Host: <strong className="text-white ml-1">{currentRoom?.hostName || 'Host'}</strong>
               </span>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extralight text-white tracking-tight">
             {currentRoom?.name || 'Vibely Room'}
           </h1>
           {currentRoom?.description && (
@@ -358,7 +358,7 @@ export const RoomDetail = () => {
         <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
           <button
             onClick={syncRoomState}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            className="btn-graphite text-xs px-3.5 py-2 flex items-center gap-1.5 cursor-pointer"
             title="Force synchronization"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export const RoomDetail = () => {
 
           <button
             onClick={handleLeave}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all cursor-pointer"
+            className="btn-danger text-xs px-3.5 py-2 flex items-center gap-1.5 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             Leave Room
@@ -380,8 +380,8 @@ export const RoomDetail = () => {
         {/* Left 2 Cols: Collaborative Stage */}
         <div className="lg:col-span-2 space-y-6">
           {/* Synchronized Playback Card */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="bg-[#181818] border border-white/[0.08] rounded-[6px] p-6 sm:p-8 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-[#ff7a1a]/5 rounded-full blur-3xl pointer-events-none" />
 
             {currentSong ? (
               <div className="space-y-6">
@@ -391,10 +391,10 @@ export const RoomDetail = () => {
                     <img
                       src={currentSong.coverUrl}
                       alt={currentSong.title}
-                      className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl object-cover shadow-2xl border border-slate-700/80"
+                      className="w-36 h-36 sm:w-44 sm:h-44 rounded-[6px] object-cover shadow-2xl border border-white/10"
                     />
                     {isPlaying && (
-                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-[2px] bg-[#121212]/90 text-[#00e599] text-[10px] font-mono uppercase tracking-wider border border-[rgba(255,255,255,0.08)] flex items-center gap-1">
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-[2px] bg-[#121212]/90 text-[#ff7a1a] text-[10px] font-mono uppercase tracking-wider border border-white/10 flex items-center gap-1">
                         <Volume2 className="w-3 h-3 animate-pulse" />
                         Live
                       </div>
@@ -402,15 +402,15 @@ export const RoomDetail = () => {
                   </div>
 
                   <div className="space-y-2 min-w-0 flex-1">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] bg-[#222222] border border-[rgba(255,255,255,0.06)] text-[10px] font-mono uppercase text-[#00e599]">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] bg-[#222222] border border-white/10 text-[10px] font-mono uppercase text-[#ff7a1a]">
                       <Music2 className="w-3 h-3" />
                       {currentSong.genre || 'Vibely Audio'}
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl font-black text-white truncate leading-tight">
+                    <h2 className="text-2xl sm:text-3xl font-extralight text-white truncate leading-tight">
                       {currentSong.title}
                     </h2>
-                    <p className="text-base text-slate-400 font-medium truncate">
+                    <p className="text-base text-[#cccccc] font-medium truncate">
                       {currentSong.artist}
                     </p>
 

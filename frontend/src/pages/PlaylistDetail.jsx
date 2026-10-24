@@ -15,11 +15,14 @@ import {
   Loader2,
   Check,
   X,
+  Heart,
+  Bookmark,
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import { usePlaylists } from '../context/PlaylistContext';
+import { useSongLists } from '../context/SongListContext';
 import { formatTime } from '../utils/format';
 
 export const PlaylistDetail = () => {
@@ -28,6 +31,7 @@ export const PlaylistDetail = () => {
   const { user } = useAuth();
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayer();
   const { deletePlaylist, updatePlaylist, removeSongFromPlaylist } = usePlaylists();
+  const { isFavorite, toggleFavorite, isInPlayLater, togglePlayLater } = useSongLists();
 
   const [playlist, setPlaylist] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -181,64 +185,72 @@ export const PlaylistDetail = () => {
       </div>
 
       {/* Playlist Hero Banner */}
-      <div className="flex flex-col md:flex-row items-center md:items-end gap-6 bg-gradient-to-b from-slate-900/90 to-slate-950/60 p-6 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="relative rounded-[6px] overflow-hidden bg-[#181818] border border-white/[0.08] p-6 sm:p-8 shadow-2xl">
+        {firstCover && (
+          <div
+            className="absolute top-0 right-0 w-96 h-96 bg-cover bg-center filter blur-3xl opacity-20 pointer-events-none scale-125"
+            style={{ backgroundImage: `url(${firstCover})` }}
+          />
+        )}
 
-        {/* Big Cover Artwork */}
-        <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden shadow-2xl bg-slate-900 border border-slate-700/60 shrink-0 flex items-center justify-center">
-          {firstCover ? (
-            <img src={firstCover} alt={playlist.name} className="w-full h-full object-cover" />
-          ) : (
-            <ListMusic className="w-16 h-16 text-[#666666]" />
-          )}
-        </div>
-
-        {/* Playlist Metadata */}
-        <div className="flex-1 space-y-3 text-center md:text-left z-10 min-w-0">
-          <div className="flex items-center justify-center md:justify-start gap-2">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#00e599]">
-              Playlist
-            </span>
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-[2px] bg-[#222222] text-[#cccccc] border border-[rgba(255,255,255,0.08)] flex items-center gap-1">
-              {playlist.isPublic ? <Globe className="w-2.5 h-2.5" /> : <Lock className="w-2.5 h-2.5" />}
-              {playlist.isPublic ? 'Public' : 'Private'}
-            </span>
+        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 sm:gap-8">
+          {/* Big Cover Artwork */}
+          <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-[6px] overflow-hidden shadow-2xl bg-[#141414] border border-white/10 shrink-0 flex items-center justify-center">
+            {firstCover ? (
+              <img src={firstCover} alt={playlist.name} className="w-full h-full object-cover" />
+            ) : (
+              <ListMusic className="w-16 h-16 text-[#666666]" />
+            )}
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            {playlist.name}
-          </h1>
+          {/* Playlist Metadata */}
+          <div className="flex-1 space-y-3 text-center md:text-left min-w-0">
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#ff7a1a] font-bold">
+                Playlist
+              </span>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-[2px] bg-[#222222] text-[#cccccc] border border-white/10 flex items-center gap-1">
+                {playlist.isPublic ? <Globe className="w-2.5 h-2.5" /> : <Lock className="w-2.5 h-2.5" />}
+                {playlist.isPublic ? 'Public' : 'Private'}
+              </span>
+            </div>
 
-          {playlist.description && (
-            <p className="text-xs sm:text-sm text-[#cccccc] max-w-2xl leading-relaxed">
-              {playlist.description}
-            </p>
-          )}
+            <h1 className="text-3xl sm:text-5xl font-extralight text-white tracking-tight leading-tight">
+              {playlist.name}
+            </h1>
 
-          <div className="text-xs text-slate-400 flex items-center justify-center md:justify-start gap-2 pt-1">
-            <span className="font-semibold text-white">
-              {playlist.owner?.name || 'Vibely User'}
-            </span>
-            <span>&bull;</span>
-            <span>
-              {songs.length} {songs.length === 1 ? 'song' : 'songs'}
-            </span>
-            <span>&bull;</span>
-            <span className="font-mono">{formatTime(totalDuration)} total</span>
+            {playlist.description && (
+              <p className="text-xs sm:text-sm text-[#cccccc] max-w-2xl leading-relaxed">
+                {playlist.description}
+              </p>
+            )}
+
+            <div className="text-xs text-[#999999] flex items-center justify-center md:justify-start gap-2 pt-1">
+              <span className="font-semibold text-white">
+                {playlist.owner?.name || 'Vibely User'}
+              </span>
+              <span>&bull;</span>
+              <span>
+                {songs.length} {songs.length === 1 ? 'song' : 'songs'}
+              </span>
+              <span>&bull;</span>
+              <span className="font-mono">{formatTime(totalDuration)} total</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Action Controls Bar */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+      <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
         <div className="flex items-center gap-4">
           {songs.length > 0 && (
             <button
               onClick={handlePlayAll}
-              className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center shadow-xl shadow-emerald-500/30 transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="btn-accent text-xs px-5 py-2.5 flex items-center gap-2 shadow-lg cursor-pointer"
               aria-label="Play All Songs"
             >
-              <Play className="w-6 h-6 fill-current ml-0.5" />
+              <Play className="w-4 h-4 fill-current ml-0.5" />
+              <span>Play All</span>
             </button>
           )}
 
@@ -246,17 +258,17 @@ export const PlaylistDetail = () => {
             <>
               <button
                 onClick={() => setEditOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold transition-all cursor-pointer"
+                className="btn-graphite text-xs px-3.5 py-2 flex items-center gap-1.5 cursor-pointer"
               >
-                <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                <Edit2 className="w-3.5 h-3.5" />
                 Edit
               </button>
 
               <button
                 onClick={() => setDeleteConfirmOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 text-xs font-semibold transition-all cursor-pointer"
+                className="btn-danger text-xs px-3.5 py-2 flex items-center gap-1.5 cursor-pointer"
               >
-                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                <Trash2 className="w-3.5 h-3.5" />
                 Delete
               </button>
             </>
@@ -266,7 +278,7 @@ export const PlaylistDetail = () => {
 
       {/* Tracklist Table */}
       {songs.length === 0 ? (
-        <div className="text-center py-16 space-y-3 bg-[#181818] border border-[rgba(255,255,255,0.06)] rounded-[4px] p-8">
+        <div className="text-center py-16 space-y-3 bg-[#181818] border border-white/[0.06] rounded-[4px] p-8">
           <Music className="w-8 h-8 text-[#666666] mx-auto" />
           <h3 className="text-sm font-semibold text-[#ffffff]">This playlist is empty</h3>
           <p className="text-xs text-[#999999] max-w-sm mx-auto">
@@ -282,46 +294,51 @@ export const PlaylistDetail = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-[#181818] border border-white/[0.08] rounded-[4px] overflow-hidden shadow-xl">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[rgba(255,255,255,0.08)] text-[#777777] font-mono text-[11px] uppercase tracking-wider">
+              <tr className="border-b border-white/[0.08] text-[#777777] font-mono text-[11px] uppercase tracking-wider">
                 <th className="py-3 px-4 w-12 text-center">#</th>
                 <th className="py-3 px-4">Title</th>
                 <th className="py-3 px-4 hidden md:table-cell">Album</th>
                 <th className="py-3 px-4 hidden sm:table-cell">Genre</th>
-                <th className="py-3 px-4 text-right w-24">
+                <th className="py-3 px-4 text-center w-28">Actions</th>
+                <th className="py-3 px-4 text-right w-20">
                   <Clock className="w-3.5 h-3.5 inline ml-auto" />
                 </th>
                 {isOwner && <th className="py-3 px-4 w-12 text-center"></th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
+            <tbody className="divide-y divide-white/[0.04]">
               {songs.map((song, index) => {
-                const sId = song.id || song._id;
+                const sId = (song.id || song._id).toString();
                 const isCurrent =
-                  currentTrack && (currentTrack.id || currentTrack._id) === sId;
+                  currentTrack && (currentTrack.id || currentTrack._id).toString() === sId;
                 const isCurrentPlaying = isCurrent && isPlaying;
+                const fav = isFavorite(sId);
+                const playLater = isInPlayLater(sId);
 
                 return (
                   <tr
                     key={sId}
                     onClick={() => handlePlaySong(song)}
-                    className={`group hover:bg-[#202020] transition-colors cursor-pointer ${isCurrent ? 'bg-[#222222]' : ''
-                      }`}
+                    className={`group hover:bg-[#202020] transition-colors cursor-pointer ${
+                      isCurrent ? 'bg-[#222222]' : ''
+                    }`}
                   >
                     {/* Track Number / Play Trigger */}
                     <td className="py-3 px-4 text-center text-[#777777] font-mono">
                       <div className="flex items-center justify-center">
                         {isCurrentPlaying ? (
                           <div className="flex items-center gap-0.5">
-                            <span className="w-1 h-3 bg-[#00e599] animate-pulse rounded-full" />
-                            <span className="w-1 h-2 bg-[#00e599] animate-pulse delay-75 rounded-full" />
+                            <span className="w-1 h-3 bg-[#ff7a1a] vbar vbar-1 rounded-sm" />
+                            <span className="w-1 h-4 bg-[#ff7a1a] vbar vbar-3 rounded-sm" />
+                            <span className="w-1 h-2 bg-[#ff7a1a] vbar vbar-5 rounded-sm" />
                           </div>
                         ) : (
                           <>
                             <span className="group-hover:hidden">{index + 1}</span>
-                            <Play className="w-3.5 h-3.5 fill-current text-[#ffffff] hidden group-hover:block" />
+                            <Play className="w-3.5 h-3.5 fill-current text-white hidden group-hover:block" />
                           </>
                         )}
                       </div>
@@ -337,12 +354,13 @@ export const PlaylistDetail = () => {
                         />
                         <div className="min-w-0">
                           <div
-                            className={`font-bold truncate ${isCurrent ? 'text-emerald-400' : 'text-slate-100 group-hover:text-white'
-                              }`}
+                            className={`font-semibold truncate ${
+                              isCurrent ? 'text-[#ff7a1a]' : 'text-white group-hover:text-[#ff7a1a]'
+                            }`}
                           >
                             {song.title}
                           </div>
-                          <div className="text-slate-400 truncate text-[11px]">
+                          <div className="text-[#999999] truncate text-[11px]">
                             {song.artist}
                           </div>
                         </div>
@@ -356,9 +374,36 @@ export const PlaylistDetail = () => {
 
                     {/* Genre */}
                     <td className="py-3 px-4 hidden sm:table-cell">
-                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-[2px] bg-[#222222] text-[#cccccc] border border-[rgba(255,255,255,0.06)]">
+                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-[2px] bg-[#222222] text-[#cccccc] border border-white/[0.06]">
                         {song.genre}
                       </span>
+                    </td>
+
+                    {/* Actions: Favorite & Play Later */}
+                    <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => toggleFavorite(song)}
+                          aria-label={fav ? 'Remove from favourites' : 'Add to favourites'}
+                          title={fav ? 'Favorited' : 'Favorite'}
+                          className={`p-1.5 rounded-[3px] transition-colors cursor-pointer ${
+                            fav ? 'text-rose-500' : 'text-[#777777] hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-current' : ''}`} />
+                        </button>
+
+                        <button
+                          onClick={() => togglePlayLater(song)}
+                          aria-label={playLater ? 'Remove from Play Later' : 'Save to Play Later'}
+                          title={playLater ? 'In Play Later' : 'Play Later'}
+                          className={`p-1.5 rounded-[3px] transition-colors cursor-pointer ${
+                            playLater ? 'text-[#ff7a1a]' : 'text-[#777777] hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          <Bookmark className={`w-3.5 h-3.5 ${playLater ? 'fill-current' : ''}`} />
+                        </button>
+                      </div>
                     </td>
 
                     {/* Duration */}
@@ -368,10 +413,11 @@ export const PlaylistDetail = () => {
 
                     {/* Owner Action: Remove Track */}
                     {isOwner && (
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={(e) => handleRemoveSong(e, sId)}
                           aria-label="Remove from playlist"
+                          title="Remove from playlist"
                           className="text-[#777777] hover:text-rose-400 transition-colors p-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

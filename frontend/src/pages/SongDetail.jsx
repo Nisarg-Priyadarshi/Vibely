@@ -250,10 +250,10 @@ export const SongDetail = () => {
                 onClick={() => togglePlayLater(song)}
                 title={playLater ? 'Remove from Play Later' : 'Save to Play Later'}
                 aria-label={playLater ? 'Remove from Play Later' : 'Save to Play Later'}
-                className={`btn-graphite text-xs px-4 py-2.5 gap-2 ${playLater ? 'text-[#699fff]' : ''}`}
+                className={`btn-graphite text-xs px-4 py-2.5 gap-2 ${playLater ? 'text-[#ff7a1a]' : ''}`}
               >
                 {playLater ? (
-                  <BookmarkCheck className="w-4 h-4 text-[#699fff]" />
+                  <BookmarkCheck className="w-4 h-4 text-[#ff7a1a]" />
                 ) : (
                   <Bookmark className="w-4 h-4" />
                 )}
@@ -294,7 +294,7 @@ export const SongDetail = () => {
                 More in <span className="text-[#ffffff]">{song.genre}</span>
               </h2>
             </div>
-            <Link to="/" className="text-xs text-[#699fff] hover:underline font-medium">
+            <Link to="/" className="text-xs text-[#ff7a1a] hover:underline font-medium">
               Explore all &rarr;
             </Link>
           </div>

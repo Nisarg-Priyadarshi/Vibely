@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Play,
   Pause,
@@ -10,8 +11,11 @@ import {
   AlertCircle,
   Loader2,
   ListMusic,
+  Heart,
+  Bookmark,
 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
+import { useSongLists } from '../context/SongListContext';
 import { formatTime } from '../utils/format';
 
 export const PlayerBar = () => {
@@ -34,6 +38,8 @@ export const PlayerBar = () => {
     prevTrack,
   } = usePlayer();
 
+  const { isFavorite, toggleFavorite, isInPlayLater, togglePlayLater } = useSongLists();
+
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
 
@@ -46,6 +52,10 @@ export const PlayerBar = () => {
   if (!currentTrack) {
     return null;
   }
+
+  const sId = (currentTrack.id || currentTrack._id || '').toString();
+  const fav = isFavorite(sId);
+  const playLater = isInPlayLater(sId);
 
   const handleSeekChange = (e) => {
     setIsSeeking(true);
@@ -64,7 +74,7 @@ export const PlayerBar = () => {
     : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-[rgba(255,255,255,0.08)] px-4 py-3 sm:px-8 shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212]/95 backdrop-blur-md border-t border-white/[0.08] px-4 py-3 sm:px-8 shadow-2xl">
       {/* Playback Alert / Error Banner */}
       {playbackError && (
         <div className="max-w-7xl mx-auto mb-2 px-3 py-1.5 rounded-[4px] bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
@@ -74,59 +84,93 @@ export const PlayerBar = () => {
       )}
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Left: Track Information */}
-        <div className="flex items-center gap-3.5 w-full md:w-1/4 min-w-0">
-          <img
-            src={currentTrack.coverUrl}
-            alt={currentTrack.title}
-            className="w-11 h-11 rounded-[4px] object-cover shrink-0 bg-[#222222] border border-[rgba(255,255,255,0.08)]"
-          />
-          <div className="min-w-0">
-            <h4 className="text-xs font-bold text-[#ffffff] truncate">
+        {/* Left: Track Information with Favorite & Play Later Actions */}
+        <div className="flex items-center gap-3.5 w-full md:w-1/3 min-w-0">
+          <Link to={`/songs/${sId}`} className="shrink-0 group">
+            <img
+              src={currentTrack.coverUrl}
+              alt={currentTrack.title}
+              className="w-12 h-12 rounded-[4px] object-cover bg-[#222222] border border-white/10 group-hover:border-[#ff7a1a]/60 transition-colors shadow-sm"
+            />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <Link
+              to={`/songs/${sId}`}
+              className="text-xs font-bold text-white truncate block hover:text-[#ff7a1a] transition-colors"
+            >
               {currentTrack.title}
-            </h4>
+            </Link>
             <p className="text-[11px] text-[#999999] truncate">
               {currentTrack.artist}
             </p>
           </div>
+
+          {/* Quick Favorite & Play Later Toolbar */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => toggleFavorite(currentTrack)}
+              aria-label={fav ? 'Remove from favourites' : 'Add to favourites'}
+              title={fav ? 'In Favourites' : 'Add to Favourites'}
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                fav
+                  ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20'
+                  : 'text-[#888888] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Heart className={`w-5 h-5 transition-transform active:scale-125 ${fav ? 'fill-current' : ''}`} />
+            </button>
+
+            <button
+              onClick={() => togglePlayLater(currentTrack)}
+              aria-label={playLater ? 'Remove from Play Later' : 'Save to Play Later'}
+              title={playLater ? 'In Play Later' : 'Save to Play Later'}
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                playLater
+                  ? 'text-[#ff7a1a] bg-[#ff7a1a]/10 hover:bg-[#ff7a1a]/20'
+                  : 'text-[#888888] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Bookmark className={`w-5 h-5 transition-transform active:scale-125 ${playLater ? 'fill-current' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Center: Controls & Scrubber */}
-        <div className="flex flex-col items-center w-full md:w-2/4 max-w-xl">
+        <div className="flex flex-col items-center w-full md:w-5/12 max-w-xl">
           {/* Action Buttons */}
           <div className="flex items-center gap-5 mb-1.5">
             <button
               onClick={prevTrack}
               aria-label="Previous Track"
-              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
+              className="w-10 h-10 flex items-center justify-center text-[#999999] hover:text-white transition-colors cursor-pointer"
             >
-              <SkipBack className="w-4 h-4 fill-current" />
+              <SkipBack className="w-5 h-5 fill-current" />
             </button>
 
             <button
               onClick={togglePlay}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="w-9 h-9 rounded-full bg-[#ffffff] hover:scale-105 active:scale-95 text-[#121212] flex items-center justify-center transition-all cursor-pointer shadow-md"
+              className="w-11 h-11 rounded-full bg-white hover:scale-105 active:scale-95 text-[#121212] flex items-center justify-center transition-all cursor-pointer shadow-md"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#121212]" />
+                <Loader2 className="w-5 h-5 animate-spin text-[#121212]" />
               ) : isPlaying ? (
-                <Pause className="w-4 h-4 fill-current text-[#121212]" />
+                <Pause className="w-5 h-5 fill-current text-[#121212]" />
               ) : (
-                <Play className="w-4 h-4 fill-current ml-0.5 text-[#121212]" />
+                <Play className="w-5 h-5 fill-current ml-0.5 text-[#121212]" />
               )}
             </button>
 
             <button
               onClick={nextTrack}
               aria-label="Next Track"
-              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
+              className="w-10 h-10 flex items-center justify-center text-[#999999] hover:text-white transition-colors cursor-pointer"
             >
-              <SkipForward className="w-4 h-4 fill-current" />
+              <SkipForward className="w-5 h-5 fill-current" />
             </button>
           </div>
 
-          {/* Scrubber Bar */}
+          {/* Scrubber Bar with orange progress */}
           <div className="w-full flex items-center gap-3 text-[11px] font-mono text-[#999999]">
             <span className="w-9 text-right shrink-0">{formatTime(seekValue)}</span>
 
@@ -141,9 +185,9 @@ export const PlayerBar = () => {
                 onMouseUp={handleSeekCommit}
                 onTouchEnd={handleSeekCommit}
                 style={{
-                  background: `linear-gradient(to right, #ffffff ${progressPercent}%, #2e2e2e ${progressPercent}%)`,
+                  background: `linear-gradient(to right, #ff7a1a ${progressPercent}%, #2e2e2e ${progressPercent}%)`,
                 }}
-                className="w-full h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] hover:h-1.5 transition-all focus:outline-none"
+                className="w-full h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ff7a1a] hover:h-1.5 transition-all focus:outline-none"
               />
             </div>
 
@@ -152,7 +196,7 @@ export const PlayerBar = () => {
         </div>
 
         {/* Right: Volume & Queue Position */}
-        <div className="hidden md:flex items-center justify-end gap-4 w-1/4">
+        <div className="hidden md:flex items-center justify-end gap-4 w-1/4 min-w-0">
           {queue && queue.length > 0 && (
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#777777] mr-1">
               <ListMusic className="w-3.5 h-3.5 text-[#999999]" />
@@ -166,19 +210,20 @@ export const PlayerBar = () => {
             <button
               onClick={toggleMute}
               aria-label={isMuted ? 'Unmute' : 'Mute'}
-              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
+              className="w-10 h-10 shrink-0 flex items-center justify-center text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
             >
               {isMuted || volume === 0 ? (
-                <VolumeX className="w-4 h-4 text-rose-400" />
+                <VolumeX className="w-5 h-5 text-rose-400" />
               ) : volume < 0.5 ? (
-                <Volume1 className="w-4 h-4" />
+                <Volume1 className="w-5 h-5" />
               ) : (
-                <Volume2 className="w-4 h-4" />
+                <Volume2 className="w-5 h-5" />
               )}
             </button>
 
             <input
               type="range"
+              aria-label="Volume"
               min="0"
               max="1"
               step="0.02"
@@ -187,7 +232,7 @@ export const PlayerBar = () => {
               style={{
                 background: `linear-gradient(to right, #cccccc ${(isMuted ? 0 : volume) * 100}%, #2e2e2e ${(isMuted ? 0 : volume) * 100}%)`,
               }}
-              className="w-20 h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] focus:outline-none"
+              className="w-28 h-1.5 shrink-0 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] focus:outline-none"
             />
           </div>
         </div>

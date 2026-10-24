@@ -349,7 +349,7 @@ export const Rooms = () => {
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-mono text-xs font-bold text-[#699fff] bg-[#0d1526] px-2 py-0.5 rounded-[2px] border border-[#699fff]/20">
+                    <span className="font-mono text-xs font-bold text-[#ff7a1a] bg-[#26170f] px-2 py-0.5 rounded-[2px] border border-[#ff7a1a]/20">
                       #{room.code}
                     </span>
                     <span className="inline-flex items-center gap-1 text-[11px] text-[#999999]">

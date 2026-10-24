@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { PlayerProvider } from './context/PlayerContext';
+import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { PlaylistProvider } from './context/PlaylistContext';
 import { RoomProvider } from './context/RoomContext';
 import { SongListProvider } from './context/SongListContext';
@@ -26,6 +26,7 @@ const LOADING_MIN_MS = 1200;
 
 function AppContent() {
   const { loading, authError, checkAuth } = useAuth();
+  const { isPlaying } = usePlayer();
   const [showLoader, setShowLoader] = useState(true);
   const mountedAt = useRef(Date.now());
 
@@ -47,7 +48,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-[#f2f2f2] flex flex-col font-sans relative">
+    <div className={`app-shell min-h-screen text-[#f2f2f2] flex flex-col font-sans relative ${isPlaying ? 'app-shell-playing' : ''}`}>
       <Navbar />
 
       <main className="flex-1 flex flex-col page-enter">
@@ -68,13 +69,16 @@ function AppContent() {
         </Routes>
       </main>
 
-      <footer className="border-t border-[rgba(255,255,255,0.07)] py-6 mb-24 bg-[#121212]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-sm font-semibold tracking-widest text-[#ffffff] uppercase">
-            Vibely
-          </span>
+      <footer className="border-t border-white/[0.06] py-8 mb-24 bg-[#121212]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <img src="/vibely-logo.png" alt="Vibely" className="w-5 h-5 rounded-[3px] object-contain opacity-80" />
+            <span className="text-sm font-bold tracking-widest text-[#ffffff] uppercase font-sans">
+              Vibely
+            </span>
+          </div>
           <span className="text-xs text-[#666666]">
-            &copy; {new Date().getFullYear()} Vibely. All rights reserved.
+            &copy; {new Date().getFullYear()} Vibely. High-fidelity synchronized music streaming.
           </span>
         </div>
       </footer>

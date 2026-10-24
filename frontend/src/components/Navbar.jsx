@@ -54,39 +54,44 @@ export const Navbar = () => {
 
   return (
     <header
-      className={`sticky top-0 z-40 px-4 sm:px-6 transition-colors duration-200 ${
+      className={`nav-stripe-bg sticky top-0 z-40 px-5 sm:px-10 transition-all duration-200 ${
         scrolled
-          ? 'bg-[#121212] border-b border-[rgba(255,255,255,0.07)]'
-          : 'bg-[#121212]/90 backdrop-blur-sm border-b border-[rgba(255,255,255,0.05)]'
+          ? 'backdrop-blur-md border-b border-white/[0.12] shadow-lg'
+          : 'backdrop-blur-md border-b border-white/[0.08]'
       }`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
-        {/* Brand wordmark */}
-        <div className="flex items-center gap-8 min-w-0">
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-[4.5rem]">
+        {/* Brand wordmark with true logo */}
+        <div className="flex items-center gap-10 min-w-0">
           <Link to="/" className="flex items-center gap-3 shrink-0 group">
-            <div className="w-7 h-7 rounded-[4px] bg-[#ffffff] flex items-center justify-center transition-transform group-hover:scale-105">
-              <Music className="w-4 h-4 text-[#121212]" aria-hidden="true" />
+            <img
+              src="/vibely-logo.png"
+              alt="Vibely"
+              className="w-9 h-9 rounded-[6px] object-contain shadow-md transition-transform duration-200 group-hover:scale-105"
+            />
+            <div className="flex items-center gap-2">
+                <span className="text-lg font-bold tracking-widest text-[#ffffff] uppercase font-sans">
+                Vibely
+              </span>
+              <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-[#ff7a1a] shadow-[0_0_8px_#ff7a1a] animate-pulse" />
             </div>
-            <span className="text-base font-semibold tracking-widest text-[#ffffff] uppercase">
-              Vibely
-            </span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-0.5" aria-label="Main navigation">
+          <nav className="hidden xl:flex items-center gap-2" aria-label="Main navigation">
             {NAV_LINKS.map(({ to, label, icon: Icon }) => {
               const active = isActive(to);
               return (
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[4px] text-xs font-medium tracking-wide transition-colors ${
+                  className={`group flex items-center gap-2 px-3.5 py-2 rounded-[4px] text-sm font-medium tracking-wide transition-[color,background-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-[1px] active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none ${
                     active
-                      ? 'bg-[#303030] text-[#ffffff]'
-                      : 'text-[#999999] hover:text-[#ffffff] hover:bg-[#1e1e1e]'
+                      ? 'bg-[#222222] text-[#ffffff] shadow-[inset_0_0_0_1px_rgba(255,122,26,0.35)]'
+                      : 'text-[#999999] hover:text-[#ffffff] hover:bg-[#1a1a1a] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                  <Icon className={`w-4 h-4 transition-colors duration-200 group-hover:text-[#ff7a1a] ${active ? 'text-[#ff7a1a]' : 'text-[#888888]'}`} aria-hidden="true" />
                   {label}
                 </Link>
               );
@@ -95,19 +100,18 @@ export const Navbar = () => {
         </div>
 
         {/* Auth controls — desktop */}
-        <div className="hidden sm:flex items-center gap-2">
+        <div className="hidden xl:flex items-center gap-4">
           {user ? (
             <>
               <Link
                 to="/profile"
-                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-[4px] transition-colors ${
+                className={`flex items-center gap-2.5 px-3 py-1.5 rounded-[4px] transition-[color,background-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-[1px] active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none ${
                   isActive('/profile')
-                    ? 'bg-[#303030] box-shadow-hairline'
-                    : 'hover:bg-[#1e1e1e]'
+                    ? 'bg-[#222222] shadow-[inset_0_0_0_1px_rgba(255,122,26,0.35)]'
+                    : 'bg-[#181818] hover:bg-[#202020] border border-white/5'
                 }`}
-                style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.07)' }}
               >
-                <div className="w-6 h-6 rounded-[3px] bg-[#303030] flex items-center justify-center text-[11px] font-bold text-[#ffffff] uppercase overflow-hidden shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[#2a2a2a] border border-white/10 flex items-center justify-center text-[11px] font-bold text-[#ff7a1a] uppercase overflow-hidden shrink-0">
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -121,7 +125,7 @@ export const Navbar = () => {
 
               <button
                 onClick={handleLogout}
-                className="btn-ghost text-xs py-1.5 px-2.5 gap-1.5"
+                className="btn-ghost text-xs py-1.5 px-3 gap-1.5 hover:text-rose-400 transition-colors"
                 title="Log Out"
               >
                 <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
@@ -134,7 +138,7 @@ export const Navbar = () => {
                 <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
                 Sign In
               </Link>
-              <Link to="/register" className="btn-white text-xs py-1.5 px-4 gap-1.5">
+              <Link to="/register" className="btn-accent text-xs py-2 px-4 gap-1.5">
                 <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
                 Create account
               </Link>
@@ -143,7 +147,7 @@ export const Navbar = () => {
         </div>
 
         {/* Mobile: avatar + hamburger */}
-        <div className="flex lg:hidden items-center gap-2">
+        <div className="flex xl:hidden items-center gap-2">
           {user && (
             <Link
               to="/profile"
@@ -158,11 +162,11 @@ export const Navbar = () => {
           )}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="w-8 h-8 flex items-center justify-center rounded-[4px] bg-[#1e1e1e] text-[#cccccc] hover:text-white transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-[4px] bg-[#1e1e1e] text-[#cccccc] hover:text-white hover:bg-[#29221d] transition-[color,background-color,transform] duration-200 ease-out active:scale-95 motion-reduce:transform-none motion-reduce:transition-none"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -170,7 +174,7 @@ export const Navbar = () => {
       {/* Mobile drawer */}
       {mobileOpen && (
         <nav
-          className="lg:hidden border-t border-[rgba(255,255,255,0.07)] py-3 space-y-0.5"
+          className="xl:hidden border-t border-[rgba(255,255,255,0.07)] py-3 space-y-1"
           aria-label="Mobile navigation"
         >
           {NAV_LINKS.map(({ to, label, icon: Icon }) => {
@@ -179,13 +183,13 @@ export const Navbar = () => {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-[4px] text-xs font-medium transition-colors ${
+                className={`group flex min-h-11 items-center gap-3 px-3 py-3 rounded-[4px] text-sm font-medium transition-[color,background-color,transform] duration-200 ease-out hover:translate-x-[2px] active:translate-x-0 motion-reduce:transform-none motion-reduce:transition-none ${
                   active
                     ? 'bg-[#303030] text-[#ffffff]'
                     : 'text-[#999999] hover:text-[#ffffff] hover:bg-[#1e1e1e]'
                 }`}
               >
-                <Icon className="w-4 h-4" aria-hidden="true" />
+                <Icon className="w-4 h-4 text-[#888888] transition-colors duration-200 group-hover:text-[#ff7a1a]" aria-hidden="true" />
                 {label}
               </Link>
             );
