@@ -59,7 +59,9 @@ export const PlayerBar = () => {
   };
 
   const currentDuration = duration || currentTrack.duration || 0;
-  const progressPercent = currentDuration > 0 ? (seekValue / currentDuration) * 100 : 0;
+  const progressPercent = currentDuration > 0
+    ? Math.min(100, Math.max(0, (seekValue / currentDuration) * 100))
+    : 0;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 border-t border-slate-800/90 backdrop-blur-xl px-4 py-3 sm:px-6 shadow-2xl">
@@ -138,7 +140,8 @@ export const PlayerBar = () => {
                 onChange={handleSeekChange}
                 onMouseUp={handleSeekCommit}
                 onTouchEnd={handleSeekCommit}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400 hover:h-2 transition-all focus:outline-none"
+                style={{ background: `linear-gradient(to right, #34d399 ${progressPercent}%, #1e293b ${progressPercent}%)` }}
+                className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-emerald-400 hover:h-2 transition-all focus:outline-none"
               />
             </div>
 

@@ -213,6 +213,9 @@ export const RoomDetail = () => {
   const isPlaying = roomState?.isPlaying ?? localIsPlaying;
   const displayPosition = seekingValue !== null ? seekingValue : currentTime;
   const songDuration = currentSong?.duration || duration || 0;
+  const roomProgressPercent = songDuration > 0
+    ? Math.min(100, Math.max(0, (displayPosition / songDuration) * 100))
+    : 0;
 
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -394,6 +397,7 @@ export const RoomDetail = () => {
                       onChange={handleHostSeekChange}
                       onMouseUp={handleHostSeekCommit}
                       onTouchEnd={handleHostSeekCommit}
+                      style={{ background: `linear-gradient(to right, #34d399 ${roomProgressPercent}%, #1e293b ${roomProgressPercent}%)` }}
                       className={`w-full h-2 bg-slate-800 rounded-lg appearance-none focus:outline-none transition-all ${
                         isHost ? 'cursor-pointer accent-emerald-400 hover:h-2.5' : 'cursor-not-allowed accent-slate-600'
                       }`}
