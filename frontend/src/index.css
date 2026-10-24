@@ -1,60 +1,83 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Vibely Design System — Tokens
+   Source: DESIGN.md / theme.css / tokens.json / variables.css
+   ========================================================================== */
+
 @theme {
+  /* Colors — canonical from DESIGN.md */
   --color-obsidian: #121212;
-  --color-obsidian-dark: #0a0a0a;
-  --color-graphite: #222222;
-  --color-graphite-elevated: #2a2a2a;
-  --color-graphite-hover: #333333;
+  --color-graphite: #303030;
   --color-mid-gray: #666666;
   --color-fog: #999999;
   --color-silver: #cccccc;
   --color-bone: #f2f2f2;
   --color-white: #ffffff;
-
-  --color-signal: #00e599;
-  --color-signal-hover: #05f0a2;
   --color-signal-blue: #699fff;
 
+  /* Typography — Inter is the free Söhne substitute (same weight range, geometric) */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --radius-xs: 2px;
+  /* Type scale from DESIGN.md */
+  --text-caption: 12px;
+  --text-body-sm: 14px;
+  --text-body: 17px;
+  --text-subheading: 22px;
+  --text-heading-sm: 28px;
+  --text-heading: 36px;
+  --text-display: 60px;
+
+  /* Spacing — 4px base */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-96: 96px;
+
+  /* Border radius — 4px everywhere, 0 on cards per DESIGN.md */
+  --radius-none: 0px;
   --radius-sm: 4px;
   --radius-md: 4px;
-  --radius-lg: 6px;
-  --radius-xl: 8px;
+
+  /* Shadow — inset hairline only */
+  --shadow-hairline: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
 :root {
-  /* Color tokens matching DESIGN.md / variables.css */
+  /* Duplicate as CSS vars for use outside @theme */
   --color-obsidian: #121212;
-  --color-graphite: #222222;
-  --color-graphite-elevated: #2a2a2a;
+  --color-graphite: #303030;
   --color-mid-gray: #666666;
   --color-fog: #999999;
   --color-silver: #cccccc;
   --color-bone: #f2f2f2;
   --color-white: #ffffff;
-  --color-signal: #00e599;
   --color-signal-blue: #699fff;
 
-  /* Typography scale */
-  --text-caption: 12px;
-  --text-body-sm: 14px;
-  --text-body: 16px;
-  --text-subheading: 20px;
-  --text-heading-sm: 24px;
-  --text-heading: 32px;
-  --text-display: 56px;
-
-  /* Inset hairline elevation */
-  --shadow-hairline: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --shadow-hairline-focus: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-  --shadow-hairline-signal: inset 0 0 0 1px rgba(0, 229, 153, 0.4);
+  /* Elevation inset hairlines */
+  --hairline: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --hairline-strong: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   Global Reset & Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
@@ -66,481 +89,255 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #0b0f19;
-  color: #f3f4f6;
+  background-color: #121212;
+  color: #f2f2f2;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.43;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Custom discreet scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Text selection */
+::selection {
+  background-color: #699fff;
+  color: #121212;
 }
 
-::-webkit-scrollbar-track {
-  background: #121212;
-}
+/* Discreet scrollbars */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #121212; }
+::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555555; }
 
-::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 3px;
-}
+/* Scrollbar-none utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555555;
-}
+/* Range inputs */
+input[type="range"] { accent-color: #ffffff; }
 
-/* Range inputs (Scrubbers & volume sliders) */
-input[type="range"] {
-  accent-color: var(--color-signal);
-}
-
-/* Accessible focus ring */
-*:focus-visible {
-  outline: 2px solid var(--color-signal);
+/* Accessible focus ring — single consistent style */
+:focus-visible {
+  outline: 2px solid #699fff;
   outline-offset: 2px;
 }
 
-/* Common UI Utility Classes */
-.surface-obsidian {
-  background-color: #121212;
-}
+/* ==========================================================================
+   Surface Utility Classes
+   ========================================================================== */
+
+.surface-obsidian { background-color: #121212; }
 
 .surface-graphite {
-  background-color: #222222;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background-color: #303030;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
-.surface-graphite-elevated {
-  background-color: #2a2a2a;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+.surface-elevated {
+  background-color: #1e1e1e;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
-.hairline-border {
-  border-color: rgba(255, 255, 255, 0.08);
-}
+.hairline { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+.hairline-b { border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+.hairline-t { border-top: 1px solid rgba(255, 255, 255, 0.07); }
 
-.hairline-border-b {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
+/* ==========================================================================
+   Button System — Flat, 4px corners, no shadows per DESIGN.md
+   ========================================================================== */
 
-.hairline-border-t {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
+/* Primary CTA — white fill on dark (#fff bg, #121212 text) */
 .btn-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: #ffffff;
   color: #121212;
   font-weight: 700;
-  border-radius: 4px;
-  padding: 8px 18px;
   font-size: 14px;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.btn-white:hover {
-  background-color: #f0f0f0;
-}
-
-.btn-white:active {
-  transform: scale(0.98);
-}
-
-.btn-signal {
-  background-color: var(--color-signal);
-  color: #121212;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 8px 18px;
-  font-size: 14px;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.btn-signal:hover {
-  background-color: var(--color-signal-hover);
-}
-
-.btn-signal:active {
-  transform: scale(0.98);
-}
-
-.btn-graphite {
-  background-color: #222222;
-  color: #f2f2f2;
-  font-weight: 600;
   border-radius: 4px;
   padding: 8px 16px;
-  font-size: 14px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.12s ease, transform 0.1s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+}
+.btn-white:hover { background-color: #ebebeb; }
+.btn-white:active { transform: scale(0.98); }
+.btn-white:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* Secondary — graphite fill, inset hairline */
+.btn-graphite {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background-color: #303030;
+  color: #f2f2f2;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 4px;
+  padding: 8px 16px;
+  border: none;
   cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: background-color 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
 }
+.btn-graphite:hover { background-color: #3a3a3a; color: #ffffff; }
+.btn-graphite:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.btn-graphite:hover {
-  background-color: #2c2c2c;
-  color: #ffffff;
-}
-
+/* Ghost — no fill, fog text, hover to white */
 .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: #999999;
   font-weight: 500;
+  font-size: 14px;
   border-radius: 4px;
   padding: 8px 14px;
-  font-size: 14px;
-  transition: color 0.15s ease;
+  border: none;
+  cursor: pointer;
+  transition: color 0.12s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+}
+.btn-ghost:hover { color: #ffffff; }
+
+/* Destructive ghost */
+.btn-danger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-}
-
-.btn-ghost:hover {
-  color: #ffffff;
-}
-
-.input-flat {
-  background-color: #222222;
-  color: #ffffff;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
-  padding: 10px 14px;
+  background: transparent;
+  color: #f87171;
+  font-weight: 500;
   font-size: 14px;
-  outline: none;
-  transition: box-shadow 0.15s ease;
+  border-radius: 4px;
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease;
+  white-space: nowrap;
 }
-
-.input-flat:focus {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-}
-
-.input-flat::placeholder {
-  color: #777777;
-}
-
-/* Accessible focus styling */
-:focus-visible {
-  outline: 2px solid #10b981;
-  outline-offset: 2px;
-}
-
-/* Prevent unwanted horizontal overflow on containers */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* Utility to hide scrollbars while keeping scrollability */
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
+.btn-danger:hover { color: #fca5a5; background-color: rgba(239, 68, 68, 0.08); }
 
 /* ==========================================================================
-   Vibely Animated Loading Screen Styles
+   Input System — Graphite bg, 4px corners, inset hairline
    ========================================================================== */
 
-/* 1. Five-Bar Audio Waveform Live Pulse Animations */
-@keyframes vibelyBarPulse1 {
-  0% {
-    transform: scaleY(0.42);
-    opacity: 0.82;
-  }
+.input-flat {
+  background-color: #303030;
+  color: #ffffff;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  border: none;
+  width: 100%;
+  transition: box-shadow 0.12s ease;
+  line-height: 1.43;
+}
+.input-flat:focus { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
+.input-flat::placeholder { color: #666666; }
+.input-flat:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  50% {
-    transform: scaleY(1.08);
-    opacity: 1;
-  }
+/* ==========================================================================
+   Loading Screen — Vibely Animation Suite
+   Strategy: Monochromatic white waveform bars on Obsidian, Signal Blue accent.
+   No rainbow/neon — the brand is dark-stage minimal, not a rave.
+   ========================================================================== */
 
-  100% {
-    transform: scaleY(0.55);
-    opacity: 0.88;
-  }
+/* Five equalizer bars — each independent timing for natural feel */
+@keyframes barPulse1 {
+  0%   { transform: scaleY(0.35); }
+  50%  { transform: scaleY(1); }
+  100% { transform: scaleY(0.5); }
+}
+@keyframes barPulse2 {
+  0%   { transform: scaleY(0.85); }
+  50%  { transform: scaleY(0.3); }
+  100% { transform: scaleY(1.1); }
+}
+@keyframes barPulse3 {
+  0%   { transform: scaleY(0.4); }
+  35%  { transform: scaleY(1.2); }
+  70%  { transform: scaleY(0.6); }
+  100% { transform: scaleY(1); }
+}
+@keyframes barPulse4 {
+  0%   { transform: scaleY(1.05); }
+  50%  { transform: scaleY(0.38); }
+  100% { transform: scaleY(0.8); }
+}
+@keyframes barPulse5 {
+  0%   { transform: scaleY(0.55); }
+  50%  { transform: scaleY(1.15); }
+  100% { transform: scaleY(0.32); }
 }
 
-@keyframes vibelyBarPulse2 {
-  0% {
-    transform: scaleY(0.92);
-    opacity: 0.95;
-  }
+.vbar { transform-origin: bottom; }
+.vbar-1 { animation: barPulse1 1.25s ease-in-out infinite alternate; }
+.vbar-2 { animation: barPulse2 0.92s ease-in-out infinite alternate 0.12s; }
+.vbar-3 { animation: barPulse3 1.4s  ease-in-out infinite alternate 0.25s; }
+.vbar-4 { animation: barPulse4 1.05s ease-in-out infinite alternate 0.18s; }
+.vbar-5 { animation: barPulse5 1.2s  ease-in-out infinite alternate 0.32s; }
 
-  50% {
-    transform: scaleY(0.38);
-    opacity: 0.78;
-  }
-
-  100% {
-    transform: scaleY(1.18);
-    opacity: 1;
-  }
+/* Wordmark fade in once — not looping */
+@keyframes wordmarkReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.wordmark-reveal {
+  animation: wordmarkReveal 0.6s ease-out 0.3s both;
 }
 
-@keyframes vibelyBarPulse3 {
-  0% {
-    transform: scaleY(0.52);
-    opacity: 0.85;
-  }
-
-  35% {
-    transform: scaleY(1.26);
-    opacity: 1;
-  }
-
-  70% {
-    transform: scaleY(0.68);
-    opacity: 0.9;
-  }
-
-  100% {
-    transform: scaleY(1.12);
-    opacity: 1;
-  }
+/* Subtitle line */
+@keyframes subtitleReveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.subtitle-reveal {
+  animation: subtitleReveal 0.5s ease-out 0.7s both;
 }
 
-@keyframes vibelyBarPulse4 {
-  0% {
-    transform: scaleY(1.12);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scaleY(0.44);
-    opacity: 0.82;
-  }
-
-  100% {
-    transform: scaleY(0.88);
-    opacity: 0.94;
-  }
+/* Blue signal pulse ring behind bars — one accent, DESIGN.md compliant */
+@keyframes signalRing {
+  0%   { transform: scale(0.92); opacity: 0.25; }
+  50%  { transform: scale(1.06); opacity: 0.45; }
+  100% { transform: scale(0.96); opacity: 0.3; }
+}
+.signal-ring {
+  animation: signalRing 3.5s ease-in-out infinite alternate;
 }
 
-@keyframes vibelyBarPulse5 {
-  0% {
-    transform: scaleY(0.62);
-    opacity: 0.86;
-  }
-
-  50% {
-    transform: scaleY(1.18);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scaleY(0.38);
-    opacity: 0.78;
-  }
-}
-
-.vibely-bar-1 {
-  transform-origin: center;
-  animation: vibelyBarPulse1 1.25s ease-in-out infinite alternate;
-  will-change: transform, opacity;
-}
-
-.vibely-bar-2 {
-  transform-origin: center;
-  animation: vibelyBarPulse2 0.92s ease-in-out infinite alternate 0.12s;
-  will-change: transform, opacity;
-}
-
-.vibely-bar-3 {
-  transform-origin: center;
-  animation: vibelyBarPulse3 1.45s ease-in-out infinite alternate 0.25s;
-  will-change: transform, opacity;
-}
-
-.vibely-bar-4 {
-  transform-origin: center;
-  animation: vibelyBarPulse4 1.05s ease-in-out infinite alternate 0.18s;
-  will-change: transform, opacity;
-}
-
-.vibely-bar-5 {
-  transform-origin: center;
-  animation: vibelyBarPulse5 1.2s ease-in-out infinite alternate 0.32s;
-  will-change: transform, opacity;
-}
-
-/* 2. Logo Center Breathing Aura */
-@keyframes vibelyAuraBreathe {
-  0% {
-    transform: scale(0.88);
-    opacity: 0.45;
-  }
-
-  50% {
-    transform: scale(1.16);
-    opacity: 0.85;
-  }
-
-  100% {
-    transform: scale(0.92);
-    opacity: 0.5;
-  }
-}
-
-.vibely-logo-aura {
-  animation: vibelyAuraBreathe 3.6s ease-in-out infinite alternate;
-  will-change: transform, opacity;
-}
-
-/* 3. Wordmark Neon Glow Pulse */
-@keyframes vibelyWordmarkPulse {
-  0% {
-    text-shadow:
-      0 0 10px rgba(255, 255, 255, 0.65),
-      0 0 20px rgba(192, 132, 252, 0.45),
-      0 0 35px rgba(34, 211, 238, 0.3);
-  }
-
-  100% {
-    text-shadow:
-      0 0 14px rgba(255, 255, 255, 0.9),
-      0 0 28px rgba(192, 132, 252, 0.7),
-      0 0 50px rgba(34, 211, 238, 0.5),
-      0 0 75px rgba(236, 72, 153, 0.3);
-  }
-}
-
-.vibely-wordmark {
-  letter-spacing: 0.22em;
-  text-shadow:
-    0 0 12px rgba(255, 255, 255, 0.7),
-    0 0 24px rgba(192, 132, 252, 0.5),
-    0 0 42px rgba(34, 211, 238, 0.35);
-  animation: vibelyWordmarkPulse 2.8s ease-in-out infinite alternate;
-  will-change: text-shadow;
-}
-
-/* 4. Layered Neon Music-Wave Ribbons */
-@keyframes vibelyWaveFlow1 {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes vibelyWaveFlow2 {
-  0% {
-    transform: translateX(-50%);
-  }
-
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes vibelyWaveFlow3 {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.vibely-wave-1 {
-  animation: vibelyWaveFlow1 16s linear infinite;
-  will-change: transform;
-}
-
-.vibely-wave-2 {
-  animation: vibelyWaveFlow2 11s linear infinite;
-  will-change: transform;
-}
-
-.vibely-wave-3 {
-  animation: vibelyWaveFlow3 19s linear infinite;
-  will-change: transform;
-}
-
-/* 5. Glowing Floating Particles */
-@keyframes vibelyFloatY {
-
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: var(--base-opacity, 0.6);
-  }
-
-  50% {
-    transform: translateY(var(--float-distance, -14px)) scale(1.15);
-    opacity: 1;
-  }
-}
-
-.vibely-particle {
-  animation: vibelyFloatY var(--float-duration, 5s) ease-in-out infinite;
-  animation-delay: var(--float-delay, 0s);
-  will-change: transform, opacity;
-}
-
-/* 6. Ambient Light Orbs Breathing */
-@keyframes vibelyAmbientOrb {
-  0% {
-    transform: scale(0.9) translate(0, 0);
-    opacity: 0.6;
-  }
-
-  50% {
-    transform: scale(1.1) translate(15px, -10px);
-    opacity: 0.9;
-  }
-
-  100% {
-    transform: scale(0.95) translate(-10px, 10px);
-    opacity: 0.7;
-  }
-}
-
-.vibely-ambient-orb-1 {
-  animation: vibelyAmbientOrb 8s ease-in-out infinite alternate;
-}
-
-.vibely-ambient-orb-2 {
-  animation: vibelyAmbientOrb 10s ease-in-out infinite alternate 1.5s;
-}
-
-/* 7. Accessibility - Prefers Reduced Motion */
+/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
-
-  .vibely-bar-1,
-  .vibely-bar-2,
-  .vibely-bar-3,
-  .vibely-bar-4,
-  .vibely-bar-5,
-  .vibely-logo-aura,
-  .vibely-wordmark,
-  .vibely-wave-1,
-  .vibely-wave-2,
-  .vibely-wave-3,
-  .vibely-particle,
-  .vibely-ambient-orb-1,
-  .vibely-ambient-orb-2 {
+  .vbar-1, .vbar-2, .vbar-3, .vbar-4, .vbar-5,
+  .wordmark-reveal, .subtitle-reveal, .signal-ring {
     animation: none !important;
     transform: none !important;
+    opacity: 1 !important;
   }
+}
+
+/* ==========================================================================
+   Page transition fade — for navigation transitions
+   ========================================================================== */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: pageFadeIn 0.22s ease-out both;
 }

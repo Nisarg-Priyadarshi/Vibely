@@ -32,12 +32,12 @@ export const Library = () => {
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl backdrop-blur-xl">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
             <ListMusic className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-white">Your Music Library</h2>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-xl font-semibold text-white">Your Music Library</h2>
+          <p className="text-xs text-[#999999] leading-relaxed">
             Sign in to create, organize, and stream your personalized music playlists.
           </p>
           <div className="pt-2">
@@ -92,12 +92,12 @@ export const Library = () => {
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 pb-32">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] pb-6">
         <div>
-          <div className="text-[11px] font-mono uppercase tracking-widest text-[#00e599] mb-1">
+          <div className="text-[11px] font-mono uppercase tracking-widest text-[#999999] mb-1">
             Personal Library
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-light text-white tracking-tight">
             Your Playlists
           </h1>
           <p className="text-xs text-[#999999]">
@@ -107,9 +107,9 @@ export const Library = () => {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer"
+          className="btn-white text-xs px-4 py-2.5 gap-2"
         >
-          <Plus className="w-4 h-4 mr-1.5" />
+          <Plus className="w-4 h-4" />
           Create Playlist
         </button>
       </div>
@@ -129,19 +129,19 @@ export const Library = () => {
           ))}
         </div>
       ) : playlists.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center space-y-4 max-w-lg mx-auto">
-          <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 mx-auto">
+        <div className="p-12 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] text-center space-y-4 max-w-lg mx-auto">
+          <div className="w-16 h-16 rounded-[4px] bg-[#303030] flex items-center justify-center text-[#666666] mx-auto">
             <ListMusic className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-slate-200">No playlists yet</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h3 className="text-lg font-medium text-[#ffffff]">No playlists yet</h3>
+          <p className="text-xs text-[#999999] leading-relaxed">
             Create your first playlist to group your favorite songs together and play them sequentially.
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+            className="btn-white text-xs px-5 py-2.5 gap-2"
           >
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4" />
             Create Your First Playlist
           </button>
         </div>
@@ -156,7 +156,7 @@ export const Library = () => {
               <div
                 key={plId}
                 onClick={() => navigate(`/playlists/${plId}`)}
-                className="group relative p-3.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800/80 hover:border-slate-700/80 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                className="group relative p-3.5 rounded-[4px] bg-[#1e1e1e] hover:bg-[#242424] border border-[rgba(255,255,255,0.07)] transition-colors duration-150 cursor-pointer flex flex-col justify-between"
               >
                 {/* Artwork Thumbnail (1:1 aspect, 4px radius) */}
                 <div className="relative aspect-square w-full rounded-[4px] overflow-hidden mb-3 bg-[#222222] flex items-center justify-center">
@@ -238,7 +238,7 @@ export const Library = () => {
               <form onSubmit={handleCreateSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-[#cccccc]">
-                    Playlist Name <span className="text-[#00e599]">*</span>
+                    Playlist Name *
                   </label>
                   <input
                     type="text"
@@ -274,7 +274,7 @@ export const Library = () => {
                     type="checkbox"
                     checked={formData.isPublic}
                     onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-                    className="w-4 h-4 accent-[#00e599] cursor-pointer"
+                    className="w-4 h-4 accent-[#ffffff] cursor-pointer"
                   />
                 </div>
 

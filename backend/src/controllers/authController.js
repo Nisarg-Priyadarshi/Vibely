@@ -1,9 +1,141 @@
 import User from '../models/User.js';
 import { signToken, setAuthCookie, clearAuthCookie } from '../services/authService.js';
+import { getGoogleConfig, getOAuth2Client, isGoogleConfigured } from '../config/google.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
+import { deleteAvatarFromCloudinary, uploadAvatarToCloudinary } from '../services/cloudinaryService.js';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
+
+const googleError = (res, status, message) => res.status(status).json({
+  success: false,
+  error: { message, status },
+});
+
+const findOrCreateGoogleUser = async (payload) => {
+  if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+    throw Object.assign(new Error('Google account must have a verified email address.'), { status: 401 });
+  }
+  let user = await User.findOne({ $or: [{ googleId: payload.sub }, { email: payload.email.toLowerCase() }] });
+  if (!user) {
+    user = new User({
+      name: payload.name || payload.email.split('@')[0],
+      email: payload.email.toLowerCase(),
+      googleId: payload.sub,
+      avatar: payload.picture || null,
+    });
+  } else if (!user.googleId) {
+    user.googleId = payload.sub;
+    if (!user.avatar && payload.picture) user.avatar = payload.picture;
+  }
+  await user.save();
+  return user;
+};
+
+export const googleAuth = async (req, res) => {
+  const { credential, idToken, code } = req.body || {};
+  if (!credential && !idToken && !code) {
+    return googleError(res, 400, 'A credential or authorization code is required.');
+  }
+  if (!isGoogleConfigured()) return googleError(res, 503, 'Google Sign-In is not configured.');
+
+  try {
+    const client = getOAuth2Client();
+    const { clientId } = getGoogleConfig();
+    let ticket;
+    if (credential || idToken) {
+      ticket = await client.verifyIdToken({ idToken: credential || idToken, audience: clientId });
+    } else {
+      const { tokens } = await client.getToken(code);
+      if (!tokens.id_token) return googleError(res, 401, 'Invalid Google credential.');
+      ticket = await client.verifyIdToken({ idToken: tokens.id_token, audience: clientId });
+    }
+
+    const user = await findOrCreateGoogleUser(ticket.getPayload());
+    const token = signToken({ id: user._id.toString(), email: user.email });
+    setAuthCookie(res, token);
+    return res.status(200).json({ success: true, message: 'Google sign-in successful.', user: user.toSafeObject(), token });
+  } catch (error) {
+    return googleError(res, error.status || 401, error.status ? error.message : 'Invalid Google credential.');
+  }
+};
+
+export const googleAuthRedirect = (req, res) => {
+  if (!isGoogleConfigured()) return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=google_not_configured`);
+  const { callbackUrl } = getGoogleConfig();
+  const url = getOAuth2Client().generateAuthUrl({
+    access_type: 'online',
+    scope: ['openid', 'email', 'profile'],
+    redirect_uri: callbackUrl || undefined,
+    prompt: 'select_account',
+  });
+  return res.redirect(url);
+};
+
+export const googleAuthCallback = async (req, res) => {
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  if (req.query.error) return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(req.query.error)}`);
+  if (!req.query.code) return res.redirect(`${clientUrl}/login?error=missing_auth_code`);
+  if (!isGoogleConfigured()) return res.redirect(`${clientUrl}/login?error=google_not_configured`);
+  try {
+    const { tokens } = await getOAuth2Client().getToken(req.query.code);
+    const { clientId } = getGoogleConfig();
+    const ticket = await getOAuth2Client().verifyIdToken({ idToken: tokens.id_token, audience: clientId });
+    const user = await findOrCreateGoogleUser(ticket.getPayload());
+    setAuthCookie(res, signToken({ id: user._id.toString(), email: user.email }));
+    return res.redirect(`${clientUrl}/?auth=success`);
+  } catch {
+    return res.redirect(`${clientUrl}/login?error=invalid_auth_code`);
+  }
+};
+
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file?.buffer) return googleError(res, 400, 'An avatar file is required.');
+    if (!isCloudinaryConfigured()) {
+      return googleError(res, 500, 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.');
+    }
+    const mime = (req.file.mimetype || '').toLowerCase();
+    if (!ALLOWED_MIME_TYPES.has(mime) || !isValidImageBuffer(req.file.buffer)) {
+      return googleError(res, 400, 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.');
+    }
+    if (req.file.size > MAX_AVATAR_SIZE) return googleError(res, 400, 'File size exceeds the 5 MB limit.');
+
+    const user = await User.findById(req.user._id);
+    if (!user) return googleError(res, 404, 'User not found.');
+    const result = await uploadAvatarToCloudinary(req.file.buffer, { public_id: `avatar_${user._id}_${Date.now()}` });
+    const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    user.avatar = result.secure_url;
+    user.avatarPublicId = result.public_id;
+    user.cloudinaryPublicId = result.public_id;
+    await user.save();
+    if (oldPublicId) {
+      try { await deleteAvatarFromCloudinary(oldPublicId); } catch (error) { console.warn('Failed to delete replaced avatar:', error.message); }
+    }
+    return res.status(200).json({ success: true, user: user.toSafeObject() });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const deleteAvatar = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return googleError(res, 404, 'User not found.');
+    const publicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (publicId && isCloudinaryConfigured()) {
+      try { await deleteAvatarFromCloudinary(publicId); } catch (error) { console.warn('Failed to delete avatar:', error.message); }
+    }
+    user.avatar = null;
+    user.avatarPublicId = null;
+    user.cloudinaryPublicId = null;
+    await user.save();
+    return res.status(200).json({ success: true, user: user.toSafeObject() });
+  } catch (error) {
+    return next(error);
+  }
+};
 
 /**
  * Validates buffer magic bytes for JPEG, PNG, and WebP
@@ -310,6 +442,11 @@ export default {
   logout,
   getMe,
   updateProfile,
+  googleAuth,
+  googleAuthRedirect,
+  googleAuthCallback,
+  uploadAvatar,
+  deleteAvatar,
 };
 
 

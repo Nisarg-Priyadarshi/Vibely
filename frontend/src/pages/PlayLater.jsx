@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Bookmark,
   Play,
@@ -12,7 +12,6 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSongLists } from '../context/SongListContext';
@@ -32,27 +31,21 @@ export const PlayLater = () => {
     fetchPlayLater,
   } = useSongLists();
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayer();
-  const navigate = useNavigate();
-
   const [activeModalSong, setActiveModalSong] = useState(null);
 
-  // Unauthenticated view
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
-            <Bookmark className="w-7 h-7 fill-amber-500/20" />
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded-[4px] bg-[#303030] text-[#699fff] flex items-center justify-center mx-auto">
+            <Bookmark className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold text-white">Your Play Later Queue</h2>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-xl font-medium text-white">Your Play Later Queue</h2>
+          <p className="text-xs text-[#999999] leading-relaxed">
             Sign in to bookmark tracks and build your personal listen-later queue.
           </p>
           <div className="pt-2">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all hover:scale-105"
-            >
+            <Link to="/login" className="btn-white text-xs px-5 py-2.5 gap-2">
               <LogIn className="w-4 h-4" />
               Sign In to View Play Later
             </Link>
@@ -65,64 +58,49 @@ export const PlayLater = () => {
   const totalDuration = playLater.reduce((acc, s) => acc + (s.duration || 0), 0);
 
   const handlePlayAll = () => {
-    if (playLater.length > 0) {
-      playTrack(playLater[0], playLater);
-    }
+    if (playLater.length > 0) playTrack(playLater[0], playLater);
   };
 
   const handleSongPlay = (song) => {
     const sId = (song.id || song._id).toString();
     const isCurrent = currentTrack && (currentTrack.id || currentTrack._id).toString() === sId;
-    if (isCurrent) {
-      togglePlay();
-    } else {
-      playTrack(song, playLater);
-    }
+    if (isCurrent) togglePlay();
+    else playTrack(song, playLater);
   };
 
   return (
-    <div className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-32">
-      {/* Header Banner */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-amber-950/40 via-slate-900/80 to-slate-900/60 border border-amber-500/20 p-5 sm:p-8 overflow-hidden shadow-2xl backdrop-blur-xl">
-        <div
-          className="absolute -top-12 -left-12 w-64 h-64 rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ backgroundImage: `radial-gradient(circle, #f59e0b 0%, transparent 70%)` }}
-        />
-
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-6">
-          <div className="flex items-center gap-3.5 sm:gap-6">
-            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-xl shadow-amber-500/25 shrink-0 ring-4 ring-amber-500/20">
-              <Bookmark className="w-7 h-7 sm:w-10 sm:h-10 text-slate-950 fill-current" />
+    <div className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-8 pb-32">
+      {/* Header */}
+      <div className="bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-5 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[4px] bg-[#303030] flex items-center justify-center shrink-0">
+              <Bookmark className="w-7 h-7 text-[#699fff]" />
             </div>
-            <div className="space-y-1 min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-bold uppercase tracking-wider">
-                <Sparkles className="w-3 h-3" />
+            <div className="space-y-0.5 min-w-0">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-[#999999]">
                 Saved for Later
               </div>
-              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight truncate">
+              <h1 className="text-xl sm:text-3xl font-thin text-white tracking-tight">
                 Play Later
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#999999]">
                 {playLater.length} {playLater.length === 1 ? 'saved track' : 'saved tracks'} &bull;{' '}
-                {formatTime(totalDuration)} total playtime
+                {formatTime(totalDuration)} total
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+          <div className="flex items-center gap-2">
             <button
               onClick={fetchPlayLater}
-              title="Refresh Play Later"
-              className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs transition-all cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
+              title="Refresh"
+              className="btn-graphite text-xs p-2.5"
             >
               <RefreshCw className={`w-4 h-4 ${loadingPlayLater ? 'animate-spin' : ''}`} />
             </button>
-
             {playLater.length > 0 && (
-              <button
-                onClick={handlePlayAll}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-105 active:scale-95 cursor-pointer min-h-[40px]"
-              >
+              <button onClick={handlePlayAll} className="btn-white text-xs px-4 py-2.5 gap-2">
                 <Play className="w-4 h-4 fill-current ml-0.5" />
                 Play All
               </button>
@@ -131,50 +109,45 @@ export const PlayLater = () => {
         </div>
       </div>
 
-      {/* Loading state */}
+      {/* Content states */}
       {loadingPlayLater && playLater.length === 0 ? (
         <div className="text-center py-20 space-y-3">
-          <Loader2 className="w-8 h-8 text-amber-400 animate-spin mx-auto" />
-          <p className="text-xs text-slate-400 font-mono">Loading saved tracks...</p>
+          <Loader2 className="w-8 h-8 text-[#cccccc] animate-spin mx-auto" />
+          <p className="text-xs text-[#999999] font-mono">Loading saved tracks...</p>
         </div>
       ) : errorPlayLater ? (
-        <div className="text-center py-16 space-y-3 bg-slate-900/40 border border-amber-500/20 rounded-2xl p-6">
-          <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
-          <p className="text-xs text-amber-300">{errorPlayLater}</p>
+        <div className="text-center py-16 space-y-3 bg-[#1e1e1e] border border-rose-500/20 rounded-[4px] p-6">
+          <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+          <p className="text-xs text-rose-300">{errorPlayLater}</p>
           <button
             onClick={fetchPlayLater}
-            className="text-xs text-emerald-400 hover:underline font-semibold"
+            className="text-xs text-[#699fff] hover:underline font-medium"
           >
             Try Again
           </button>
         </div>
       ) : playLater.length === 0 ? (
-        /* Empty State */
-        <div className="text-center py-20 space-y-4 bg-slate-900/30 border border-slate-800/60 rounded-3xl p-8">
-          <div className="w-16 h-16 rounded-full bg-slate-800/80 flex items-center justify-center mx-auto text-slate-500">
-            <Bookmark className="w-8 h-8 text-slate-500" />
+        <div className="text-center py-20 space-y-4 bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8">
+          <div className="w-16 h-16 rounded-[4px] bg-[#303030] flex items-center justify-center mx-auto">
+            <Bookmark className="w-8 h-8 text-[#666666]" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-slate-200">Your Play Later list is empty</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+            <h3 className="text-base font-medium text-[#ffffff]">Your Play Later list is empty</h3>
+            <p className="text-xs text-[#999999] max-w-sm mx-auto leading-relaxed">
               Bookmark songs as you explore to easily find and listen to them when you have time.
             </p>
           </div>
           <div className="pt-2">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition-all hover:scale-105"
-            >
+            <Link to="/" className="btn-white text-xs px-5 py-2.5">
               Explore Music Catalogue
             </Link>
           </div>
         </div>
       ) : (
-        /* Tracklist Table */
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-x-auto shadow-xl">
+        <div className="bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] overflow-x-auto">
           <table className="w-full text-left text-xs min-w-[500px]">
             <thead>
-              <tr className="border-b border-slate-800/80 text-slate-500 font-mono text-[11px] uppercase tracking-wider">
+              <tr className="border-b border-[rgba(255,255,255,0.07)] text-[#666666] font-mono text-[11px] uppercase tracking-wider">
                 <th className="py-3 px-4 w-12 text-center">#</th>
                 <th className="py-3 px-4">Title</th>
                 <th className="py-3 px-4 hidden md:table-cell">Album</th>
@@ -185,11 +158,10 @@ export const PlayLater = () => {
                 <th className="py-3 px-4 w-32 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/40">
+            <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
               {playLater.map((song, index) => {
                 const sId = (song.id || song._id).toString();
-                const isCurrent =
-                  currentTrack && (currentTrack.id || currentTrack._id).toString() === sId;
+                const isCurrent = currentTrack && (currentTrack.id || currentTrack._id).toString() === sId;
                 const isCurrentPlaying = isCurrent && isPlaying;
                 const fav = isFavorite(sId);
 
@@ -197,18 +169,17 @@ export const PlayLater = () => {
                   <tr
                     key={sId}
                     onClick={() => handleSongPlay(song)}
-                    className={`group hover:bg-slate-800/60 transition-colors cursor-pointer ${
-                      isCurrent ? 'bg-slate-800/40' : ''
+                    className={`group hover:bg-[rgba(255,255,255,0.03)] transition-colors cursor-pointer ${
+                      isCurrent ? 'bg-[rgba(255,255,255,0.04)]' : ''
                     }`}
                   >
-                    {/* Number / Play Indicator */}
-                    <td className="py-3 px-4 text-center text-slate-500 font-mono">
+                    <td className="py-3 px-4 text-center text-[#666666] font-mono">
                       <div className="flex items-center justify-center">
                         {isCurrentPlaying ? (
-                          <div className="flex items-center gap-0.5">
-                            <span className="w-1 h-3 bg-emerald-400 animate-pulse rounded-full"></span>
-                            <span className="w-1 h-2 bg-emerald-400 animate-pulse delay-75 rounded-full"></span>
-                            <span className="w-1 h-3.5 bg-emerald-400 animate-pulse delay-150 rounded-full"></span>
+                          <div className="flex items-end gap-0.5 h-3.5">
+                            <span className="w-0.5 h-2 bg-white vbar vbar-1 rounded-sm" />
+                            <span className="w-0.5 h-3 bg-white vbar vbar-3 rounded-sm" />
+                            <span className="w-0.5 h-2 bg-white vbar vbar-5 rounded-sm" />
                           </div>
                         ) : (
                           <>
@@ -219,78 +190,68 @@ export const PlayLater = () => {
                       </div>
                     </td>
 
-                    {/* Artwork, Title & Artist */}
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <img
                           src={song.coverUrl}
                           alt={song.title}
-                          className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-800"
+                          className="w-9 h-9 rounded-[3px] object-cover shrink-0 border border-[rgba(255,255,255,0.07)]"
                         />
                         <div className="min-w-0">
                           <Link
                             to={`/songs/${sId}`}
                             onClick={(e) => e.stopPropagation()}
-                            className={`font-bold truncate hover:underline block ${
-                              isCurrent ? 'text-emerald-400' : 'text-slate-100 group-hover:text-white'
+                            className={`font-semibold truncate hover:underline block ${
+                              isCurrent ? 'text-[#699fff]' : 'text-[#ffffff] group-hover:text-white'
                             }`}
                           >
                             {song.title}
                           </Link>
-                          <div className="text-slate-400 truncate text-[11px]">
-                            {song.artist}
-                          </div>
+                          <div className="text-[#999999] truncate text-[11px]">{song.artist}</div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Album */}
-                    <td className="py-3 px-4 text-slate-400 hidden md:table-cell truncate">
+                    <td className="py-3 px-4 text-[#999999] hidden md:table-cell truncate">
                       {song.album || 'Single'}
                     </td>
 
-                    {/* Genre */}
                     <td className="py-3 px-4 hidden sm:table-cell">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-950/70 text-emerald-400 border border-slate-700/60">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-[2px] bg-[#303030] text-[#cccccc]">
                         {song.genre}
                       </span>
                     </td>
 
-                    {/* Duration */}
-                    <td className="py-3 px-4 text-right text-slate-400 font-mono">
+                    <td className="py-3 px-4 text-right text-[#999999] font-mono">
                       {formatTime(song.duration)}
                     </td>
 
-                    {/* Actions */}
                     <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1.5">
-                        {/* Favorite Toggle */}
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => toggleFavorite(song)}
                           title={fav ? 'Favourited' : 'Add to Favourites'}
-                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                          className={`p-1.5 rounded-[3px] transition-colors cursor-pointer ${
                             fav
-                              ? 'bg-rose-500/15 border-rose-500/40 text-rose-400'
-                              : 'hover:bg-slate-700 text-slate-400 hover:text-slate-200 border-transparent'
+                              ? 'text-rose-400 bg-rose-950/30'
+                              : 'text-[#666666] hover:text-[#cccccc] hover:bg-[rgba(255,255,255,0.06)]'
                           }`}
                         >
-                          <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-rose-500' : ''}`} />
+                          <Heart className={`w-3.5 h-3.5 ${fav ? 'fill-rose-400' : ''}`} />
                         </button>
 
-                        {/* Add to Playlist */}
                         <button
                           onClick={() => setActiveModalSong(song)}
                           title="Add to Playlist"
-                          className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-emerald-400 transition-all cursor-pointer"
+                          className="p-1.5 rounded-[3px] text-[#666666] hover:text-[#cccccc] hover:bg-[rgba(255,255,255,0.06)] transition-colors cursor-pointer"
                         >
                           <ListPlus className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Remove from Play Later */}
                         <button
                           onClick={() => togglePlayLater(song)}
                           title="Remove from Play Later"
-                          className="p-1.5 rounded-lg hover:bg-amber-950/40 text-amber-400 hover:text-amber-300 transition-all cursor-pointer"
+                          className="p-1.5 rounded-[3px] text-[#699fff] hover:text-[#84b4ff] hover:bg-[#699fff]/10 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -304,7 +265,6 @@ export const PlayLater = () => {
         </div>
       )}
 
-      {/* Add To Playlist Modal */}
       {activeModalSong && (
         <AddToPlaylistModal
           song={activeModalSong}
