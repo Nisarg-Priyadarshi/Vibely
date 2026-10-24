@@ -23,9 +23,14 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: false, // Not required for Google OAuth accounts
       minlength: [6, 'Password must be at least 6 characters long'],
       select: false, // Exclude password from query results by default
+    },
+    googleId: {
+      type: String,
+      default: null,
+      index: true,
     },
     avatar: {
       type: String,
@@ -56,7 +61,7 @@ userSchema.pre('save', async function (next) {
 // Compare candidate password with stored hash
 userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) {
-    throw new Error('Password hash not loaded for comparison');
+    throw new Error('This account uses Google Sign-In. Please log in with Google.');
   }
   return bcrypt.compare(candidatePassword, this.password);
 };
@@ -68,6 +73,8 @@ userSchema.methods.toSafeObject = function () {
     name: this.name,
     email: this.email,
     avatar: this.avatar || null,
+    hasPassword: !!this.password,
+    isGoogleAccount: !!this.googleId,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

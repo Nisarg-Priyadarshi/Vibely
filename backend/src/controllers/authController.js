@@ -1,5 +1,8 @@
 import User from '../models/User.js';
 import { signToken, setAuthCookie, clearAuthCookie } from '../services/authService.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -219,11 +222,93 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Verify a Google ID token and issue a Vibely session.
+ * POST /api/auth/google
+ */
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential || typeof credential !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Google credential is required.', status: 400 },
+      });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Google authentication is not configured on this server.', status: 500 },
+      });
+    }
+
+    // Verify the ID token with Google's public keys
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Google account must have an email address.', status: 400 },
+      });
+    }
+
+    // Find existing user by googleId or email, or create a new one
+    let user = await User.findOne({ $or: [{ googleId }, { email: email.toLowerCase() }] });
+
+    if (!user) {
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email: email.toLowerCase(),
+        googleId,
+        avatar: picture || null,
+      });
+    } else if (!user.googleId) {
+      // Link Google ID to an existing email/password account
+      user.googleId = googleId;
+      if (!user.avatar && picture) user.avatar = picture;
+      await user.save();
+    }
+
+    const token = signToken({ id: user._id.toString(), email: user.email });
+    setAuthCookie(res, token);
+
+    res.status(200).json({
+      success: true,
+      message: 'Google login successful.',
+      user: user.toSafeObject(),
+      token,
+    });
+  } catch (error) {
+    // Google token verification errors are user errors, not server errors
+    if (error.message && error.message.includes('Token used too late')) {
+      return res.status(401).json({
+        success: false,
+        error: { message: 'Google sign-in session expired. Please try again.', status: 401 },
+      });
+    }
+    if (error.message && (error.message.includes('Invalid token') || error.message.includes('audience'))) {
+      return res.status(401).json({
+        success: false,
+        error: { message: 'Invalid Google credential. Please try again.', status: 401 },
+      });
+    }
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
   logout,
   getMe,
   updateProfile,
+  googleAuth,
 };
 

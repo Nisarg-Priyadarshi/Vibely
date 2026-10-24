@@ -112,6 +112,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Google OAuth login — credential is the ID token from Google Identity Services
+  const loginWithGoogle = async (credential) => {
+    setAuthError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ credential }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Google login failed. Please try again.');
+      }
+
+      setUser(data.user);
+      return { success: true, user: data.user };
+    } catch (err) {
+      setAuthError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -120,6 +145,7 @@ export const AuthProvider = ({ children }) => {
         authError,
         register,
         login,
+        loginWithGoogle,
         logout,
         checkAuth,
       }}

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Login = () => {
-  const { user, login } = useAuth();
+  const { user, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const googleButtonRef = useRef(null);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -22,6 +23,36 @@ export const Login = () => {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Mount Google Sign-In button
+  useEffect(() => {
+    const tryRender = () => {
+      if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: async ({ credential }) => {
+          const result = await loginWithGoogle(credential);
+          if (result.success) navigate('/');
+          else setServerError(result.error);
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'filled_black',
+        size: 'large',
+        width: googleButtonRef.current.offsetWidth || 400,
+        text: 'continue_with',
+        shape: 'rectangular',
+      });
+    };
+    // GSI script may still be loading (async defer), retry until available
+    const interval = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        clearInterval(interval);
+        tryRender();
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [loginWithGoogle, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -184,6 +215,16 @@ export const Login = () => {
                 Create one now
               </Link>
             </p>
+          </div>
+
+          {/* Google Sign-In */}
+          <div className="space-y-3">
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-800" />
+              <span className="text-[11px] text-slate-500 font-medium">or continue with</span>
+              <div className="flex-1 h-px bg-slate-800" />
+            </div>
+            <div ref={googleButtonRef} className="w-full flex justify-center overflow-hidden rounded-xl" />
           </div>
         </div>
       </div>
