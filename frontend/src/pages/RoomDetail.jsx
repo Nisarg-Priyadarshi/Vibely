@@ -1,0 +1,695 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+  Radio,
+  Users,
+  Copy,
+  Check,
+  Play,
+  Pause,
+  Crown,
+  LogOut,
+  Music2,
+  Sparkles,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  RefreshCw,
+  AlertCircle,
+  Send,
+  Loader2,
+  ListPlus,
+  Shield,
+  Volume2,
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useRoom } from '../context/RoomContext';
+import { usePlayer } from '../context/PlayerContext';
+import { formatTime } from '../utils/format';
+import { API_BASE_URL } from '../config/api';
+
+export const RoomDetail = () => {
+  const { code } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const {
+    socketStatus,
+    currentRoom,
+    roomMembers,
+    roomState,
+    pendingRequests,
+    roomNotification,
+    isHost,
+    joinRoom,
+    leaveRoom,
+    hostControl,
+    requestAction,
+    respondToRequest,
+    syncRoomState,
+  } = useRoom();
+
+  const { currentTime, duration, isPlaying: localIsPlaying } = usePlayer();
+
+  const [copied, setCopied] = useState(false);
+  const [songModalOpen, setSongModalOpen] = useState(false);
+  const [catalogueSongs, setCatalogueSongs] = useState([]);
+  const [songSearch, setSongSearch] = useState('');
+  const [loadingSongs, setLoadingSongs] = useState(false);
+  const [seekingValue, setSeekingValue] = useState(null);
+  const [submittingAction, setSubmittingAction] = useState(false);
+
+  // Auto-join room on mount if not currently connected to this room
+  useEffect(() => {
+    if (code && (!currentRoom || currentRoom.code !== code.toUpperCase())) {
+      joinRoom(code).catch((err) => {
+        console.warn('Auto-join room error:', err.message);
+      });
+    }
+  }, [code, currentRoom, joinRoom]);
+
+  // Load songs catalogue for track selection/requests
+  useEffect(() => {
+    if (songModalOpen && catalogueSongs.length === 0) {
+      setLoadingSongs(true);
+      fetch(`${API_BASE_URL}/songs?limit=50`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) {
+            setCatalogueSongs(data.data || []);
+          }
+        })
+        .catch((err) => console.warn('Failed to load songs catalogue:', err))
+        .finally(() => setLoadingSongs(false));
+    }
+  }, [songModalOpen, catalogueSongs.length]);
+
+  const filteredSongs = useMemo(() => {
+    if (!songSearch.trim()) return catalogueSongs;
+    const q = songSearch.toLowerCase();
+    return catalogueSongs.filter(
+      (s) =>
+        s.title.toLowerCase().includes(q) ||
+        s.artist.toLowerCase().includes(q) ||
+        (s.genre && s.genre.toLowerCase().includes(q))
+    );
+  }, [catalogueSongs, songSearch]);
+
+  const handleCopyCode = () => {
+    if (!currentRoom?.code) return;
+    navigator.clipboard.writeText(currentRoom.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLeave = async () => {
+    await leaveRoom();
+    navigate('/rooms');
+  };
+
+  // Host playback controls
+  const handleHostTogglePlay = async () => {
+    if (!isHost) return;
+    const action = roomState?.isPlaying ? 'pause' : 'play';
+    const payload = { position: currentTime };
+    await hostControl({ action, payload });
+  };
+
+  const handleHostSeekChange = (e) => {
+    if (!isHost) return;
+    setSeekingValue(parseFloat(e.target.value));
+  };
+
+  const handleHostSeekCommit = async (e) => {
+    if (!isHost) return;
+    const pos = parseFloat(e.target.value);
+    setSeekingValue(null);
+    await hostControl({ action: 'seek', payload: { position: pos } });
+  };
+
+  const handleHostSelectSong = async (song) => {
+    setSongModalOpen(false);
+    if (isHost) {
+      await hostControl({
+        action: 'change_track',
+        payload: { songId: song.id || song._id },
+      });
+    } else {
+      await requestAction({
+        action: 'change_track',
+        payload: { songId: song.id || song._id },
+      });
+    }
+  };
+
+  // Member request controls
+  const handleMemberRequestPlay = async () => {
+    setSubmittingAction(true);
+    try {
+      await requestAction({
+        action: 'play',
+        payload: { position: currentTime },
+      });
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const handleMemberRequestPause = async () => {
+    setSubmittingAction(true);
+    try {
+      await requestAction({
+        action: 'pause',
+        payload: { position: currentTime },
+      });
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4">
+          <p className="text-sm text-slate-300">You must be logged in to enter a Vibely Room.</p>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const currentSong = roomState?.currentSong;
+  const isPlaying = roomState?.isPlaying ?? localIsPlaying;
+  const displayPosition = seekingValue !== null ? seekingValue : currentTime;
+  const songDuration = currentSong?.duration || duration || 0;
+
+  return (
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Transient Notification Banner */}
+      {roomNotification && (
+        <div
+          className={`px-4 py-3 rounded-2xl border text-xs font-semibold flex items-center justify-between shadow-lg transition-all animate-in fade-in slide-in-from-top-2 ${
+            roomNotification.type === 'error'
+              ? 'bg-rose-950/90 border-rose-500/50 text-rose-200'
+              : roomNotification.type === 'success'
+              ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+              : 'bg-slate-900/95 border-emerald-500/30 text-slate-200'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{roomNotification.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Disconnection / Reconnecting Warning */}
+      {socketStatus !== 'connected' && (
+        <div className="px-4 py-3 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 animate-spin" />
+            <span>
+              Connection status: <strong>{socketStatus}</strong>. Playback sync may be momentarily paused.
+            </span>
+          </div>
+          <button
+            onClick={syncRoomState}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all cursor-pointer"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Re-sync
+          </button>
+        </div>
+      )}
+
+      {/* Room Header Card */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="font-mono text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5" />
+              #{currentRoom?.code || code}
+            </span>
+
+            <button
+              onClick={handleCopyCode}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+              title="Copy Room Code"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy Code</span>
+                </>
+              )}
+            </button>
+
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">
+              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              {roomMembers.length} {roomMembers.length === 1 ? 'member' : 'members'}
+            </span>
+
+            {isHost ? (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl">
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                You are Host
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-xl">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                Host: <strong className="text-slate-200 ml-1">{currentRoom?.hostName || 'Host'}</strong>
+              </span>
+            )}
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {currentRoom?.name || 'Vibely Room'}
+          </h1>
+          {currentRoom?.description && (
+            <p className="text-xs text-slate-400 max-w-2xl">{currentRoom.description}</p>
+          )}
+        </div>
+
+        {/* Action Header Buttons */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={syncRoomState}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            title="Force synchronization"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Re-sync Audio</span>
+          </button>
+
+          <button
+            onClick={handleLeave}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Leave Room
+          </button>
+        </div>
+      </div>
+
+      {/* Main Grid: Player Stage & Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: Collaborative Stage */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Synchronized Playback Card */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+            {currentSong ? (
+              <div className="space-y-6">
+                {/* Track Artwork and Info */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                  <div className="relative group shrink-0">
+                    <img
+                      src={currentSong.coverUrl}
+                      alt={currentSong.title}
+                      className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl object-cover shadow-2xl border border-slate-700/80"
+                    />
+                    {isPlaying && (
+                      <div className="absolute bottom-2.5 right-2.5 px-2 py-1 rounded-lg bg-emerald-500/90 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-sm flex items-center gap-1">
+                        <Volume2 className="w-3 h-3 animate-pulse" />
+                        Live
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 min-w-0 flex-1">
+                    <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-[11px] font-semibold text-emerald-400">
+                      <Music2 className="w-3 h-3" />
+                      {currentSong.genre || 'Vibely Audio'}
+                    </div>
+
+                    <h2 className="text-2xl sm:text-3xl font-black text-white truncate leading-tight">
+                      {currentSong.title}
+                    </h2>
+                    <p className="text-base text-slate-400 font-medium truncate">
+                      {currentSong.artist}
+                    </p>
+
+                    <div className="pt-2 text-xs text-slate-500 flex items-center justify-center sm:justify-start gap-4">
+                      <span>Synchronized with room</span>
+                      <span>&bull;</span>
+                      <span className="font-mono text-emerald-400">
+                        {isPlaying ? 'Streaming Now' : 'Paused'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar & Host Scrubber */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+                    <span>{formatTime(displayPosition)}</span>
+                    <span>{formatTime(songDuration)}</span>
+                  </div>
+
+                  <div className="relative flex items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max={songDuration || 100}
+                      step="0.5"
+                      disabled={!isHost}
+                      value={displayPosition}
+                      onChange={handleHostSeekChange}
+                      onMouseUp={handleHostSeekCommit}
+                      onTouchEnd={handleHostSeekCommit}
+                      className={`w-full h-2 bg-slate-800 rounded-lg appearance-none focus:outline-none transition-all ${
+                        isHost ? 'cursor-pointer accent-emerald-400 hover:h-2.5' : 'cursor-not-allowed accent-slate-600'
+                      }`}
+                    />
+                  </div>
+                  {!isHost && (
+                    <p className="text-[11px] text-slate-500 text-center sm:text-left">
+                      Seeking is locked to the room host.
+                    </p>
+                  )}
+                </div>
+
+                {/* Playback Control Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-800">
+                  {/* Host Controls */}
+                  {isHost ? (
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <button
+                        onClick={handleHostTogglePlay}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+                      >
+                        {isPlaying ? (
+                          <>
+                            <Pause className="w-4 h-4 fill-current" />
+                            Pause for All
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                            Play for All
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => setSongModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer"
+                      >
+                        <ListPlus className="w-4 h-4 text-emerald-400" />
+                        Change Song
+                      </button>
+                    </div>
+                  ) : (
+                    /* Member Request Controls */
+                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                      {isPlaying ? (
+                        <button
+                          onClick={handleMemberRequestPause}
+                          disabled={submittingAction}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          <Pause className="w-3.5 h-3.5" />
+                          Request Pause
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleMemberRequestPlay}
+                          disabled={submittingAction}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          Request Play
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => setSongModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition-all cursor-pointer"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        Request Track Change
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="text-[11px] text-slate-500 font-mono">
+                    Mode: <strong className="text-slate-300">{isHost ? 'Host Direct' : 'Member Sync'}</strong>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Empty Player State */
+              <div className="py-12 text-center space-y-4">
+                <div className="w-16 h-16 rounded-3xl bg-slate-800/80 border border-slate-700 flex items-center justify-center mx-auto text-slate-500">
+                  <Music2 className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-white">No Track Playing Yet</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  {isHost
+                    ? 'Select a track from the catalogue to begin broadcasting audio to everyone in this room.'
+                    : 'The host has not started playback yet. You can request a song below or wait for the host.'}
+                </p>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => setSongModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                  >
+                    <ListPlus className="w-4 h-4" />
+                    {isHost ? 'Pick Song to Play' : 'Request a Song'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Host Pending Requests Approval Section */}
+          {isHost && (
+            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-base font-bold text-white">Member Playback Requests</h3>
+                  <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">
+                    {pendingRequests.length}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500">Approve or decline requests from listeners</p>
+              </div>
+
+              {pendingRequests.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-slate-950/60 border border-dashed border-slate-800 text-center text-xs text-slate-500">
+                  No pending requests from members. Requests will appear here in real time.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pendingRequests.map((req) => (
+                    <div
+                      key={req.requestId}
+                      className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-slate-200">{req.userName}</span>
+                          <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            {req.action.replace('_', ' ')}
+                          </span>
+                        </div>
+                        {req.action === 'change_track' && req.payload?.song && (
+                          <p className="text-xs text-slate-400">
+                            Song: <strong className="text-white">{req.payload.song.title}</strong> &bull; {req.payload.song.artist}
+                          </p>
+                        )}
+                        {typeof req.payload?.position === 'number' && (
+                          <p className="text-[11px] text-slate-500">
+                            Requested position: {formatTime(req.payload.position)}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => respondToRequest({ requestId: req.requestId, approved: true })}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-emerald-500/20"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => respondToRequest({ requestId: req.requestId, approved: false })}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950 hover:text-rose-300 text-slate-400 text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Col: Live Room Members Sidebar */}
+        <div className="space-y-6">
+          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-base font-bold text-white">Listeners in Room</h3>
+              </div>
+              <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
+                {roomMembers.length}
+              </span>
+            </div>
+
+            <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+              {roomMembers.map((member) => {
+                const isMemberHost = member.userId === currentRoom?.hostId;
+                const isCurrentUser = member.userId === (user.id || user._id)?.toString();
+
+                return (
+                  <div
+                    key={member.userId}
+                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                      isCurrentUser
+                        ? 'bg-slate-950/80 border-emerald-500/30 shadow-sm'
+                        : 'bg-slate-950/40 border-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-slate-950 uppercase shrink-0">
+                        {member.name ? member.name.charAt(0) : 'U'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-200 truncate">
+                            {member.name}
+                          </span>
+                          {isCurrentUser && (
+                            <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.2 rounded">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" />
+                          Joined {new Date(member.joinedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isMemberHost && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold shrink-0">
+                        <Crown className="w-3 h-3 text-amber-400" />
+                        Host
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Song Selection / Track Request Modal */}
+      {songModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Music2 className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-lg font-bold text-white">
+                  {isHost ? 'Select Song to Broadcast' : 'Request Song from Host'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSongModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search songs by title, artist, or genre..."
+                value={songSearch}
+                onChange={(e) => setSongSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* Songs List */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[240px]">
+              {loadingSongs ? (
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400">
+                  <Loader2 className="w-6 h-6 animate-spin text-emerald-400 mb-2" />
+                  <p className="text-xs">Loading catalogue...</p>
+                </div>
+              ) : filteredSongs.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-10">No matching songs found.</p>
+              ) : (
+                filteredSongs.map((song) => (
+                  <div
+                    key={song.id || song._id}
+                    className="p-2.5 rounded-2xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800/80 flex items-center justify-between gap-3 group transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={song.coverUrl}
+                        alt={song.title}
+                        className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-800"
+                      />
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-white truncate group-hover:text-emerald-400 transition-colors">
+                          {song.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 truncate">{song.artist}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleHostSelectSong(song)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shrink-0"
+                    >
+                      {isHost ? (
+                        <>
+                          <Play className="w-3 h-3 fill-current" />
+                          Play Now
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3 h-3" />
+                          Request
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default RoomDetail;
