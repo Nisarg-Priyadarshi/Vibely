@@ -17,6 +17,7 @@ import {
   Smile,
   Shield,
   ArrowRight,
+  ArrowLeft,
   LogOut,
   Mail,
 } from 'lucide-react';
@@ -428,7 +429,11 @@ export const Social = () => {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
-          <Users className="w-12 h-12 text-slate-600 mx-auto" />
+          <img
+            src="/vibely-logo.png"
+            alt="Vibely logo"
+            className="w-14 h-14 mx-auto rounded-2xl shadow-xl shadow-emerald-500/10 border border-slate-800/80 object-contain"
+          />
           <h2 className="text-xl font-bold text-white">Sign In Required</h2>
           <p className="text-xs text-slate-400">
             Please log in to chat with friends and receive room invitations.
@@ -466,20 +471,20 @@ export const Social = () => {
           </div>
 
           {/* Social Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800 w-full sm:w-auto">
             <button
               onClick={() => {
                 setActiveTab('chat');
                 setSearchParams({ tab: 'chat' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'chat'
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
-              <MessageSquare className="w-3.5 h-3.5" />
-              Friends & Chat
+              <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+              <span>Friends & Chat</span>
               {friends.length > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                   activeTab === 'chat' ? 'bg-slate-950/30 text-slate-950' : 'bg-slate-800 text-slate-300'
@@ -494,14 +499,14 @@ export const Social = () => {
                 setActiveTab('requests');
                 setSearchParams({ tab: 'requests' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'requests'
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
-              <UserCheck className="w-3.5 h-3.5" />
-              Requests
+              <UserCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>Requests</span>
               {receivedRequests.length > 0 && (
                 <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-mono animate-pulse">
                   {receivedRequests.length}
@@ -514,14 +519,14 @@ export const Social = () => {
                 setActiveTab('search');
                 setSearchParams({ tab: 'search' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'search'
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
-              <UserPlus className="w-3.5 h-3.5" />
-              Find Friends
+              <UserPlus className="w-3.5 h-3.5 shrink-0" />
+              <span>Find Friends</span>
             </button>
 
             <button
@@ -529,14 +534,14 @@ export const Social = () => {
                 setActiveTab('invitations');
                 setSearchParams({ tab: 'invitations' });
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'invitations'
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
-              <Radio className="w-3.5 h-3.5" />
-              Room Invites
+              <Radio className="w-3.5 h-3.5 shrink-0" />
+              <span>Room Invites</span>
               {roomInvites.length > 0 && (
                 <span className="text-[10px] bg-cyan-500 text-slate-950 font-bold px-1.5 py-0.2 rounded-full font-mono">
                   {roomInvites.length}
@@ -568,7 +573,11 @@ export const Social = () => {
       {activeTab === 'chat' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
           {/* Left Column: Friends List & Conversations Sidebar */}
-          <div className="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl backdrop-blur-xl flex flex-col gap-4">
+          <div
+            className={`lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xl backdrop-blur-xl flex flex-col gap-4 ${
+              activeFriendId ? 'hidden lg:flex' : 'flex'
+            }`}
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-400" />
@@ -656,8 +665,9 @@ export const Social = () => {
                             e.stopPropagation();
                             handleRemoveFriend(friend.id);
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-rose-950 hover:text-rose-400 text-slate-500 transition-all cursor-pointer"
+                          className="opacity-90 sm:opacity-0 sm:group-hover:opacity-100 p-2 sm:p-1.5 rounded-lg hover:bg-rose-950 hover:text-rose-400 text-slate-400 transition-all cursor-pointer"
                           title="Remove Friend"
+                          aria-label={`Remove ${friend.name}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -670,12 +680,29 @@ export const Social = () => {
           </div>
 
           {/* Right Column: Active 1-to-1 Chat Window */}
-          <div className="lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between min-h-[540px]">
+          <div
+            className={`lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between min-h-[540px] ${
+              !activeFriendId ? 'hidden lg:flex' : 'flex'
+            }`}
+          >
             {activeConversation ? (
               <>
                 {/* Chat Top Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0 gap-2">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    {/* Back to Friends Button on Mobile */}
+                    <button
+                      onClick={() => {
+                        setActiveFriendId(null);
+                        setSearchParams({ tab: 'chat' });
+                      }}
+                      className="lg:hidden p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white shrink-0 -ml-1 transition-colors cursor-pointer"
+                      title="Back to Friends"
+                      aria-label="Back to Friends list"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+
                     <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
                       {activeConversation.avatar ? (
                         <img src={activeConversation.avatar} alt={activeConversation.name} className="w-full h-full object-cover" />
@@ -683,22 +710,22 @@ export const Social = () => {
                         activeConversation.name.charAt(0)
                       )}
                     </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        {activeConversation.name}
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2 truncate">
+                        <span className="truncate">{activeConversation.name}</span>
+                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
                       </h3>
-                      <p className="text-[10px] text-slate-400 font-mono">{activeConversation.email}</p>
+                      <p className="text-[10px] text-slate-400 font-mono truncate">{activeConversation.email}</p>
                     </div>
                   </div>
 
                   {currentRoom && (
                     <button
                       onClick={() => navigate(`/rooms/${currentRoom.code}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-semibold transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[11px] sm:text-xs font-semibold transition-all cursor-pointer shrink-0 truncate max-w-[150px] sm:max-w-none"
                     >
-                      <Radio className="w-3.5 h-3.5" />
-                      In Room: {currentRoom.name}
+                      <Radio className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate"><span className="hidden sm:inline">In Room: </span>{currentRoom.name}</span>
                     </button>
                   )}
                 </div>
@@ -843,7 +870,7 @@ export const Social = () => {
                 {receivedRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-bold text-xs uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
@@ -859,7 +886,7 @@ export const Social = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                       <button
                         onClick={() => handleAcceptRequest(req.id)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer"
@@ -907,7 +934,7 @@ export const Social = () => {
                 {sentRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-bold text-xs uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
@@ -925,7 +952,7 @@ export const Social = () => {
 
                     <button
                       onClick={() => handleCancelRequest(req.id)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer self-end sm:self-auto shrink-0"
                     >
                       Cancel
                     </button>
@@ -984,7 +1011,7 @@ export const Social = () => {
                 return (
                   <div
                     key={u.id}
-                    className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-3 shadow-inner"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner"
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
                       <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
@@ -1000,7 +1027,7 @@ export const Social = () => {
                       </div>
                     </div>
 
-                    <div className="shrink-0">
+                    <div className="self-end sm:self-auto shrink-0">
                       {status === 'friends' ? (
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold flex items-center gap-1">

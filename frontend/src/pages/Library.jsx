@@ -35,9 +35,11 @@ export const Library = () => {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl backdrop-blur-xl">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-            <ListMusic className="w-6 h-6" />
-          </div>
+          <img
+            src="/vibely-logo.png"
+            alt="Vibely logo"
+            className="w-14 h-14 mx-auto rounded-2xl shadow-xl shadow-emerald-500/10 border border-slate-800/80 object-contain"
+          />
           <h2 className="text-xl font-bold text-white">Your Music Library</h2>
           <p className="text-xs text-slate-400 leading-relaxed">
             Sign in to create, organize, and stream your personalized music playlists.
@@ -92,7 +94,7 @@ export const Library = () => {
   };
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 pb-32">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-32">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>
@@ -100,7 +102,7 @@ export const Library = () => {
             <Sparkles className="w-3.5 h-3.5" />
             Your Collection
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight">
             Your Playlists
           </h1>
           <p className="text-xs text-slate-400">
@@ -110,7 +112,7 @@ export const Library = () => {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer min-h-[40px]"
         >
           <Plus className="w-4 h-4" />
           Create Playlist
@@ -119,7 +121,7 @@ export const Library = () => {
 
       {/* Playlists Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
@@ -132,24 +134,24 @@ export const Library = () => {
           ))}
         </div>
       ) : playlists.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center space-y-4 max-w-lg mx-auto">
+        <div className="p-8 sm:p-12 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center space-y-4 max-w-lg mx-auto">
           <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 mx-auto">
             <ListMusic className="w-8 h-8" />
           </div>
-          <h3 className="text-lg font-bold text-slate-200">No playlists yet</h3>
+          <h3 className="text-base sm:text-lg font-bold text-slate-200">No playlists yet</h3>
           <p className="text-xs text-slate-400 leading-relaxed">
             Create your first playlist to group your favorite songs together and play them sequentially.
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer min-h-[40px]"
           >
             <Plus className="w-4 h-4" />
             Create Your First Playlist
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
           {playlists.map((playlist) => {
             const plId = playlist.id || playlist._id;
             const songs = playlist.songs || [];
@@ -159,7 +161,7 @@ export const Library = () => {
               <div
                 key={plId}
                 onClick={() => navigate(`/playlists/${plId}`)}
-                className="group relative p-3.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800/80 hover:border-slate-700/80 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                className="group relative p-3 sm:p-3.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800/80 hover:border-slate-700/80 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
               >
                 {/* Artwork Thumbnail */}
                 <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3 bg-gradient-to-tr from-slate-950 to-slate-800 flex items-center justify-center">

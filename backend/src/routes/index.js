@@ -6,6 +6,8 @@ import playlistRoutes from './playlistRoutes.js';
 import roomRoutes from './roomRoutes.js';
 import friendRoutes from './friendRoutes.js';
 import chatRoutes from './chatRoutes.js';
+import favoriteRoutes from './favoriteRoutes.js';
+import playLaterRoutes from './playLaterRoutes.js';
 
 const router = Router();
 
@@ -18,6 +20,8 @@ router.use('/rooms', roomRoutes);
 router.use('/friends', friendRoutes);
 router.use('/chat', chatRoutes);
 router.use('/messages', chatRoutes); // Alias for consistency
+router.use('/favorites', favoriteRoutes);
+router.use('/play-later', playLaterRoutes);
 
 export default router;
 

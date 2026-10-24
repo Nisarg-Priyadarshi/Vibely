@@ -1,5 +1,11 @@
 import User from '../models/User.js';
 import { signToken, setAuthCookie, clearAuthCookie } from '../services/authService.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
+import {
+  uploadAvatarToCloudinary,
+  deleteAvatarFromCloudinary,
+} from '../services/cloudinaryService.js';
+import { isGoogleConfigured, getOAuth2Client } from '../config/google.js';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
@@ -304,11 +310,427 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Upload or replace authenticated user's avatar.
+ * POST /api/auth/profile/avatar or POST /api/auth/avatar
+ */
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    // 1. Verify Cloudinary configuration
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+          status: 500,
+        },
+      });
+    }
+
+    // 2. Validate file presence
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Please provide an image file to upload.',
+          status: 400,
+        },
+      });
+    }
+
+    // 3. Validate MIME type
+    const mime = (req.file.mimetype || '').toLowerCase();
+    if (!ALLOWED_MIME_TYPES.has(mime)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.',
+          status: 400,
+        },
+      });
+    }
+
+    // 4. Validate file size (max 5 MB)
+    if (req.file.size > MAX_AVATAR_SIZE) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'File size exceeds the 5 MB limit. Please upload an image smaller than 5 MB.',
+          status: 400,
+        },
+      });
+    }
+
+    // 5. Validate magic bytes in buffer
+    if (!isValidImageBuffer(req.file.buffer)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid file content. Uploaded file is not a valid JPEG, PNG, or WebP image.',
+          status: 400,
+        },
+      });
+    }
+
+    // 6. Find user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found.',
+          status: 404,
+        },
+      });
+    }
+
+    // 7. If user already has an existing avatar in Cloudinary, delete it (replacement)
+    const existingPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (existingPublicId) {
+      try {
+        await deleteAvatarFromCloudinary(existingPublicId);
+      } catch (delError) {
+        console.warn('Failed to delete previous avatar from Cloudinary:', delError.message);
+      }
+    }
+
+    // 8. Upload new avatar buffer to Cloudinary
+    const uploadResult = await uploadAvatarToCloudinary(req.file.buffer, {
+      public_id: `avatar_${user._id}_${Date.now()}`,
+    });
+
+    // 9. Update MongoDB User document
+    user.avatar = uploadResult.secure_url;
+    user.avatarPublicId = uploadResult.public_id;
+    user.cloudinaryPublicId = uploadResult.public_id;
+    await user.save();
+
+    // 10. Return safe user profile
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully.',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete authenticated user's avatar.
+ * DELETE /api/auth/profile/avatar or DELETE /api/auth/avatar
+ */
+export const deleteAvatar = async (req, res, next) => {
+  try {
+    // 1. Verify Cloudinary configuration
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+          status: 500,
+        },
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found.',
+          status: 404,
+        },
+      });
+    }
+
+    // 2. Delete asset from Cloudinary if stored
+    const existingPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (existingPublicId) {
+      try {
+        await deleteAvatarFromCloudinary(existingPublicId);
+      } catch (delError) {
+        console.warn('Failed to delete avatar from Cloudinary:', delError.message);
+      }
+    }
+
+    // 3. Reset avatar fields in MongoDB
+    user.avatar = null;
+    user.avatarPublicId = null;
+    user.cloudinaryPublicId = null;
+    await user.save();
+
+    // 4. Return safe user profile
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture removed successfully.',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify a Google credential (ID token) or authorization code and issue a session.
+ * POST /api/auth/google
+ */
+export const googleAuth = async (req, res, next) => {
+  try {
+    const credential = req.body?.credential || req.body?.idToken || req.body?.token;
+    const code = req.body?.code;
+
+    if (!credential && !code) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Google credential or authorization code is required.',
+          status: 400,
+        },
+      });
+    }
+
+    if (!isGoogleConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Google authentication is not configured on this server.',
+          status: 500,
+        },
+      });
+    }
+
+    const client = getOAuth2Client();
+    let googleId;
+    let email;
+    let name;
+    let picture;
+
+    if (code) {
+      const { tokens } = await client.getToken(code);
+      client.setCredentials(tokens);
+
+      if (tokens.id_token) {
+        const ticket = await client.verifyIdToken({
+          idToken: tokens.id_token,
+          audience: process.env.GOOGLE_CLIENT_ID?.trim(),
+        });
+        const payload = ticket.getPayload();
+        googleId = payload.sub;
+        email = payload.email;
+        name = payload.name;
+        picture = payload.picture;
+      } else {
+        const userInfoRes = await client.request({
+          url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+        });
+        googleId = userInfoRes.data.sub;
+        email = userInfoRes.data.email;
+        name = userInfoRes.data.name;
+        picture = userInfoRes.data.picture;
+      }
+    } else {
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID?.trim(),
+      });
+      const payload = ticket.getPayload();
+      googleId = payload.sub;
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+    }
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Google account must have an email address.',
+          status: 400,
+        },
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Find existing user by googleId or email, or create a new one
+    let user = await User.findOne({
+      $or: [{ googleId }, { email: normalizedEmail }],
+    });
+
+    if (!user) {
+      user = await User.create({
+        name: name?.trim() || normalizedEmail.split('@')[0],
+        email: normalizedEmail,
+        googleId,
+        avatar: picture || null,
+      });
+    } else if (!user.googleId) {
+      // Link Google ID to existing account
+      user.googleId = googleId;
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+      }
+      await user.save();
+    }
+
+    const token = signToken({ id: user._id.toString(), email: user.email });
+    setAuthCookie(res, token);
+
+    res.status(200).json({
+      success: true,
+      message: 'Google login successful.',
+      user: user.toSafeObject(),
+      token,
+    });
+  } catch (error) {
+    if (error.message && error.message.includes('Token used too late')) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Google sign-in session expired. Please try again.',
+          status: 401,
+        },
+      });
+    }
+    if (
+      error.message &&
+      (error.message.includes('Invalid token') ||
+        error.message.includes('audience') ||
+        error.message.includes('Wrong number of segments') ||
+        error.message.includes('jwt') ||
+        error.message.includes('invalid_grant'))
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid Google credential. Please try again.',
+          status: 401,
+        },
+      });
+    }
+    next(error);
+  }
+};
+
+/**
+ * Initiate server-side Google OAuth 2.0 redirect flow.
+ * GET /api/auth/google
+ */
+export const googleAuthRedirect = (req, res, next) => {
+  try {
+    if (!isGoogleConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Google authentication is not configured on this server.',
+          status: 500,
+        },
+      });
+    }
+
+    const client = getOAuth2Client();
+    const authUrl = client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['openid', 'profile', 'email'],
+      prompt: 'select_account',
+    });
+
+    res.redirect(authUrl);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Handle Google OAuth 2.0 redirect callback.
+ * GET /api/auth/google/callback
+ */
+export const googleAuthCallback = async (req, res, next) => {
+  try {
+    const { code, error } = req.query;
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+    if (error) {
+      return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(error)}`);
+    }
+
+    if (!code) {
+      return res.redirect(`${clientUrl}/login?error=missing_auth_code`);
+    }
+
+    const client = getOAuth2Client();
+    const { tokens } = await client.getToken(code);
+    client.setCredentials(tokens);
+
+    let googleId;
+    let email;
+    let name;
+    let picture;
+
+    if (tokens.id_token) {
+      const ticket = await client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID?.trim(),
+      });
+      const payload = ticket.getPayload();
+      googleId = payload.sub;
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+    } else {
+      const userInfoRes = await client.request({
+        url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+      });
+      googleId = userInfoRes.data.sub;
+      email = userInfoRes.data.email;
+      name = userInfoRes.data.name;
+      picture = userInfoRes.data.picture;
+    }
+
+    if (!email) {
+      return res.redirect(`${clientUrl}/login?error=no_email_provided`);
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    let user = await User.findOne({
+      $or: [{ googleId }, { email: normalizedEmail }],
+    });
+
+    if (!user) {
+      user = await User.create({
+        name: name?.trim() || normalizedEmail.split('@')[0],
+        email: normalizedEmail,
+        googleId,
+        avatar: picture || null,
+      });
+    } else if (!user.googleId) {
+      user.googleId = googleId;
+      if (!user.avatar && picture) user.avatar = picture;
+      await user.save();
+    }
+
+    const token = signToken({ id: user._id.toString(), email: user.email });
+    setAuthCookie(res, token);
+
+    return res.redirect(`${clientUrl}/`);
+  } catch (err) {
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    return res.redirect(`${clientUrl}/login?error=oauth_failed`);
+  }
+};
+
 export default {
   register,
   login,
   logout,
   getMe,
   updateProfile,
+  uploadAvatar,
+  deleteAvatar,
+  googleAuth,
+  googleAuthRedirect,
+  googleAuthCallback,
 };
 

@@ -40,7 +40,11 @@ export const Profile = () => {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
         <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
-          <User className="w-12 h-12 text-slate-600 mx-auto" />
+          <img
+            src="/vibely-logo.png"
+            alt="Vibely logo"
+            className="w-14 h-14 mx-auto rounded-2xl shadow-xl shadow-emerald-500/10 border border-slate-800/80 object-contain"
+          />
           <h2 className="text-xl font-bold text-white">Sign In Required</h2>
           <p className="text-xs text-slate-400">
             Please log in to view and manage your account settings.
@@ -182,7 +186,7 @@ export const Profile = () => {
   return (
     <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8 pb-32">
       {/* Profile Header */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
@@ -307,8 +311,8 @@ export const Profile = () => {
       </div>
 
       {/* Edit Profile Form & Settings */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div>
             <h2 className="text-base font-bold text-white">Account Details</h2>
             <p className="text-xs text-slate-400">Manage your public listener credentials</p>
@@ -320,7 +324,7 @@ export const Profile = () => {
                 setName(user.name);
                 setIsEditing(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors self-start sm:self-auto cursor-pointer"
             >
               <Edit2 className="w-3.5 h-3.5" />
               Edit Display Name
@@ -398,24 +402,24 @@ export const Profile = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
               <span className="text-slate-500 block">Display Name</span>
-              <span className="font-bold text-slate-200 text-sm">{user.name}</span>
+              <span className="font-bold text-slate-200 text-sm truncate block">{user.name}</span>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
               <span className="text-slate-500 block">Email Address</span>
-              <span className="font-mono text-slate-200 text-sm">{user.email}</span>
+              <span className="font-mono text-slate-200 text-sm truncate block">{user.email}</span>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
               <span className="text-slate-500 block">Unique User ID</span>
-              <span className="font-mono text-slate-400">{user.id}</span>
+              <span className="font-mono text-slate-400 break-all">{user.id}</span>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
               <span className="text-slate-500 block">Session Protection</span>
               <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <ShieldCheck className="w-4 h-4" />
-                HTTP-Only Cookie Encrypted
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>HTTP-Only Cookie Encrypted</span>
               </span>
             </div>
           </div>

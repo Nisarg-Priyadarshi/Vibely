@@ -38,10 +38,12 @@ export const Register = () => {
           else setServerError(result.error);
         },
       });
+      const containerWidth = googleButtonRef.current?.offsetWidth || (window.innerWidth - 64);
+      const targetWidth = Math.min(Math.max(containerWidth, 200), 380);
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'filled_black',
         size: 'large',
-        width: googleButtonRef.current.offsetWidth || 400,
+        width: targetWidth,
         text: 'signup_with',
         shape: 'rectangular',
       });
@@ -117,17 +119,26 @@ export const Register = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+    <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
         {/* Glow */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 space-y-6">
           <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              Join the Vibe
+            <Link to="/" className="inline-block group focus:outline-none mb-1" title="Vibely — Home">
+              <img
+                src="/vibely-logo.png"
+                alt="Vibely logo"
+                className="w-14 h-14 mx-auto rounded-2xl shadow-xl shadow-emerald-500/10 border border-slate-800/80 group-hover:scale-105 transition-transform object-contain"
+              />
+            </Link>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                Join the Vibe
+              </div>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
               Create an account

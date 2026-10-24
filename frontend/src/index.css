@@ -3,13 +3,312 @@
 :root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  width: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  min-width: 320px;
+  width: 100%;
+  overflow-x: hidden;
   background-color: #0b0f19;
   color: #f3f4f6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Accessible focus styling */
+:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Prevent unwanted horizontal overflow on containers */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Utility to hide scrollbars while keeping scrollability */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+/* ==========================================================================
+   Vibely Animated Loading Screen Styles
+   ========================================================================== */
+
+/* 1. Five-Bar Audio Waveform Live Pulse Animations */
+@keyframes vibelyBarPulse1 {
+  0% {
+    transform: scaleY(0.42);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scaleY(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.55);
+    opacity: 0.88;
+  }
+}
+
+@keyframes vibelyBarPulse2 {
+  0% {
+    transform: scaleY(0.92);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scaleY(0.38);
+    opacity: 0.78;
+  }
+  100% {
+    transform: scaleY(1.18);
+    opacity: 1;
+  }
+}
+
+@keyframes vibelyBarPulse3 {
+  0% {
+    transform: scaleY(0.52);
+    opacity: 0.85;
+  }
+  35% {
+    transform: scaleY(1.26);
+    opacity: 1;
+  }
+  70% {
+    transform: scaleY(0.68);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes vibelyBarPulse4 {
+  0% {
+    transform: scaleY(1.12);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0.44);
+    opacity: 0.82;
+  }
+  100% {
+    transform: scaleY(0.88);
+    opacity: 0.94;
+  }
+}
+
+@keyframes vibelyBarPulse5 {
+  0% {
+    transform: scaleY(0.62);
+    opacity: 0.86;
+  }
+  50% {
+    transform: scaleY(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.38);
+    opacity: 0.78;
+  }
+}
+
+.vibely-bar-1 {
+  transform-origin: center;
+  animation: vibelyBarPulse1 1.25s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.vibely-bar-2 {
+  transform-origin: center;
+  animation: vibelyBarPulse2 0.92s ease-in-out infinite alternate 0.12s;
+  will-change: transform, opacity;
+}
+
+.vibely-bar-3 {
+  transform-origin: center;
+  animation: vibelyBarPulse3 1.45s ease-in-out infinite alternate 0.25s;
+  will-change: transform, opacity;
+}
+
+.vibely-bar-4 {
+  transform-origin: center;
+  animation: vibelyBarPulse4 1.05s ease-in-out infinite alternate 0.18s;
+  will-change: transform, opacity;
+}
+
+.vibely-bar-5 {
+  transform-origin: center;
+  animation: vibelyBarPulse5 1.2s ease-in-out infinite alternate 0.32s;
+  will-change: transform, opacity;
+}
+
+/* 2. Logo Center Breathing Aura */
+@keyframes vibelyAuraBreathe {
+  0% {
+    transform: scale(0.88);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.16);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.5;
+  }
+}
+
+.vibely-logo-aura {
+  animation: vibelyAuraBreathe 3.6s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* 3. Wordmark Neon Glow Pulse */
+@keyframes vibelyWordmarkPulse {
+  0% {
+    text-shadow:
+      0 0 10px rgba(255, 255, 255, 0.65),
+      0 0 20px rgba(192, 132, 252, 0.45),
+      0 0 35px rgba(34, 211, 238, 0.3);
+  }
+  100% {
+    text-shadow:
+      0 0 14px rgba(255, 255, 255, 0.9),
+      0 0 28px rgba(192, 132, 252, 0.7),
+      0 0 50px rgba(34, 211, 238, 0.5),
+      0 0 75px rgba(236, 72, 153, 0.3);
+  }
+}
+
+.vibely-wordmark {
+  letter-spacing: 0.22em;
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.7),
+    0 0 24px rgba(192, 132, 252, 0.5),
+    0 0 42px rgba(34, 211, 238, 0.35);
+  animation: vibelyWordmarkPulse 2.8s ease-in-out infinite alternate;
+  will-change: text-shadow;
+}
+
+/* 4. Layered Neon Music-Wave Ribbons */
+@keyframes vibelyWaveFlow1 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes vibelyWaveFlow2 {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes vibelyWaveFlow3 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.vibely-wave-1 {
+  animation: vibelyWaveFlow1 16s linear infinite;
+  will-change: transform;
+}
+
+.vibely-wave-2 {
+  animation: vibelyWaveFlow2 11s linear infinite;
+  will-change: transform;
+}
+
+.vibely-wave-3 {
+  animation: vibelyWaveFlow3 19s linear infinite;
+  will-change: transform;
+}
+
+/* 5. Glowing Floating Particles */
+@keyframes vibelyFloatY {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: var(--base-opacity, 0.6);
+  }
+  50% {
+    transform: translateY(var(--float-distance, -14px)) scale(1.15);
+    opacity: 1;
+  }
+}
+
+.vibely-particle {
+  animation: vibelyFloatY var(--float-duration, 5s) ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+  will-change: transform, opacity;
+}
+
+/* 6. Ambient Light Orbs Breathing */
+@keyframes vibelyAmbientOrb {
+  0% {
+    transform: scale(0.9) translate(0, 0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1) translate(15px, -10px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.95) translate(-10px, 10px);
+    opacity: 0.7;
+  }
+}
+
+.vibely-ambient-orb-1 {
+  animation: vibelyAmbientOrb 8s ease-in-out infinite alternate;
+}
+
+.vibely-ambient-orb-2 {
+  animation: vibelyAmbientOrb 10s ease-in-out infinite alternate 1.5s;
+}
+
+/* 7. Accessibility - Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .vibely-bar-1,
+  .vibely-bar-2,
+  .vibely-bar-3,
+  .vibely-bar-4,
+  .vibely-bar-5,
+  .vibely-logo-aura,
+  .vibely-wordmark,
+  .vibely-wave-1,
+  .vibely-wave-2,
+  .vibely-wave-3,
+  .vibely-particle,
+  .vibely-ambient-orb-1,
+  .vibely-ambient-orb-2 {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
