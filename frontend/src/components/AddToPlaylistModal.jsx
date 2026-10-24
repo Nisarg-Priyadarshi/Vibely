@@ -69,12 +69,12 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000000]/80 backdrop-blur-xs">
-      <div className="w-full max-w-md bg-[#1e1e1e] border border-[rgba(255,255,255,0.1)] rounded-[4px] shadow-2xl p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-[4px] text-[#999999] hover:text-[#ffffff] hover:bg-[#282828] transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           aria-label="Close"
         >
           <X className="w-4 h-4" />

@@ -38,10 +38,12 @@ export const Register = () => {
           else setServerError(result.error);
         },
       });
+      const containerWidth = googleButtonRef.current?.offsetWidth || (window.innerWidth - 64);
+      const targetWidth = Math.min(Math.max(containerWidth, 200), 380);
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'filled_black',
         size: 'large',
-        width: googleButtonRef.current.offsetWidth || 380,
+        width: googleButtonRef.current.offsetWidth || 400,
         text: 'signup_with',
         shape: 'rectangular',
       });
@@ -117,12 +119,20 @@ export const Register = () => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 sm:p-10 shadow-2xl relative">
-        <div className="space-y-6">
-          <div className="text-center space-y-1.5">
-            <h1 className="text-2xl font-bold text-[#ffffff] tracking-tight">
-              Create an Account
+    <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+        {/* Glow */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              Join the Vibe
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+              Create an account
             </h1>
             <p className="text-xs text-[#999999]">
               Join the concert rooms and stream in sync with listeners worldwide
@@ -150,11 +160,10 @@ export const Register = () => {
                 onChange={handleChange}
                 placeholder="Alex Rivers"
                 disabled={submitting}
-                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
-                  validationErrors.name
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${validationErrors.name
                     ? 'border-rose-500/60'
                     : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
-                }`}
+                  }`}
               />
               {validationErrors.name && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.name}</p>
@@ -174,11 +183,10 @@ export const Register = () => {
                 onChange={handleChange}
                 placeholder="alex@example.com"
                 disabled={submitting}
-                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
-                  validationErrors.email
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${validationErrors.email
                     ? 'border-rose-500/60'
                     : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
-                }`}
+                  }`}
               />
               {validationErrors.email && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.email}</p>
@@ -198,11 +206,10 @@ export const Register = () => {
                 onChange={handleChange}
                 placeholder="At least 6 characters"
                 disabled={submitting}
-                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
-                  validationErrors.password
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${validationErrors.password
                     ? 'border-rose-500/60'
                     : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
-                }`}
+                  }`}
               />
               {validationErrors.password && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.password}</p>
@@ -222,11 +229,10 @@ export const Register = () => {
                 onChange={handleChange}
                 placeholder="Repeat your password"
                 disabled={submitting}
-                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${
-                  validationErrors.confirmPassword
+                className={`w-full px-3.5 py-2.5 rounded-[4px] bg-[#222222] border text-[#ffffff] placeholder-[#666666] text-xs focus:outline-none transition-colors ${validationErrors.confirmPassword
                     ? 'border-rose-500/60'
                     : 'border-[rgba(255,255,255,0.08)] focus:border-[rgba(255,255,255,0.3)]'
-                }`}
+                  }`}
               />
               {validationErrors.confirmPassword && (
                 <p className="text-[11px] text-rose-400 pl-1">{validationErrors.confirmPassword}</p>

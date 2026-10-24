@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Song from '../models/Song.js';
+import User from '../models/User.js';
 
 /**
  * Get paginated list of songs with optional genre and search filtering.
@@ -150,9 +151,223 @@ export const getSongById = async (req, res, next) => {
   }
 };
 
+/**
+ * Get current authenticated user's favorite songs.
+ * GET /api/songs/favorites/mine or GET /api/favorites
+ */
+export const getMyFavorites = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate('favorites');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'User not found.', status: 404 },
+      });
+    }
+
+    const validSongs = (user.favorites || []).filter(Boolean);
+
+    if (validSongs.length !== (user.favorites || []).length) {
+      user.favorites = validSongs.map((s) => s._id);
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      count: validSongs.length,
+      data: validSongs,
+      songIds: validSongs.map((s) => s._id.toString()),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Add a song to the current user's favorites.
+ * POST /api/songs/:id/favorite or POST /api/favorites/:id
+ */
+export const addToFavorites = async (req, res, next) => {
+  try {
+    const songId = req.params.id || req.params.songId || req.body?.songId;
+
+    if (!songId || !mongoose.Types.ObjectId.isValid(songId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid song ID format.', status: 400 },
+      });
+    }
+
+    const song = await Song.findById(songId);
+    if (!song) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Song not found.', status: 404 },
+      });
+    }
+
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { favorites: song._id } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Song added to favourites.',
+      isFavorite: true,
+      data: song,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove a song from the current user's favorites.
+ * DELETE /api/songs/:id/favorite or DELETE /api/favorites/:id
+ */
+export const removeFromFavorites = async (req, res, next) => {
+  try {
+    const songId = req.params.id || req.params.songId || req.body?.songId;
+
+    if (!songId || !mongoose.Types.ObjectId.isValid(songId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid song ID format.', status: 400 },
+      });
+    }
+
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $pull: { favorites: songId } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Song removed from favourites.',
+      isFavorite: false,
+      songId,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get current authenticated user's Play Later songs.
+ * GET /api/songs/play-later/mine or GET /api/play-later
+ */
+export const getMyPlayLater = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate('playLater');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'User not found.', status: 404 },
+      });
+    }
+
+    const validSongs = (user.playLater || []).filter(Boolean);
+
+    if (validSongs.length !== (user.playLater || []).length) {
+      user.playLater = validSongs.map((s) => s._id);
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      count: validSongs.length,
+      data: validSongs,
+      songIds: validSongs.map((s) => s._id.toString()),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Add a song to the current user's Play Later list.
+ * POST /api/songs/:id/play-later or POST /api/play-later/:id
+ */
+export const addToPlayLater = async (req, res, next) => {
+  try {
+    const songId = req.params.id || req.params.songId || req.body?.songId;
+
+    if (!songId || !mongoose.Types.ObjectId.isValid(songId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid song ID format.', status: 400 },
+      });
+    }
+
+    const song = await Song.findById(songId);
+    if (!song) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Song not found.', status: 404 },
+      });
+    }
+
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { playLater: song._id } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Song added to Play Later.',
+      isInPlayLater: true,
+      data: song,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove a song from the current user's Play Later list.
+ * DELETE /api/songs/:id/play-later or DELETE /api/play-later/:id
+ */
+export const removeFromPlayLater = async (req, res, next) => {
+  try {
+    const songId = req.params.id || req.params.songId || req.body?.songId;
+
+    if (!songId || !mongoose.Types.ObjectId.isValid(songId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid song ID format.', status: 400 },
+      });
+    }
+
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $pull: { playLater: songId } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Song removed from Play Later.',
+      isInPlayLater: false,
+      songId,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getSongs,
   searchSongs,
   getGenres,
   getSongById,
+  getMyFavorites,
+  addToFavorites,
+  removeFromFavorites,
+  getMyPlayLater,
+  addToPlayLater,
+  removeFromPlayLater,
 };

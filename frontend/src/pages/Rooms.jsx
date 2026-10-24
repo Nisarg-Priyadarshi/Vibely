@@ -115,13 +115,13 @@ export const Rooms = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 text-center space-y-4 shadow-2xl">
-          <div className="w-10 h-10 rounded-[4px] bg-[#222222] text-[#cccccc] flex items-center justify-center mx-auto border border-[rgba(255,255,255,0.1)]">
-            <Radio className="w-5 h-5" />
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl backdrop-blur-xl">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+            <Radio className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold text-[#ffffff]">Vibely Rooms</h2>
-          <p className="text-xs text-[#999999] leading-relaxed">
+          <h2 className="text-2xl font-black text-white">Vibely Rooms</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
             Collaborative listening sessions with real-time audio synchronization. Sign in to create your own room or join with a room code.
           </p>
           <div className="pt-2">
@@ -139,42 +139,41 @@ export const Rooms = () => {
   }
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 pb-36">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
         <div>
           <div className="text-[11px] font-mono uppercase tracking-widest text-[#00e599] mb-1">
             Real-Time Sync
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight text-[#ffffff] flex items-center gap-3">
-            Listening Rooms
+          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+            <Radio className="w-8 h-8 text-emerald-400" />
+            Vibely Rooms
           </h1>
-          <p className="text-xs text-[#999999] mt-1 max-w-xl">
-            Stream audio simultaneously with other listeners. Hosts control the deck while members can request tracks in real time.
+          <p className="text-sm text-slate-400 mt-1 max-w-xl">
+            Stream music simultaneously with friends. The host directs playback while members can request their favorite tracks.
           </p>
         </div>
 
         {/* Real-time Connection Indicator */}
-        <div className="flex items-center gap-2 bg-[#181818] border border-[rgba(255,255,255,0.08)] px-3.5 py-1.5 rounded-[4px] self-start md:self-auto">
+        <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-2xl shadow-inner self-start md:self-auto">
           <span
-            className={`w-2 h-2 rounded-full ${
-              socketStatus === 'connected'
+            className={`w-2 h-2 rounded-full ${socketStatus === 'connected'
                 ? 'bg-[#00e599]'
                 : socketStatus === 'connecting' || socketStatus === 'reconnecting'
-                ? 'bg-amber-400 animate-pulse'
-                : 'bg-rose-400'
-            }`}
+                  ? 'bg-amber-400 animate-pulse'
+                  : 'bg-rose-400'
+              }`}
           />
           <div className="text-xs">
-            <span className="text-[#999999]">Gateway: </span>
+            <span className="font-semibold text-slate-300">Socket Status: </span>
             <span
-              className={`capitalize font-mono text-[11px] font-semibold ${
-                socketStatus === 'connected'
+              className={`capitalize font-mono text-[11px] font-semibold ${socketStatus === 'connected'
                   ? 'text-[#ffffff]'
                   : socketStatus === 'connecting' || socketStatus === 'reconnecting'
-                  ? 'text-amber-400'
-                  : 'text-rose-400'
-              }`}
+                    ? 'text-amber-400'
+                    : 'text-rose-400'
+                }`}
             >
               {socketStatus}
             </span>
@@ -183,16 +182,18 @@ export const Rooms = () => {
       </div>
 
       {/* Action Cards: Create & Join */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
         {/* Card 1: Create a Room */}
-        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 flex flex-col justify-between">
+        <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors pointer-events-none" />
+
           <div>
             <div className="w-8 h-8 rounded-[4px] bg-[#222222] border border-[rgba(255,255,255,0.08)] text-[#ffffff] flex items-center justify-center mb-4">
               <Plus className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-[#ffffff]">Host a Room</h2>
-            <p className="text-xs text-[#999999] mt-1">
-              Start your own broadcast stage. Control the queue and curate tracks for your audience.
+            <h2 className="text-lg font-bold text-white">Create a New Room</h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Become the host and guide the playback. You can approve or reject track change requests.
             </p>
 
             {createError && (
@@ -234,7 +235,7 @@ export const Rooms = () => {
               <button
                 type="submit"
                 disabled={isCreating}
-                className="w-full btn-white text-xs py-2.5 mt-2"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer mt-2"
               >
                 {isCreating ? (
                   <>
@@ -253,14 +254,16 @@ export const Rooms = () => {
         </div>
 
         {/* Card 2: Join via Code */}
-        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 flex flex-col justify-between">
+        <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col justify-between relative overflow-hidden group hover:border-cyan-500/30 transition-all">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-colors pointer-events-none" />
+
           <div>
             <div className="w-8 h-8 rounded-[4px] bg-[#222222] border border-[rgba(255,255,255,0.08)] text-[#ffffff] flex items-center justify-center mb-4">
               <Users className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-[#ffffff]">Join with Room Code</h2>
-            <p className="text-xs text-[#999999] mt-1">
-              Have an invite code from another listener? Enter the 4–6 character code to connect.
+            <h2 className="text-lg font-bold text-white">Join with Room Code</h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Have a shareable code from a host? Enter it below to join the listening party instantly.
             </p>
 
             {joinError && (
@@ -285,11 +288,11 @@ export const Rooms = () => {
                 />
               </div>
 
-              <div className="pt-8">
+              <div className="pt-9">
                 <button
                   type="submit"
                   disabled={isJoining}
-                  className="w-full btn-graphite text-xs py-2.5 text-[#ffffff] hover:border-[rgba(255,255,255,0.25)]"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 disabled:opacity-50 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
                 >
                   {isJoining ? (
                     <>

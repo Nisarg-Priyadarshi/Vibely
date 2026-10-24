@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Loader2,
   ListMusic,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { usePlayer } from '../context/PlayerContext';
 import { formatTime } from '../utils/format';
@@ -36,6 +38,7 @@ export const PlayerBar = () => {
 
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   useEffect(() => {
     if (!isSeeking) {
@@ -59,46 +62,48 @@ export const PlayerBar = () => {
   };
 
   const currentDuration = duration || currentTrack.duration || 0;
-  const progressPercent = currentDuration > 0
-    ? Math.min(100, Math.max(0, (seekValue / currentDuration) * 100))
-    : 0;
+  const progressPercent =
+    currentDuration > 0
+      ? Math.min(100, Math.max(0, (seekValue / currentDuration) * 100))
+      : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-[rgba(255,255,255,0.08)] px-4 py-3 sm:px-8 shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 border-t border-slate-800/90 backdrop-blur-xl px-4 py-3 sm:px-6 shadow-2xl">
       {/* Playback Alert / Error Banner */}
       {playbackError && (
-        <div className="max-w-7xl mx-auto mb-2 px-3 py-1.5 rounded-[4px] bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+        <div className="max-w-7xl mx-auto mb-2 px-3 py-1.5 rounded-lg bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
           <span className="truncate">{playbackError}</span>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      {/* Main Player Bar */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Track Information */}
-        <div className="flex items-center gap-3.5 w-full md:w-1/4 min-w-0">
+        <div className="flex items-center gap-3 w-full md:w-1/4 min-w-0">
           <img
             src={currentTrack.coverUrl}
             alt={currentTrack.title}
-            className="w-11 h-11 rounded-[4px] object-cover shrink-0 bg-[#222222]"
+            className="w-12 h-12 rounded-xl object-cover shrink-0 shadow-md border border-slate-800"
           />
           <div className="min-w-0">
-            <h4 className="text-xs font-bold text-[#ffffff] truncate">
+            <h4 className="text-sm font-bold text-slate-100 truncate hover:text-emerald-400 transition-colors">
               {currentTrack.title}
             </h4>
-            <p className="text-[11px] text-[#999999] truncate">
+            <p className="text-xs text-slate-400 truncate">
               {currentTrack.artist}
             </p>
           </div>
         </div>
 
-        {/* Center: Controls & Scrubber */}
+        {/* Center: Controls & Progress Scrubber */}
         <div className="flex flex-col items-center w-full md:w-2/4 max-w-xl">
           {/* Action Buttons */}
           <div className="flex items-center gap-5 mb-1.5">
             <button
               onClick={prevTrack}
               aria-label="Previous Track"
-              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               <SkipBack className="w-4 h-4 fill-current" />
             </button>
@@ -120,14 +125,14 @@ export const PlayerBar = () => {
             <button
               onClick={nextTrack}
               aria-label="Next Track"
-              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               <SkipForward className="w-4 h-4 fill-current" />
             </button>
           </div>
 
           {/* Scrubber Bar */}
-          <div className="w-full flex items-center gap-3 text-[11px] font-mono text-[#999999]">
+          <div className="w-full flex items-center gap-3 text-[11px] font-mono text-slate-400">
             <span className="w-9 text-right shrink-0">{formatTime(seekValue)}</span>
 
             <div className="relative flex-1 flex items-center group cursor-pointer">
@@ -140,10 +145,8 @@ export const PlayerBar = () => {
                 onChange={handleSeekChange}
                 onMouseUp={handleSeekCommit}
                 onTouchEnd={handleSeekCommit}
-                style={{
-                  background: `linear-gradient(to right, #ffffff ${progressPercent}%, #2e2e2e ${progressPercent}%)`,
-                }}
-                className="w-full h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] hover:h-1.5 transition-all focus:outline-none"
+                style={{ background: `linear-gradient(to right, #34d399 ${progressPercent}%, #1e293b ${progressPercent}%)` }}
+                className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-emerald-400 hover:h-2 transition-all focus:outline-none"
               />
             </div>
 
@@ -152,7 +155,7 @@ export const PlayerBar = () => {
         </div>
 
         {/* Right: Volume & Queue Position */}
-        <div className="hidden md:flex items-center justify-end gap-4 w-1/4">
+        <div className="hidden md:flex items-center justify-end gap-3 w-1/4">
           {queue && queue.length > 0 && (
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#777777] mr-1">
               <ListMusic className="w-3.5 h-3.5 text-[#999999]" />
@@ -162,34 +165,75 @@ export const PlayerBar = () => {
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleMute}
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
-              className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer"
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="w-4 h-4 text-rose-400" />
-              ) : volume < 0.5 ? (
-                <Volume1 className="w-4 h-4" />
-              ) : (
-                <Volume2 className="w-4 h-4" />
-              )}
-            </button>
+          <button
+            onClick={toggleMute}
+            aria-label={isMuted ? 'Unmute' : 'Mute'}
+            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+          >
+            {isMuted || volume === 0 ? (
+              <VolumeX className="w-4 h-4 text-rose-400" />
+            ) : volume < 0.5 ? (
+              <Volume1 className="w-4 h-4" />
+            ) : (
+              <Volume2 className="w-4 h-4" />
+            )}
+          </button>
 
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.02"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-              style={{
-                background: `linear-gradient(to right, #cccccc ${(isMuted ? 0 : volume) * 100}%, #2e2e2e ${(isMuted ? 0 : volume) * 100}%)`,
-              }}
-              className="w-20 h-1 rounded-[2px] appearance-none cursor-pointer accent-[#ffffff] focus:outline-none"
-            />
-          </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.02"
+            value={isMuted ? 0 : volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-20 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
+          />
+        </div>
+
+        {/* Mobile Right Controls: Prev, Play/Pause, Next, and Expand Button (< md) */}
+        <div className="flex md:hidden items-center gap-1 shrink-0">
+          <button
+            onClick={prevTrack}
+            aria-label="Previous Track"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer rounded-xl active:bg-slate-800"
+          >
+            <SkipBack className="w-4 h-4 fill-current" />
+          </button>
+
+          <button
+            onClick={togglePlay}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            className="w-11 h-11 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center shadow-lg shadow-emerald-500/25 transition-transform active:scale-95 cursor-pointer"
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : isPlaying ? (
+              <Pause className="w-5 h-5 fill-current" />
+            ) : (
+              <Play className="w-5 h-5 fill-current ml-0.5" />
+            )}
+          </button>
+
+          <button
+            onClick={nextTrack}
+            aria-label="Next Track"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer rounded-xl active:bg-slate-800"
+          >
+            <SkipForward className="w-4 h-4 fill-current" />
+          </button>
+
+          <button
+            onClick={() => setMobileExpanded(!mobileExpanded)}
+            aria-label={mobileExpanded ? 'Collapse player' : 'Expand player options'}
+            aria-expanded={mobileExpanded}
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white rounded-xl active:bg-slate-800 transition-colors"
+          >
+            {mobileExpanded ? (
+              <ChevronDown className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <ChevronUp className="w-4 h-4" />
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -168,7 +168,7 @@ export const PlaylistDetail = () => {
   const firstCover = songs.length > 0 && songs[0]?.coverUrl ? songs[0].coverUrl : null;
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8 pb-36">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 pb-32">
       {/* Top back navigation */}
       <div>
         <Link
@@ -181,9 +181,11 @@ export const PlaylistDetail = () => {
       </div>
 
       {/* Playlist Hero Banner */}
-      <div className="flex flex-col md:flex-row items-center md:items-end gap-8 bg-[#181818] p-6 sm:p-10 rounded-[4px] border border-[rgba(255,255,255,0.08)] relative">
+      <div className="flex flex-col md:flex-row items-center md:items-end gap-6 bg-gradient-to-b from-slate-900/90 to-slate-950/60 p-6 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
         {/* Big Cover Artwork */}
-        <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-[4px] overflow-hidden bg-[#242424] border border-[rgba(255,255,255,0.1)] shrink-0 flex items-center justify-center">
+        <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden shadow-2xl bg-slate-900 border border-slate-700/60 shrink-0 flex items-center justify-center">
           {firstCover ? (
             <img src={firstCover} alt={playlist.name} className="w-full h-full object-cover" />
           ) : (
@@ -192,7 +194,7 @@ export const PlaylistDetail = () => {
         </div>
 
         {/* Playlist Metadata */}
-        <div className="flex-1 space-y-3 text-center md:text-left z-10">
+        <div className="flex-1 space-y-3 text-center md:text-left z-10 min-w-0">
           <div className="flex items-center justify-center md:justify-start gap-2">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#00e599]">
               Playlist
@@ -203,7 +205,7 @@ export const PlaylistDetail = () => {
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extralight tracking-tight text-[#ffffff] leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
             {playlist.name}
           </h1>
 
@@ -213,8 +215,8 @@ export const PlaylistDetail = () => {
             </p>
           )}
 
-          <div className="text-xs text-[#999999] flex items-center justify-center md:justify-start gap-2 pt-1">
-            <span className="font-semibold text-[#ffffff]">
+          <div className="text-xs text-slate-400 flex items-center justify-center md:justify-start gap-2 pt-1">
+            <span className="font-semibold text-white">
               {playlist.owner?.name || 'Vibely User'}
             </span>
             <span>&bull;</span>
@@ -228,16 +230,15 @@ export const PlaylistDetail = () => {
       </div>
 
       {/* Action Controls Bar */}
-      <div className="flex items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-5">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div className="flex items-center gap-4">
           {songs.length > 0 && (
             <button
               onClick={handlePlayAll}
-              className="btn-white text-xs px-5 py-2.5"
+              className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center shadow-xl shadow-emerald-500/30 transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
               aria-label="Play All Songs"
             >
-              <Play className="w-4 h-4 fill-current mr-2" />
-              Play All
+              <Play className="w-6 h-6 fill-current ml-0.5" />
             </button>
           )}
 
@@ -245,7 +246,7 @@ export const PlaylistDetail = () => {
             <>
               <button
                 onClick={() => setEditOpen(true)}
-                className="btn-graphite text-xs px-3.5 py-2"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold transition-all cursor-pointer"
               >
                 <Edit2 className="w-3.5 h-3.5 mr-1.5" />
                 Edit
@@ -253,7 +254,7 @@ export const PlaylistDetail = () => {
 
               <button
                 onClick={() => setDeleteConfirmOpen(true)}
-                className="btn-graphite text-xs px-3.5 py-2 text-rose-400 hover:text-rose-300"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 text-xs font-semibold transition-all cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                 Delete
@@ -281,7 +282,7 @@ export const PlaylistDetail = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] overflow-hidden">
+        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[rgba(255,255,255,0.08)] text-[#777777] font-mono text-[11px] uppercase tracking-wider">
@@ -306,9 +307,8 @@ export const PlaylistDetail = () => {
                   <tr
                     key={sId}
                     onClick={() => handlePlaySong(song)}
-                    className={`group hover:bg-[#202020] transition-colors cursor-pointer ${
-                      isCurrent ? 'bg-[#222222]' : ''
-                    }`}
+                    className={`group hover:bg-[#202020] transition-colors cursor-pointer ${isCurrent ? 'bg-[#222222]' : ''
+                      }`}
                   >
                     {/* Track Number / Play Trigger */}
                     <td className="py-3 px-4 text-center text-[#777777] font-mono">
@@ -337,13 +337,12 @@ export const PlaylistDetail = () => {
                         />
                         <div className="min-w-0">
                           <div
-                            className={`font-semibold truncate ${
-                              isCurrent ? 'text-[#00e599]' : 'text-[#ffffff]'
-                            }`}
+                            className={`font-bold truncate ${isCurrent ? 'text-emerald-400' : 'text-slate-100 group-hover:text-white'
+                              }`}
                           >
                             {song.title}
                           </div>
-                          <div className="text-[#999999] truncate text-[11px]">
+                          <div className="text-slate-400 truncate text-[11px]">
                             {song.artist}
                           </div>
                         </div>

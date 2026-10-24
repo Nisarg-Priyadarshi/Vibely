@@ -264,17 +264,16 @@ export const RoomDetail = () => {
     : 0;
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 space-y-6 pb-36">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Transient Notification Banner */}
       {roomNotification && (
         <div
-          className={`px-4 py-3 rounded-[4px] border text-xs font-semibold flex items-center justify-between shadow-lg transition-all ${
-            roomNotification.type === 'error'
+          className={`px-4 py-3 rounded-[4px] border text-xs font-semibold flex items-center justify-between shadow-lg transition-all ${roomNotification.type === 'error'
               ? 'bg-rose-950/90 border-rose-500/50 text-rose-200'
               : roomNotification.type === 'success'
-              ? 'bg-[#122b1f] border-[#00e599]/50 text-[#00e599]'
-              : 'bg-[#1e1e1e] border-[rgba(255,255,255,0.1)] text-[#ffffff]'
-          }`}
+                ? 'bg-[#122b1f] border-[#00e599]/50 text-[#00e599]'
+                : 'bg-[#1e1e1e] border-[rgba(255,255,255,0.1)] text-[#ffffff]'
+            }`}
         >
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-4 h-4 text-[#00e599] shrink-0" />
@@ -285,7 +284,7 @@ export const RoomDetail = () => {
 
       {/* Disconnection Warning */}
       {socketStatus !== 'connected' && (
-        <div className="px-4 py-3 rounded-[4px] bg-amber-950/70 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between">
+        <div className="px-4 py-3 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 animate-spin" />
             <span>
@@ -294,7 +293,7 @@ export const RoomDetail = () => {
           </div>
           <button
             onClick={syncRoomState}
-            className="btn-white text-xs px-3 py-1 bg-amber-500 text-[#121212]"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all cursor-pointer"
           >
             <RefreshCw className="w-3 h-3 mr-1" />
             Re-sync
@@ -303,10 +302,10 @@ export const RoomDetail = () => {
       )}
 
       {/* Room Header Card */}
-      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="font-mono text-xs font-bold text-[#00e599] bg-[#122b1f] px-2.5 py-1 rounded-[2px] border border-[#00e599]/30 flex items-center gap-1.5">
+            <span className="font-mono text-xs font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5" />
               #{currentRoom?.code || code}
             </span>
@@ -340,14 +339,14 @@ export const RoomDetail = () => {
                 Host
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs text-[#999999] bg-[#222222] border border-[rgba(255,255,255,0.06)] px-2 py-0.5 rounded-[2px]">
-                <Shield className="w-3.5 h-3.5 text-[#cccccc]" />
-                Host: <strong className="text-[#ffffff] ml-1">{currentRoom?.hostName || 'Host'}</strong>
+              <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-xl">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                Host: <strong className="text-slate-200 ml-1">{currentRoom?.hostName || 'Host'}</strong>
               </span>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             {currentRoom?.name || 'Vibely Room'}
           </h1>
           {currentRoom?.description && (
@@ -356,21 +355,21 @@ export const RoomDetail = () => {
         </div>
 
         {/* Action Header Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
           <button
             onClick={syncRoomState}
-            className="btn-graphite text-xs px-3 py-2"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
             title="Force synchronization"
           >
-            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            <RefreshCw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Re-sync Audio</span>
           </button>
 
           <button
             onClick={handleLeave}
-            className="btn-graphite text-xs px-3.5 py-2 text-rose-400 hover:text-rose-300"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5 mr-1.5" />
+            <LogOut className="w-3.5 h-3.5" />
             Leave Room
           </button>
         </div>
@@ -381,16 +380,18 @@ export const RoomDetail = () => {
         {/* Left 2 Cols: Collaborative Stage */}
         <div className="lg:col-span-2 space-y-6">
           {/* Synchronized Playback Card */}
-          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 relative">
+          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
             {currentSong ? (
               <div className="space-y-6">
                 {/* Track Artwork and Info */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
                   <div className="relative group shrink-0">
                     <img
                       src={currentSong.coverUrl}
                       alt={currentSong.title}
-                      className="w-36 h-36 sm:w-44 sm:h-44 rounded-[4px] object-cover bg-[#222222] border border-[rgba(255,255,255,0.08)]"
+                      className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl object-cover shadow-2xl border border-slate-700/80"
                     />
                     {isPlaying && (
                       <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-[2px] bg-[#121212]/90 text-[#00e599] text-[10px] font-mono uppercase tracking-wider border border-[rgba(255,255,255,0.08)] flex items-center gap-1">
@@ -406,10 +407,10 @@ export const RoomDetail = () => {
                       {currentSong.genre || 'Vibely Audio'}
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] truncate leading-tight">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white truncate leading-tight">
                       {currentSong.title}
                     </h2>
-                    <p className="text-sm text-[#999999] truncate">
+                    <p className="text-base text-slate-400 font-medium truncate">
                       {currentSong.artist}
                     </p>
 
@@ -444,9 +445,8 @@ export const RoomDetail = () => {
                       style={{
                         background: `linear-gradient(to right, #ffffff ${roomProgressPercent}%, #2e2e2e ${roomProgressPercent}%)`,
                       }}
-                      className={`w-full h-1.5 rounded-[2px] appearance-none focus:outline-none transition-all ${
-                        isHost ? 'cursor-pointer accent-[#ffffff]' : 'cursor-not-allowed accent-[#555555]'
-                      }`}
+                      className={`w-full h-1.5 rounded-[2px] appearance-none focus:outline-none transition-all ${isHost ? 'cursor-pointer accent-[#ffffff]' : 'cursor-not-allowed accent-[#555555]'
+                        }`}
                     />
                   </div>
                   {!isHost && (
@@ -702,11 +702,10 @@ export const RoomDetail = () => {
                 return (
                   <div
                     key={member.userId}
-                    className={`flex items-center justify-between p-2.5 rounded-[4px] border ${
-                      isCurrentUser
+                    className={`flex items-center justify-between p-2.5 rounded-[4px] border ${isCurrentUser
                         ? 'bg-[#222222] border-[rgba(255,255,255,0.12)]'
                         : 'bg-[#1b1b1b] border-[rgba(255,255,255,0.05)]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-7 h-7 rounded-[3px] bg-[#282828] flex items-center justify-center text-xs font-bold text-[#ffffff] uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
@@ -752,18 +751,18 @@ export const RoomDetail = () => {
 
       {/* Song Selection / Track Request Modal */}
       {songModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000000]/80 backdrop-blur-xs">
-          <div className="bg-[#1e1e1e] border border-[rgba(255,255,255,0.1)] rounded-[4px] max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <Music2 className="w-4 h-4 text-[#00e599]" />
-                <h3 className="text-base font-bold text-[#ffffff]">
-                  {isHost ? 'Broadcast Song to Room' : 'Request Song from Host'}
+                <Music2 className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-lg font-bold text-white">
+                  {isHost ? 'Select Song to Broadcast' : 'Request Song from Host'}
                 </h3>
               </div>
               <button
                 onClick={() => setSongModalOpen(false)}
-                className="text-[#999999] hover:text-[#ffffff] transition-colors cursor-pointer text-lg"
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 &times;
               </button>
@@ -836,16 +835,16 @@ export const RoomDetail = () => {
 
       {/* Invite Friends Modal */}
       {inviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000000]/80 backdrop-blur-xs">
-          <div className="bg-[#1e1e1e] border border-[rgba(255,255,255,0.1)] rounded-[4px] max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-4 h-4 text-[#00e599]" />
                 <h3 className="text-base font-bold text-[#ffffff]">Invite Friends</h3>
               </div>
               <button
                 onClick={() => setInviteModalOpen(false)}
-                className="text-[#999999] hover:text-[#ffffff] text-lg"
+                className="p-1 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 &times;
               </button>

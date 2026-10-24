@@ -37,11 +37,11 @@ export const Profile = () => {
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 text-center space-y-4 shadow-2xl">
-          <User className="w-10 h-10 text-[#666666] mx-auto" />
-          <h2 className="text-xl font-bold text-[#ffffff]">Sign In Required</h2>
-          <p className="text-xs text-[#999999]">
-            Please sign in to view and manage your account settings.
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
+          <User className="w-12 h-12 text-slate-600 mx-auto" />
+          <h2 className="text-xl font-bold text-white">Sign In Required</h2>
+          <p className="text-xs text-slate-400">
+            Please log in to view and manage your account settings.
           </p>
           <div className="pt-2">
             <Link
@@ -177,11 +177,13 @@ export const Profile = () => {
   };
 
   return (
-    <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10 flex flex-col gap-8 pb-36">
-      {/* Profile Header (Obsidian Surface with Hairline Inset) */}
-      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 relative">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Avatar Container (4px radius, utilitarian) */}
+    <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8 pb-32">
+      {/* Profile Header */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
+          {/* Avatar Container with Cloudinary Upload UI */}
           <div className="flex flex-col items-center gap-2.5 shrink-0">
             <div className="relative group w-24 h-24 rounded-[4px] overflow-hidden bg-[#242424] flex items-center justify-center border border-[rgba(255,255,255,0.1)]">
               {user.avatar ? (
@@ -297,9 +299,9 @@ export const Profile = () => {
         </div>
       </div>
 
-      {/* Account Details & Settings */}
-      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-4">
+      {/* Edit Profile Form & Settings */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div>
             <h2 className="text-sm font-bold text-[#ffffff]">Account Details</h2>
             <p className="text-xs text-[#999999]">Manage your public credentials and profile settings</p>
@@ -311,7 +313,7 @@ export const Profile = () => {
                 setName(user.name);
                 setIsEditing(true);
               }}
-              className="btn-graphite text-xs px-3 py-1.5"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
             >
               <Edit2 className="w-3 h-3 mr-1.5" />
               Edit Name
@@ -386,26 +388,26 @@ export const Profile = () => {
             </div>
           </form>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
-              <span className="text-[#777777] block text-[11px]">Display Name</span>
-              <span className="font-semibold text-[#ffffff] text-sm">{user.name}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
+              <span className="text-slate-500 block">Display Name</span>
+              <span className="font-bold text-slate-200 text-sm">{user.name}</span>
             </div>
 
-            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
-              <span className="text-[#777777] block text-[11px]">Email Address</span>
-              <span className="font-mono text-[#ffffff] text-xs">{user.email}</span>
+            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
+              <span className="text-slate-500 block">Email Address</span>
+              <span className="font-mono text-slate-200 text-sm">{user.email}</span>
             </div>
 
-            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
-              <span className="text-[#777777] block text-[11px]">User Identifier</span>
-              <span className="font-mono text-[#999999] text-xs">{user.id}</span>
+            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
+              <span className="text-slate-500 block">Unique User ID</span>
+              <span className="font-mono text-slate-400">{user.id}</span>
             </div>
 
-            <div className="p-3.5 rounded-[4px] bg-[#1e1e1e] border border-[rgba(255,255,255,0.06)] space-y-1">
-              <span className="text-[#777777] block text-[11px]">Session Protection</span>
-              <span className="text-[#00e599] font-medium flex items-center gap-1 text-xs">
-                <ShieldCheck className="w-3.5 h-3.5" />
+            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1">
+              <span className="text-slate-500 block">Session Protection</span>
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <ShieldCheck className="w-4 h-4" />
                 HTTP-Only Cookie Encrypted
               </span>
             </div>

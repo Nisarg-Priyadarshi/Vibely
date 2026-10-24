@@ -31,14 +31,14 @@ export const Library = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-8 text-center space-y-4 shadow-2xl">
-          <div className="w-10 h-10 rounded-[4px] bg-[#222222] text-[#cccccc] flex items-center justify-center mx-auto border border-[rgba(255,255,255,0.1)]">
-            <ListMusic className="w-5 h-5" />
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl backdrop-blur-xl">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+            <ListMusic className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-[#ffffff]">Your Music Library</h2>
-          <p className="text-xs text-[#999999] leading-relaxed">
-            Sign in to create, organize, and stream your personal playlists.
+          <h2 className="text-xl font-bold text-white">Your Music Library</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Sign in to create, organize, and stream your personalized music playlists.
           </p>
           <div className="pt-2">
             <Link
@@ -90,14 +90,14 @@ export const Library = () => {
   };
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex flex-col gap-8 pb-36">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 pb-32">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
         <div>
           <div className="text-[11px] font-mono uppercase tracking-widest text-[#00e599] mb-1">
             Personal Library
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight text-[#ffffff]">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Your Playlists
           </h1>
           <p className="text-xs text-[#999999]">
@@ -107,7 +107,7 @@ export const Library = () => {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="btn-white text-xs px-4 py-2.5"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Create Playlist
@@ -116,8 +116,8 @@ export const Library = () => {
 
       {/* Playlists Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
             <div
               key={i}
               className="p-2.5 rounded-[4px] space-y-3 animate-pulse"
@@ -129,24 +129,24 @@ export const Library = () => {
           ))}
         </div>
       ) : playlists.length === 0 ? (
-        <div className="p-12 rounded-[4px] bg-[#181818] border border-[rgba(255,255,255,0.08)] text-center space-y-4 max-w-md mx-auto">
-          <div className="w-12 h-12 rounded-[4px] bg-[#222222] flex items-center justify-center text-[#666666] mx-auto border border-[rgba(255,255,255,0.08)]">
-            <ListMusic className="w-6 h-6" />
+        <div className="p-12 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center space-y-4 max-w-lg mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 mx-auto">
+            <ListMusic className="w-8 h-8" />
           </div>
-          <h3 className="text-base font-semibold text-[#ffffff]">No playlists yet</h3>
-          <p className="text-xs text-[#999999] leading-relaxed">
-            Create your first playlist to group songs and listen sequentially in continuous stream.
+          <h3 className="text-lg font-bold text-slate-200">No playlists yet</h3>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Create your first playlist to group your favorite songs together and play them sequentially.
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="btn-white text-xs px-5 py-2.5"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Create Your First Playlist
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {playlists.map((playlist) => {
             const plId = playlist.id || playlist._id;
             const songs = playlist.songs || [];
@@ -156,7 +156,7 @@ export const Library = () => {
               <div
                 key={plId}
                 onClick={() => navigate(`/playlists/${plId}`)}
-                className="group cursor-pointer flex flex-col p-2.5 rounded-[4px] bg-transparent hover:bg-[#1a1a1a] transition-colors duration-150"
+                className="group relative p-3.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800/80 hover:border-slate-700/80 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
               >
                 {/* Artwork Thumbnail (1:1 aspect, 4px radius) */}
                 <div className="relative aspect-square w-full rounded-[4px] overflow-hidden mb-3 bg-[#222222] flex items-center justify-center">

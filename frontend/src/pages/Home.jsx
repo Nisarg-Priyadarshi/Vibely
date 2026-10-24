@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Music,
   Radio,
@@ -106,28 +107,68 @@ export const Home = () => {
   };
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex flex-col gap-10 pb-36">
-      {/* Top Session Indicator (Subtle, Darkroom Style) */}
+    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 pb-32">
+      {/* Top Banner / Auth Welcome */}
       {user && (
-        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] px-4 py-3 flex items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-cyan-950/40 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-[#00e599]" />
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-[#999999]">Connected as</span>
-              <span className="font-semibold text-[#ffffff]">{user.name}</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-sm uppercase shadow-md shadow-emerald-500/20">
+              {user.name.charAt(0)}
+            </div>
+            <div>
+              <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider block">
+                Session Active
+              </span>
+              <span className="text-sm font-bold text-slate-200">
+                Welcome back, {user.name}
+              </span>
             </div>
           </div>
-          <span className="text-[11px] font-mono text-[#777777] hidden sm:inline">
-            Stage online
-          </span>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 bg-slate-950/60 border border-slate-800 px-3 py-1 rounded-full">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Catalogue ready</span>
+          </div>
         </div>
+      ) : (
+      <div className="bg-gradient-to-r from-emerald-950/30 via-slate-900/70 to-teal-950/30 border border-slate-800/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <img
+            src="/vibely-logo.png"
+            alt="Vibely logo"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-contain shadow-md border border-slate-800 shrink-0"
+          />
+          <div>
+            <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider block">
+              Listen Together
+            </span>
+            <span className="text-sm font-bold text-slate-200">
+              Welcome to Vibely — Synchronized Music Streaming
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end shrink-0">
+          <Link
+            to="/login"
+            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all text-center flex-1 sm:flex-initial"
+          >
+            Log In
+          </Link>
+          <Link
+            to="/register"
+            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-xs font-bold text-slate-950 transition-all shadow-md shadow-emerald-500/20 text-center flex-1 sm:flex-initial"
+          >
+            Get Started Free
+          </Link>
+        </div>
+      </div>
       )}
 
       {/* Featured Editorial Spotlight Banner */}
       {featuredTrack && !searchQuery && selectedGenre === 'All' && (
-        <div className="relative rounded-[4px] overflow-hidden bg-[#181818] border border-[rgba(255,255,255,0.08)] p-6 sm:p-10 flex flex-col md:flex-row items-center gap-8">
-          {/* Cover Art Tile */}
-          <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-[4px] overflow-hidden shrink-0 bg-[#222222]">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-slate-900/90 to-emerald-950/40 border border-slate-800/80 shadow-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shrink-0 shadow-2xl border border-slate-700/60 group">
             <img
               src={featuredTrack.coverUrl}
               alt={featuredTrack.title}
@@ -222,11 +263,10 @@ export const Home = () => {
               <button
                 key={genre}
                 onClick={() => setSelectedGenre(genre)}
-                className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                  selectedGenre === genre
+                className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${selectedGenre === genre
                     ? 'bg-[#ffffff] text-[#121212]'
                     : 'bg-[#1e1e1e] hover:bg-[#282828] text-[#cccccc] border border-[rgba(255,255,255,0.06)]'
-                }`}
+                  }`}
               >
                 {genre}
               </button>
@@ -239,11 +279,11 @@ export const Home = () => {
       <div>
         {loading ? (
           // Loading Skeleton Grid
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {[...Array(12)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="p-2.5 rounded-[4px] space-y-3 animate-pulse"
+                className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-3.5 space-y-3 animate-pulse"
               >
                 <div className="aspect-square bg-[#222222] rounded-[4px]"></div>
                 <div className="h-3.5 bg-[#262626] rounded-[2px] w-3/4"></div>
@@ -288,8 +328,8 @@ export const Home = () => {
             )}
           </div>
         ) : (
-          // Track Grid (6 columns on large screens with 16px gap, matching DESIGN.md)
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          // Track Grid
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
             {songs.map((song) => (
               <SongCard key={song.id || song._id} song={song} queue={songs} />
             ))}

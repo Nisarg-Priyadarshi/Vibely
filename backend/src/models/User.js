@@ -47,6 +47,18 @@ const userSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Song',
+      },
+    ],
+    playLater: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Song',
+      },
+    ],
   },
   {
     timestamps: true,
@@ -55,7 +67,7 @@ const userSchema = new mongoose.Schema(
 
 // Pre-save hook to hash password before persisting
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
 
@@ -83,6 +95,11 @@ userSchema.methods.toSafeObject = function () {
     name: this.name,
     email: this.email,
     avatar: this.avatar || null,
+    avatarPublicId: this.avatarPublicId || null,
+    hasPassword: Boolean(this.password),
+    isGoogleAccount: Boolean(this.googleId),
+    favorites: (this.favorites || []).map((id) => (id._id ? id._id.toString() : id.toString())),
+    playLater: (this.playLater || []).map((id) => (id._id ? id._id.toString() : id.toString())),
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
