@@ -115,13 +115,13 @@ export const Rooms = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
+      <div className="flex-1 flex items-center justify-center px-4 py-[4rem]">
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[1.5rem] sm:p-[2rem] text-center space-y-[1rem]">
+          <div className="w-[3.5rem] h-[3.5rem] rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
             <Radio className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-light text-white">Vibely Rooms</h2>
-          <p className="text-xs text-[#999999] leading-relaxed">
+          <p className="max-w-sm mx-auto text-xs text-[#999999] leading-relaxed">
             Collaborative listening sessions with real-time audio synchronization. Sign in to create your own room or join with a room code.
           </p>
           <div className="pt-2">
@@ -139,18 +139,18 @@ export const Rooms = () => {
   }
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-[2rem] sm:px-[3rem] pt-[3rem] pb-[4rem] space-y-[2rem]">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] pb-[1.5rem]">
         <div>
-          <div className="text-[11px] font-mono uppercase tracking-widest text-[#999999] mb-1">
+          <div className="text-[11px] font-mono uppercase tracking-widest text-[#999999] mb-[0.5rem]">
             Real-Time Sync
           </div>
           <h1 className="text-3xl font-light text-white tracking-tight flex items-center gap-3">
             <Radio className="w-7 h-7 text-[#cccccc]" />
             Vibely Rooms
           </h1>
-          <p className="text-sm text-[#999999] mt-1 max-w-xl">
+          <p className="text-sm text-[#999999] mt-[0.5rem] max-w-xl">
             Stream music simultaneously with friends. The host directs playback while members can request their favorite tracks.
           </p>
         </div>

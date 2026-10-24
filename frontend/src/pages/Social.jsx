@@ -416,11 +416,13 @@ export const Social = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-white/10 rounded-[6px] p-8 text-center space-y-4 shadow-2xl">
-          <Users className="w-12 h-12 text-[#666666] mx-auto" />
+      <div className="flex-1 flex items-center justify-center px-4 py-[4rem]">
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-white/10 rounded-[6px] p-[1.5rem] sm:p-[2rem] text-center space-y-[1rem] shadow-2xl">
+          <div className="w-[3.5rem] h-[3.5rem] rounded-[4px] bg-[#303030] flex items-center justify-center mx-auto">
+            <Users className="w-6 h-6 text-[#ff7a1a]" />
+          </div>
           <h2 className="text-xl font-bold text-white">Sign In Required</h2>
-          <p className="text-xs text-[#999999]">
+          <p className="max-w-sm mx-auto text-xs text-[#999999]">
             Please log in to chat with friends and receive room invitations.
           </p>
           <div className="pt-2">
@@ -437,18 +439,18 @@ export const Social = () => {
   }
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6 pb-36">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-[2rem] sm:px-[3rem] pt-[3rem] pb-36 flex flex-col gap-[2rem]">
       {/* Social Hub Top Navigation Header */}
-      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 relative">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-[2rem] relative">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-[2rem]">
           <div>
-            <div className="text-[11px] font-mono uppercase tracking-widest text-[#ff7a1a] font-bold">
+            <div className="text-[11px] font-mono uppercase tracking-widest text-[#ff7a1a] font-bold mb-[0.5rem]">
               Social Network
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] tracking-tight mt-1">
+            <h1 className="text-2xl sm:text-3xl font-extralight text-[#ffffff] tracking-tight">
               Community and Direct Messages
             </h1>
-            <p className="text-xs text-[#999999] mt-0.5">
+            <p className="text-xs text-[#999999] mt-[0.5rem]">
               Connect with fellow listeners, coordinate listening sessions, and share room invitations.
             </p>
           </div>
@@ -551,10 +553,10 @@ export const Social = () => {
 
       {/* TAB 1: FRIENDS & PRIVATE CHAT */}
       {activeTab === 'chat' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-[1.5rem] min-h-[580px]">
           {/* Left Column: Friends List & Conversations Sidebar */}
-          <div className="lg:col-span-4 bg-[#181818] border border-white/[0.08] rounded-[6px] p-5 shadow-xl flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+          <div className="lg:col-span-4 bg-[#181818] border border-white/[0.08] rounded-[6px] p-[1.75rem] shadow-xl flex flex-col gap-[1.25rem]">
+            <div className="flex items-center justify-between pb-[1rem] border-b border-white/[0.08]">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#cccccc]" />
                 <h3 className="text-sm font-bold text-[#ffffff]">Your Friends</h3>
@@ -578,10 +580,10 @@ export const Social = () => {
                   <span>Loading friends...</span>
                 </div>
               ) : friends.length === 0 ? (
-                <div className="py-16 text-center space-y-3 px-4">
-                  <Users className="w-10 h-10 text-[#666666] mx-auto" />
-                  <p className="text-xs text-[#cccccc] font-semibold">No friends added yet</p>
-                  <p className="text-[11px] text-[#777777]">
+                <div className="py-[4rem] text-center space-y-[1rem] px-[1rem]">
+                  <Users className="w-[3rem] h-[3rem] text-[#777777] mx-auto" />
+                  <p className="text-sm text-[#cccccc] font-semibold">No friends added yet</p>
+                  <p className="text-[13px] leading-relaxed text-[#999999]">
                     Search for listeners to start private chats and invite them into listening rooms.
                   </p>
                   <button
@@ -589,7 +591,7 @@ export const Social = () => {
                       setActiveTab('search');
                       setSearchParams({ tab: 'search' });
                     }}
-                    className="btn-white text-xs px-4 py-2 mt-2"
+                    className="btn-white text-sm px-5 py-2.5 mt-[0.5rem]"
                   >
                     <Search className="w-3.5 h-3.5 mr-1" />
                     Find Listeners
@@ -655,7 +657,7 @@ export const Social = () => {
           </div>
 
           {/* Right Column: Active 1-to-1 Chat Window */}
-          <div className="lg:col-span-8 bg-[#181818] border border-white/[0.08] rounded-[6px] p-6 shadow-xl flex flex-col justify-between min-h-[540px]">
+          <div className="lg:col-span-8 bg-[#181818] border border-white/[0.08] rounded-[6px] p-[1.75rem] shadow-xl flex flex-col justify-between min-h-[540px]">
             {activeConversation ? (
               <>
                 {/* Chat Top Header */}
@@ -781,12 +783,12 @@ export const Social = () => {
                 </form>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-                <div className="w-12 h-12 rounded-[4px] bg-[#141414] border border-[rgba(255,255,255,0.08)] flex items-center justify-center text-[#666666]">
-                  <MessageSquare className="w-6 h-6 text-[#999999]" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-[2rem] space-y-[1rem]">
+                <div className="w-[4rem] h-[4rem] rounded-[4px] bg-[#141414] border border-[rgba(255,255,255,0.08)] flex items-center justify-center text-[#666666]">
+                  <MessageSquare className="w-[1.75rem] h-[1.75rem] text-[#999999]" />
                 </div>
-                <h3 className="text-sm font-semibold text-[#ffffff]">Select a Friend to Chat</h3>
-                <p className="text-xs text-[#999999] max-w-sm">
+                <h3 className="text-base font-semibold text-[#ffffff]">Select a Friend to Chat</h3>
+                <p className="text-sm leading-relaxed text-[#999999] max-w-md">
                   Choose a contact from the left list to start private direct messages or coordinate live sessions.
                 </p>
               </div>
@@ -797,13 +799,13 @@ export const Social = () => {
 
       {/* TAB 2: FRIEND REQUESTS */}
       {activeTab === 'requests' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[1.5rem]">
           {/* Incoming Requests */}
-          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
+          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-[1.75rem] space-y-[1.25rem]">
+            <div className="flex items-center justify-between pb-[1rem] border-b border-[rgba(255,255,255,0.08)]">
               <div className="flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-[#00e599]" />
-                <h3 className="text-sm font-bold text-[#ffffff]">Incoming Requests</h3>
+                <h3 className="text-base font-bold text-[#ffffff]">Incoming Requests</h3>
               </div>
               <span className="text-[11px] font-mono bg-[#122b1f] text-[#00e599] border border-[#00e599]/30 px-2 py-0.5 rounded-[2px]">
                 {receivedRequests.length}
@@ -815,8 +817,8 @@ export const Social = () => {
                 <Loader2 className="w-6 h-6 animate-spin text-[#00e599]" />
               </div>
             ) : receivedRequests.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#777777] space-y-2">
-                <UserCheck className="w-8 h-8 text-[#555555] mx-auto" />
+              <div className="py-[3rem] text-center text-sm text-[#999999] space-y-[0.75rem]">
+                <UserCheck className="w-[2rem] h-[2rem] text-[#777777] mx-auto" />
                 <p>No incoming friend requests right now.</p>
               </div>
             ) : (
@@ -863,11 +865,11 @@ export const Social = () => {
           </div>
 
           {/* Sent Requests */}
-          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)]">
+          <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-[1.75rem] space-y-[1.25rem]">
+            <div className="flex items-center justify-between pb-[1rem] border-b border-[rgba(255,255,255,0.08)]">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#cccccc]" />
-                <h3 className="text-sm font-bold text-[#ffffff]">Sent Requests</h3>
+                <h3 className="text-base font-bold text-[#ffffff]">Sent Requests</h3>
               </div>
               <span className="text-[11px] font-mono bg-[#222222] text-[#cccccc] px-2 py-0.5 rounded-[2px] border border-[rgba(255,255,255,0.06)]">
                 {sentRequests.length}
@@ -879,8 +881,8 @@ export const Social = () => {
                 <Loader2 className="w-6 h-6 animate-spin text-[#ff7a1a]" />
               </div>
             ) : sentRequests.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#777777] space-y-2">
-                <Clock className="w-8 h-8 text-[#555555] mx-auto" />
+              <div className="py-[3rem] text-center text-sm text-[#999999] space-y-[0.75rem]">
+                <Clock className="w-[2rem] h-[2rem] text-[#777777] mx-auto" />
                 <p>No outgoing pending requests.</p>
               </div>
             ) : (
@@ -920,13 +922,13 @@ export const Social = () => {
 
       {/* TAB 3: USER SEARCH */}
       {activeTab === 'search' && (
-        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 space-y-6 max-w-3xl mx-auto w-full">
+        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-[1.5rem] sm:p-[2rem] space-y-[1.5rem] max-w-3xl mx-auto w-full">
           <div>
             <h2 className="text-base font-bold text-[#ffffff] flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-[#00e599]" />
               Discover Vibely Listeners
             </h2>
-            <p className="text-xs text-[#999999] mt-1">
+            <p className="text-xs text-[#999999] mt-[0.5rem]">
               Search by display name or email to connect with friends and expand your musical network.
             </p>
           </div>
@@ -1032,13 +1034,13 @@ export const Social = () => {
 
       {/* TAB 4: ROOM INVITATIONS */}
       {activeTab === 'invitations' && (
-        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-6 sm:p-8 space-y-6 max-w-3xl mx-auto w-full">
+        <div className="bg-[#181818] border border-[rgba(255,255,255,0.08)] rounded-[4px] p-[1.5rem] sm:p-[2rem] space-y-[1.5rem] max-w-3xl mx-auto w-full">
           <div>
             <h2 className="text-base font-bold text-[#ffffff] flex items-center gap-2">
               <Radio className="w-4 h-4 text-[#00e599]" />
               Incoming Room Invitations
             </h2>
-            <p className="text-xs text-[#999999] mt-1">
+            <p className="text-xs text-[#999999] mt-[0.5rem]">
               Join active listening rooms invited by your contacts.
             </p>
           </div>

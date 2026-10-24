@@ -31,9 +31,9 @@ export const Library = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
+      <div className="flex-1 flex items-center justify-center px-4 py-[4rem]">
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[1.5rem] sm:p-[2rem] text-center space-y-[1rem]">
+          <div className="w-[3.5rem] h-[3.5rem] rounded-[4px] bg-[#303030] text-[#cccccc] flex items-center justify-center mx-auto">
             <ListMusic className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-semibold text-white">Your Music Library</h2>
@@ -90,17 +90,17 @@ export const Library = () => {
   };
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8 pb-32">
+    <div className="flex-1 max-w-7xl w-full mx-auto px-[2rem] sm:px-[3rem] pt-[3rem] pb-32 flex flex-col gap-[2rem]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] pb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] pb-[1.5rem]">
         <div>
-          <div className="text-[11px] font-mono uppercase tracking-widest text-[#999999] mb-1">
+          <div className="text-[11px] font-mono uppercase tracking-widest text-[#999999] mb-[0.5rem]">
             Personal Library
           </div>
           <h1 className="text-2xl sm:text-3xl font-light text-white tracking-tight">
             Your Playlists
           </h1>
-          <p className="text-xs text-[#999999]">
+          <p className="mt-[0.5rem] text-xs text-[#999999]">
             Organize personal queues and shared community tracklists
           </p>
         </div>

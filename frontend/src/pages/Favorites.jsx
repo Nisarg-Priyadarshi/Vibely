@@ -29,9 +29,9 @@ export const Favorites = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 py-20">
-        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-[4px] bg-[#303030] text-rose-400 flex items-center justify-center mx-auto">
+      <div className="flex-1 flex items-center justify-center px-4 py-[4rem]">
+        <div className="max-w-md w-full bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[1.5rem] sm:p-[2rem] text-center space-y-[1rem]">
+          <div className="w-[3.5rem] h-[3.5rem] rounded-[4px] bg-[#303030] text-rose-400 flex items-center justify-center mx-auto">
             <Heart className="w-7 h-7" />
           </div>
           <h2 className="text-xl font-medium text-white">Your Favourite Tracks</h2>
@@ -63,22 +63,22 @@ export const Favorites = () => {
   };
 
   return (
-    <div className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-8 pb-32">
+    <div className="flex-1 max-w-6xl w-full mx-auto px-[1.5rem] sm:px-[2rem] py-[2rem] sm:py-[2.5rem] flex flex-col gap-[2rem] pb-32">
       {/* Header */}
-      <div className="bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-5 sm:p-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[4px] bg-[#303030] flex items-center justify-center shrink-0">
-              <Heart className="w-7 h-7 text-rose-400 fill-rose-400/20" />
+      <div className="bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[1.75rem] sm:p-[2rem]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-[1.5rem]">
+          <div className="flex items-center gap-[1.25rem]">
+            <div className="w-[4.5rem] h-[4.5rem] rounded-[4px] bg-[#303030] flex items-center justify-center shrink-0">
+              <Heart className="w-[2rem] h-[2rem] text-rose-400 fill-rose-400/20" />
             </div>
-            <div className="space-y-0.5 min-w-0">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-[#999999]">
+            <div className="min-w-0">
+              <div className="text-[11px] font-mono uppercase tracking-widest text-[#999999] mb-[0.5rem]">
                 Personal Collection
               </div>
-              <h1 className="text-xl sm:text-3xl font-thin text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-thin text-white tracking-tight">
                 Favourite Tracks
               </h1>
-              <p className="text-xs text-[#999999]">
+              <p className="text-sm text-[#999999] mt-[0.5rem]">
                 {favorites.length} {favorites.length === 1 ? 'track' : 'tracks'} &bull;{' '}
                 {formatTime(totalDuration)} total
               </p>
@@ -121,18 +121,18 @@ export const Favorites = () => {
           </button>
         </div>
       ) : favorites.length === 0 ? (
-        <div className="text-center py-20 space-y-4 bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-8">
-          <div className="w-16 h-16 rounded-[4px] bg-[#303030] flex items-center justify-center mx-auto">
-            <Heart className="w-8 h-8 text-[#666666]" />
+        <div className="text-center py-[3rem] space-y-[1.5rem] bg-[#1e1e1e] border border-[rgba(255,255,255,0.07)] rounded-[4px] p-[2rem]">
+          <div className="w-[4.5rem] h-[4.5rem] rounded-[4px] bg-[#303030] flex items-center justify-center mx-auto">
+            <Heart className="w-[2rem] h-[2rem] text-[#888888]" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-base font-medium text-[#ffffff]">No favourite tracks yet</h3>
-            <p className="text-xs text-[#999999] max-w-sm mx-auto leading-relaxed">
+          <div className="space-y-[0.5rem]">
+            <h3 className="text-lg font-medium text-[#ffffff]">No favourite tracks yet</h3>
+            <p className="text-sm text-[#999999] max-w-md mx-auto leading-relaxed">
               Explore music and click the heart icon on any track to save it here.
             </p>
           </div>
-          <div className="pt-2">
-            <Link to="/" className="btn-white text-xs px-5 py-2.5">
+          <div className="pt-[0.5rem]">
+            <Link to="/" className="btn-white text-sm px-6 py-3">
               Explore Music Catalogue
             </Link>
           </div>

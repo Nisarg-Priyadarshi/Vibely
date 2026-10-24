@@ -210,7 +210,7 @@ input[type="range"] { accent-color: #ffffff; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
+  background-color: #ff7a1a;
   color: #121212;
   font-weight: 700;
   font-size: 14px;
@@ -223,7 +223,7 @@ input[type="range"] { accent-color: #ffffff; }
   text-decoration: none;
   line-height: 1;
 }
-.btn-white:hover { background-color: #ebebeb; transform: translateY(-1px); }
+.btn-white:hover { background-color: #ff9a52; transform: translateY(-1px); }
 .btn-white:active { transform: translateY(0) scale(0.98); }
 .btn-white:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
