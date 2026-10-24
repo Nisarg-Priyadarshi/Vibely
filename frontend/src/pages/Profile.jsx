@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User,
@@ -13,6 +13,9 @@ import {
   ListMusic,
   ArrowRight,
   Music,
+  Camera,
+  Trash2,
+  Upload,
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
@@ -22,12 +25,16 @@ export const Profile = () => {
   const { user, logout, checkAuth } = useAuth();
   const { playlists } = usePlaylists();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [name, setName] = useState(user?.name || '');
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+
 
   if (!user) {
     return (
@@ -92,6 +99,81 @@ export const Profile = () => {
     }
   };
 
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input value so selecting the same file again triggers change event
+    e.target.value = '';
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      setErrorMsg('Invalid file type. Only JPEG, PNG, and WebP images are allowed.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('File size exceeds the 5 MB limit. Please upload an image smaller than 5 MB.');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile/avatar`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to upload profile picture.');
+      }
+
+      await checkAuth(); // Sync AuthContext user state across the entire application
+      setSuccessMsg('Profile picture updated successfully!');
+      setTimeout(() => setSuccessMsg(null), 3500);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!user.avatar) return;
+
+    setDeletingAvatar(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/profile/avatar`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to remove profile picture.');
+      }
+
+      await checkAuth(); // Sync AuthContext user state
+      setSuccessMsg('Profile picture removed successfully.');
+      setTimeout(() => setSuccessMsg(null), 3500);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setDeletingAvatar(false);
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -104,9 +186,89 @@ export const Profile = () => {
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
-          {/* Avatar Initial Circle */}
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-3xl uppercase shadow-xl shadow-emerald-500/20 shrink-0">
-            {user.name.charAt(0)}
+          {/* Avatar Container with Cloudinary Upload UI */}
+          <div className="flex flex-col items-center gap-2.5 shrink-0">
+            <div className="relative group w-28 h-28 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10 ring-2 ring-emerald-500/20 hover:ring-emerald-400/50 transition-all bg-slate-950 flex items-center justify-center">
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-full h-full object-cover rounded-3xl"
+                />
+              ) : (
+                <div className="w-full h-full rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-3xl uppercase shadow-xl shadow-emerald-500/20">
+                  {user.name.charAt(0)}
+                </div>
+              )}
+
+              {/* Hover Overlay Button to Change Avatar */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar || deletingAvatar}
+                className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                title="Click to change profile picture"
+              >
+                <Camera className="w-6 h-6 text-emerald-400" />
+                <span className="text-[10px] font-bold text-slate-200 uppercase tracking-wider">
+                  {user.avatar ? 'Change' : 'Upload'}
+                </span>
+              </button>
+
+              {/* Uploading Spinner Overlay */}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-1.5 z-20">
+                  <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+                  <span className="text-[10px] font-semibold text-emerald-300">Uploading...</span>
+                </div>
+              )}
+
+              {/* Deleting Spinner Overlay */}
+              {deletingAvatar && (
+                <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-1.5 z-20">
+                  <Loader2 className="w-6 h-6 text-rose-400 animate-spin" />
+                  <span className="text-[10px] font-semibold text-rose-300">Removing...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Hidden Native File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleAvatarFileChange}
+              className="hidden"
+            />
+
+            {/* Avatar Action Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar || deletingAvatar}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Camera className="w-3 h-3 text-emerald-400" />
+                {user.avatar ? 'Change' : 'Upload'}
+              </button>
+
+              {user.avatar && (
+                <button
+                  type="button"
+                  onClick={handleDeleteAvatar}
+                  disabled={uploadingAvatar || deletingAvatar}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-950/30 hover:bg-rose-950/60 text-rose-400 hover:text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50"
+                  title="Remove profile picture"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Remove
+                </button>
+              )}
+            </div>
+            <span className="text-[10px] text-slate-500 text-center font-mono">
+              JPEG, PNG, WebP • Max 5MB
+            </span>
           </div>
 
           <div className="flex-1 space-y-2 text-center sm:text-left">

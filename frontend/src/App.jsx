@@ -13,6 +13,7 @@ import { PlaylistDetail } from './pages/PlaylistDetail';
 import { Profile } from './pages/Profile';
 import { Rooms } from './pages/Rooms';
 import { RoomDetail } from './pages/RoomDetail';
+import { Social } from './pages/Social';
 
 function App() {
   return (
@@ -30,6 +31,8 @@ function App() {
                   <Route path="/playlists/:id" element={<PlaylistDetail />} />
                   <Route path="/rooms" element={<Rooms />} />
                   <Route path="/rooms/:code" element={<RoomDetail />} />
+                  <Route path="/social" element={<Social />} />
+                  <Route path="/chat" element={<Social />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />

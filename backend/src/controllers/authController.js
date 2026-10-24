@@ -1,7 +1,32 @@
 import User from '../models/User.js';
 import { signToken, setAuthCookie, clearAuthCookie } from '../services/authService.js';
+import { isCloudinaryConfigured } from '../config/cloudinary.js';
+import {
+  uploadAvatarToCloudinary,
+  deleteAvatarFromCloudinary,
+} from '../services/cloudinaryService.js';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
+
+/**
+ * Validates buffer magic bytes for JPEG, PNG, and WebP
+ */
+const isValidImageBuffer = (buffer) => {
+  if (!buffer || buffer.length < 4) return false;
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return true;
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) return true;
+  // WebP: RIFF (52 49 46 46) .... WEBP (57 45 42 50)
+  if (
+    buffer.length >= 12 &&
+    buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+    buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50
+  ) return true;
+  return false;
+};
 
 /**
  * Register a new user account.
@@ -204,7 +229,72 @@ export const updateProfile = async (req, res, next) => {
 
     user.name = name.trim();
     if (avatar !== undefined) {
-      user.avatar = typeof avatar === 'string' && avatar.trim() ? avatar.trim() : null;
+      if (avatar === null || avatar === '') {
+        const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+        if (oldPublicId && isCloudinaryConfigured()) {
+          try {
+            await deleteAvatarFromCloudinary(oldPublicId);
+          } catch (e) {
+            console.warn('Failed to delete old avatar on avatar clearing:', e.message);
+          }
+        }
+        user.avatar = null;
+        user.avatarPublicId = null;
+        user.cloudinaryPublicId = null;
+      } else if (typeof avatar === 'string' && avatar.trim()) {
+        user.avatar = avatar.trim();
+      }
+    }
+
+    // If an image file was uploaded with profile update
+    if (req.file && req.file.buffer) {
+      if (!isCloudinaryConfigured()) {
+        return res.status(500).json({
+          success: false,
+          error: {
+            message: 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+            status: 500,
+          },
+        });
+      }
+
+      const mime = (req.file.mimetype || '').toLowerCase();
+      if (!ALLOWED_MIME_TYPES.has(mime) || !isValidImageBuffer(req.file.buffer)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.',
+            status: 400,
+          },
+        });
+      }
+
+      if (req.file.size > MAX_AVATAR_SIZE) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'File size exceeds the 5 MB limit. Please upload an image smaller than 5 MB.',
+            status: 400,
+          },
+        });
+      }
+
+      const oldPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+      if (oldPublicId) {
+        try {
+          await deleteAvatarFromCloudinary(oldPublicId);
+        } catch (e) {
+          console.warn('Failed to delete previous avatar from Cloudinary:', e.message);
+        }
+      }
+
+      const uploadResult = await uploadAvatarToCloudinary(req.file.buffer, {
+        public_id: `avatar_${user._id}_${Date.now()}`,
+      });
+
+      user.avatar = uploadResult.secure_url;
+      user.avatarPublicId = uploadResult.public_id;
+      user.cloudinaryPublicId = uploadResult.public_id;
     }
 
     await user.save();
@@ -219,11 +309,174 @@ export const updateProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Upload or replace authenticated user's avatar.
+ * POST /api/auth/profile/avatar or POST /api/auth/avatar
+ */
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    // 1. Verify Cloudinary configuration
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+          status: 500,
+        },
+      });
+    }
+
+    // 2. Validate file presence
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Please provide an image file to upload.',
+          status: 400,
+        },
+      });
+    }
+
+    // 3. Validate MIME type
+    const mime = (req.file.mimetype || '').toLowerCase();
+    if (!ALLOWED_MIME_TYPES.has(mime)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.',
+          status: 400,
+        },
+      });
+    }
+
+    // 4. Validate file size (max 5 MB)
+    if (req.file.size > MAX_AVATAR_SIZE) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'File size exceeds the 5 MB limit. Please upload an image smaller than 5 MB.',
+          status: 400,
+        },
+      });
+    }
+
+    // 5. Validate magic bytes in buffer
+    if (!isValidImageBuffer(req.file.buffer)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid file content. Uploaded file is not a valid JPEG, PNG, or WebP image.',
+          status: 400,
+        },
+      });
+    }
+
+    // 6. Find user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found.',
+          status: 404,
+        },
+      });
+    }
+
+    // 7. If user already has an existing avatar in Cloudinary, delete it (replacement)
+    const existingPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (existingPublicId) {
+      try {
+        await deleteAvatarFromCloudinary(existingPublicId);
+      } catch (delError) {
+        console.warn('Failed to delete previous avatar from Cloudinary:', delError.message);
+      }
+    }
+
+    // 8. Upload new avatar buffer to Cloudinary
+    const uploadResult = await uploadAvatarToCloudinary(req.file.buffer, {
+      public_id: `avatar_${user._id}_${Date.now()}`,
+    });
+
+    // 9. Update MongoDB User document
+    user.avatar = uploadResult.secure_url;
+    user.avatarPublicId = uploadResult.public_id;
+    user.cloudinaryPublicId = uploadResult.public_id;
+    await user.save();
+
+    // 10. Return safe user profile
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully.',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete authenticated user's avatar.
+ * DELETE /api/auth/profile/avatar or DELETE /api/auth/avatar
+ */
+export const deleteAvatar = async (req, res, next) => {
+  try {
+    // 1. Verify Cloudinary configuration
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Cloudinary configuration is missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.',
+          status: 500,
+        },
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found.',
+          status: 404,
+        },
+      });
+    }
+
+    // 2. Delete asset from Cloudinary if stored
+    const existingPublicId = user.avatarPublicId || user.cloudinaryPublicId;
+    if (existingPublicId) {
+      try {
+        await deleteAvatarFromCloudinary(existingPublicId);
+      } catch (delError) {
+        console.warn('Failed to delete avatar from Cloudinary:', delError.message);
+      }
+    }
+
+    // 3. Reset avatar fields in MongoDB
+    user.avatar = null;
+    user.avatarPublicId = null;
+    user.cloudinaryPublicId = null;
+    await user.save();
+
+    // 4. Return safe user profile
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture removed successfully.',
+      user: user.toSafeObject(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
   logout,
   getMe,
   updateProfile,
+  uploadAvatar,
+  deleteAvatar,
 };
 

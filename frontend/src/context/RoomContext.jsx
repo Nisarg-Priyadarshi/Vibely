@@ -27,6 +27,8 @@ export const RoomProvider = ({ children }) => {
   const [roomState, setRoomState] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [roomNotification, setRoomNotification] = useState(null);
+  const [roomInvitations, setRoomInvitations] = useState([]);
+
 
   // Clear transient room notification
   const notify = useCallback((message, type = 'info') => {
@@ -175,6 +177,11 @@ export const RoomProvider = ({ children }) => {
       setRoomMembers([]);
       setRoomState(null);
       setPendingRequests([]);
+    });
+
+    socket.on('room:invitation_received', (invitation) => {
+      setRoomInvitations((prev) => [invitation, ...prev.filter((i) => i.invitationId !== invitation.invitationId)]);
+      notify(`Invite: ${invitation.sender?.name || 'A friend'} invited you to "${invitation.roomName}"!`, 'info');
     });
 
     return () => {
@@ -374,6 +381,9 @@ export const RoomProvider = ({ children }) => {
         roomState,
         pendingRequests,
         roomNotification,
+        roomInvitations,
+        setRoomInvitations,
+        socket: socketRef.current,
         isHost,
         createRoom,
         joinRoom,

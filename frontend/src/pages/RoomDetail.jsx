@@ -22,6 +22,8 @@ import {
   ListPlus,
   Shield,
   Volume2,
+  UserPlus,
+  User,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRoom } from '../context/RoomContext';
@@ -58,6 +60,14 @@ export const RoomDetail = () => {
   const [loadingSongs, setLoadingSongs] = useState(false);
   const [seekingValue, setSeekingValue] = useState(null);
   const [submittingAction, setSubmittingAction] = useState(false);
+
+  // Room Friend Invitations State
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [friendsList, setFriendsList] = useState([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
+  const [invitedMap, setInvitedMap] = useState({});
+  const [inviteError, setInviteError] = useState(null);
+
 
   // Auto-join room on mount if not currently connected to this room
   useEffect(() => {
@@ -106,6 +116,44 @@ export const RoomDetail = () => {
     await leaveRoom();
     navigate('/rooms');
   };
+
+  // Load friends when room invitation modal opens
+  useEffect(() => {
+    if (inviteModalOpen) {
+      setLoadingFriends(true);
+      setInviteError(null);
+      fetch(`${API_BASE_URL}/friends`, { credentials: 'include' })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) {
+            setFriendsList(data.friends || []);
+          }
+        })
+        .catch((err) => console.warn('Failed to load friends for invite:', err))
+        .finally(() => setLoadingFriends(false));
+    }
+  }, [inviteModalOpen]);
+
+  const handleInviteFriend = async (friendId) => {
+    if (!currentRoom?.code) return;
+    try {
+      setInviteError(null);
+      const res = await fetch(`${API_BASE_URL}/rooms/invitations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ roomCode: currentRoom.code, friendId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to send invitation.');
+      }
+      setInvitedMap((prev) => ({ ...prev, [friendId]: true }));
+    } catch (err) {
+      setInviteError(err.message);
+    }
+  };
+
 
   // Host playback controls
   const handleHostTogglePlay = async () => {
@@ -548,11 +596,21 @@ export const RoomDetail = () => {
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Listeners in Room</h3>
+                <h3 className="text-base font-bold text-white">Listeners</h3>
               </div>
-              <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
-                {roomMembers.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setInviteModalOpen(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-all cursor-pointer"
+                  title="Invite accepted friends to this room"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Invite
+                </button>
+                <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
+                  {roomMembers.length}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
@@ -570,8 +628,14 @@ export const RoomDetail = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-slate-950 uppercase shrink-0">
-                        {member.name ? member.name.charAt(0) : 'U'}
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-slate-950 uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                        {member.avatar ? (
+                          <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                        ) : member.name ? (
+                          member.name.charAt(0)
+                        ) : (
+                          'U'
+                        )}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -688,8 +752,103 @@ export const RoomDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Invite Friends Modal */}
+      {inviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold text-white">Invite Friends</h3>
+              </div>
+              <button
+                onClick={() => setInviteModalOpen(false)}
+                className="p-1 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {inviteError && (
+              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{inviteError}</span>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {loadingFriends ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+                  <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+                  <span>Loading your friends...</span>
+                </div>
+              ) : friendsList.length === 0 ? (
+                <div className="py-10 text-center space-y-2">
+                  <User className="w-10 h-10 text-slate-600 mx-auto" />
+                  <p className="text-xs text-slate-400">
+                    You have no accepted friends yet.
+                  </p>
+                  <Link
+                    to="/social"
+                    className="inline-block mt-2 text-xs font-bold text-emerald-400 hover:text-emerald-300"
+                  >
+                    Go to Social to find friends &rarr;
+                  </Link>
+                </div>
+              ) : (
+                friendsList.map((friend) => {
+                  const isAlreadyIn = roomMembers.some((m) => m.userId === friend.id);
+                  const isInvited = !!invitedMap[friend.id];
+
+                  return (
+                    <div
+                      key={friend.id}
+                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-950/50 border border-slate-800/80 hover:border-slate-700 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-slate-950 uppercase shrink-0 overflow-hidden ring-1 ring-emerald-500/30">
+                          {friend.avatar ? (
+                            <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+                          ) : (
+                            friend.name.charAt(0)
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-200 truncate">{friend.name}</h4>
+                          <p className="text-[10px] text-slate-400 font-mono truncate">{friend.email}</p>
+                        </div>
+                      </div>
+
+                      {isAlreadyIn ? (
+                        <span className="text-[10px] bg-slate-800 text-slate-400 px-2.5 py-1 rounded-xl font-semibold">
+                          In Room
+                        </span>
+                      ) : isInvited ? (
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold flex items-center gap-1">
+                          <Check className="w-3 h-3" />
+                          Invited
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleInviteFriend(friend.id)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all cursor-pointer shadow-md shadow-emerald-500/20"
+                        >
+                          <UserPlus className="w-3 h-3" />
+                          Invite
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default RoomDetail;

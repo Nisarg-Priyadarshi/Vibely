@@ -32,6 +32,16 @@ const userSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    avatarPublicId: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    cloudinaryPublicId: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -68,6 +78,7 @@ userSchema.methods.toSafeObject = function () {
     name: this.name,
     email: this.email,
     avatar: this.avatar || null,
+    avatarPublicId: this.avatarPublicId || null,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
