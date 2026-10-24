@@ -1,4 +1,4 @@
-import { verifyToken, COOKIE_NAME } from '../services/authService.js';
+import { verifyToken, COOKIE_NAME, clearAuthCookie } from '../services/authService.js';
 import User from '../models/User.js';
 
 /**
@@ -37,6 +37,8 @@ export const authenticate = async (req, res, next) => {
     try {
       decoded = verifyToken(token);
     } catch (err) {
+      // Clear invalid or expired cookie so client does not continue sending bad credentials
+      clearAuthCookie(res);
       const message =
         err.name === 'TokenExpiredError'
           ? 'Authentication token has expired. Please log in again.'
@@ -54,6 +56,7 @@ export const authenticate = async (req, res, next) => {
     // Find user in database
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
+      clearAuthCookie(res);
       return res.status(401).json({
         success: false,
         error: {
@@ -71,4 +74,6 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
+export const requireAuth = authenticate;
 export default authenticate;
+

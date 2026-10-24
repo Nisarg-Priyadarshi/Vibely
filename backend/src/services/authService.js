@@ -7,9 +7,10 @@ export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 /**
  * Sign a JSON Web Token with user payload.
  * @param {Object} payload 
+ * @param {Object} [options] Optional JWT sign options (e.g. expiresIn)
  * @returns {string} Signed JWT
  */
-export const signToken = (payload) => {
+export const signToken = (payload, options = {}) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error('JWT_SECRET is not configured in environment variables');
@@ -17,6 +18,7 @@ export const signToken = (payload) => {
 
   return jwt.sign(payload, secret, {
     expiresIn: process.env.JWT_EXPIRES_IN || DEFAULT_EXPIRATION,
+    ...options,
   });
 };
 
