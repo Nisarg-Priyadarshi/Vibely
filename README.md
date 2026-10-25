@@ -1,7 +1,8 @@
 # Vibely 🎵
 
-A full-stack, real-time collaborative music streaming platform inspired by modern digital audio workstations and social listening services. Vibely pairs an audio streaming engine with synchronized **Vibely Rooms**, live social messaging, playlist curation, and profile personalization.
+**Live Website:** [https://vibely-ten-pi.vercel.app](https://vibely-ten-pi.vercel.app)
 
+A music streaming application built using the MERN stack.
 ---
 
 ## 📑 Table of Contents
