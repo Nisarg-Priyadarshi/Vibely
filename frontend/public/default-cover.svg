@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1c1c"/>
+      <stop offset="50%" stop-color="#141414"/>
+      <stop offset="100%" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <radialGradient id="vinylGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff7a1a" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="#ff7a1a" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ff7a1a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="orangeAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff944d"/>
+      <stop offset="100%" stop-color="#ff6200"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="400" height="400" rx="8" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle ambient glow -->
+  <circle cx="200" cy="200" r="180" fill="url(#vinylGlow)"/>
+
+  <!-- Outer Vinyl Rim -->
+  <circle cx="200" cy="200" r="145" fill="#181818" stroke="#262626" stroke-width="2"/>
+  
+  <!-- Vinyl Grooves -->
+  <circle cx="200" cy="200" r="128" fill="none" stroke="#222222" stroke-width="1.5" stroke-dasharray="8 3"/>
+  <circle cx="200" cy="200" r="112" fill="none" stroke="#202020" stroke-width="1.2"/>
+  <circle cx="200" cy="200" r="96" fill="none" stroke="#242424" stroke-width="1.2" stroke-dasharray="12 4"/>
+  <circle cx="200" cy="200" r="80" fill="none" stroke="#1f1f1f" stroke-width="1"/>
+  
+  <!-- Vinyl Center Label -->
+  <circle cx="200" cy="200" r="56" fill="#1a1a1a" stroke="url(#orangeAccent)" stroke-width="2"/>
+  <circle cx="200" cy="200" r="48" fill="#121212"/>
+
+  <!-- Center Spindle Hole -->
+  <circle cx="200" cy="200" r="12" fill="#0a0a0a" stroke="#333333" stroke-width="1.5"/>
+
+  <!-- Music Note / Soundwave Emblem -->
+  <path d="M194 186 v28 a8 8 0 1 1 -5 -7.5 v-20.5 l22 -5 v19 a8 8 0 1 1 -5 -7.5 v-11.5 z" fill="url(#orangeAccent)"/>
+  
+  <!-- Vibely Wordmark bottom watermark -->
+  <text x="200" y="360" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" letter-spacing="4" fill="#666666" text-anchor="middle">VIBELY MUSIC</text>
+</svg>

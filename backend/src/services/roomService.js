@@ -6,6 +6,30 @@ import Song from '../models/Song.js';
 const rooms = new Map(); // code -> room object
 const socketToRoom = new Map(); // socketId -> room code
 const cancelledRooms = new Set(); // codes of cancelled rooms that cannot be rejoined
+const hostDisconnectTimers = new Map(); // code -> NodeJS.Timeout
+
+let hostDisconnectGraceMs = process.env.ROOM_HOST_DISCONNECT_GRACE_MS
+  ? parseInt(process.env.ROOM_HOST_DISCONNECT_GRACE_MS, 10)
+  : (process.env.NODE_ENV === 'test' ? 2000 : 60000); // 60s production default, 2s test mode
+
+export const setHostDisconnectGraceMs = (ms) => {
+  hostDisconnectGraceMs = ms;
+};
+
+export const getHostDisconnectGraceMs = () => hostDisconnectGraceMs;
+
+export const clearDisconnectTimer = (code) => {
+  const normalized = code ? code.trim().toUpperCase() : null;
+  if (normalized && hostDisconnectTimers.has(normalized)) {
+    clearTimeout(hostDisconnectTimers.get(normalized));
+    hostDisconnectTimers.delete(normalized);
+  }
+};
+
+export const hasDisconnectTimer = (code) => {
+  const normalized = code ? code.trim().toUpperCase() : null;
+  return normalized ? hostDisconnectTimers.has(normalized) : false;
+};
 
 const ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // Unambiguous chars
 const MAX_MEMBERS_PER_ROOM = 50;
@@ -173,6 +197,13 @@ export const joinRoom = ({ code, user, socketId }) => {
     // Reconnecting user: update socket ID
     room.members[existingMemberIndex].socketId = socketId;
     socketToRoom.set(socketId, normalizedCode);
+
+    // If reconnecting user is the room host, clear the disconnect grace timer
+    if (room.hostId === userId) {
+      clearDisconnectTimer(normalizedCode);
+      room.hostDisconnectedAt = null;
+    }
+
     return { room: serializeRoom(room), isNewMember: false };
   }
 
@@ -218,6 +249,9 @@ export const leaveRoom = ({ code, userId, socketId }) => {
     return null;
   }
 
+  // Clear any active disconnect grace timer for this room
+  clearDisconnectTimer(normalizedCode);
+
   // If the departing user is the host: cancel and close the room completely
   if (isHost) {
     room.isCancelled = true;
@@ -257,6 +291,7 @@ export const leaveRoom = ({ code, userId, socketId }) => {
 
   // If room is now empty, delete it
   if (room.members.length === 0) {
+    clearDisconnectTimer(normalizedCode);
     rooms.delete(normalizedCode);
     return {
       deleted: true,
@@ -270,6 +305,129 @@ export const leaveRoom = ({ code, userId, socketId }) => {
     deleted: false,
     room: serializeRoom(room),
   };
+};
+
+/**
+ * Handle transport-level socket disconnection.
+ * A host disconnection is treated as temporary and starts a grace period timer.
+ * Only if the host fails to reconnect before the timer expires is the room closed.
+ * A non-host disconnection removes only that member and keeps the room alive.
+ */
+export const handleDisconnect = ({ socketId, userId, onHostTimeout }) => {
+  const normalizedCode = socketToRoom.get(socketId);
+  if (!normalizedCode) return null;
+
+  // Clean up socket mapping for the disconnected socket
+  socketToRoom.delete(socketId);
+
+  const room = rooms.get(normalizedCode);
+  if (!room || room.isCancelled) return null;
+
+  const strUserId = userId.toString();
+  const isHost = room.hostId === strUserId;
+
+  if (isHost) {
+    // Host temporarily disconnected: do NOT immediately cancel or delete the room!
+    const hostMember = room.members.find((m) => m.userId === strUserId);
+    if (hostMember) {
+      hostMember.socketId = null;
+    }
+    room.hostDisconnectedAt = Date.now();
+
+    // Clear any prior timer for this room
+    clearDisconnectTimer(normalizedCode);
+
+    // Start grace period timer
+    const graceMs = hostDisconnectGraceMs;
+    const timer = setTimeout(() => {
+      hostDisconnectTimers.delete(normalizedCode);
+
+      const targetRoom = rooms.get(normalizedCode);
+      if (!targetRoom || targetRoom.isCancelled) return;
+
+      // Check if host reconnected in the meantime
+      const currentHost = targetRoom.members.find((m) => m.userId === targetRoom.hostId);
+      if (currentHost && currentHost.socketId) {
+        return; // Host reconnected, do not clean up
+      }
+
+      // Host timed out: cancel and close room
+      targetRoom.isCancelled = true;
+      cancelledRooms.add(normalizedCode);
+      rooms.delete(normalizedCode);
+
+      const affectedMembers = [...targetRoom.members];
+      for (const m of affectedMembers) {
+        if (m.socketId) {
+          socketToRoom.delete(m.socketId);
+        }
+      }
+      targetRoom.requests.clear();
+      targetRoom.messages = [];
+      targetRoom.state.isPlaying = false;
+
+      if (typeof onHostTimeout === 'function') {
+        onHostTimeout({
+          code: normalizedCode,
+          reason: 'The host left. This room has been closed.',
+          members: affectedMembers,
+        });
+      }
+    }, graceMs);
+
+    if (timer && typeof timer.unref === 'function') {
+      timer.unref();
+    }
+    hostDisconnectTimers.set(normalizedCode, timer);
+
+    return {
+      isHost: true,
+      code: normalizedCode,
+      room: serializeRoom(room),
+    };
+  }
+
+  // Non-host member disconnected
+  room.members = room.members.filter((m) => m.userId !== strUserId);
+
+  // If room is now empty, delete it
+  if (room.members.length === 0) {
+    clearDisconnectTimer(normalizedCode);
+    rooms.delete(normalizedCode);
+    return {
+      deleted: true,
+      code: normalizedCode,
+      reason: 'Room was closed because all listeners left.',
+    };
+  }
+
+  return {
+    isHost: false,
+    deleted: false,
+    room: serializeRoom(room),
+  };
+};
+
+/**
+ * Cancel any rooms currently hosted by a user (e.g. if creating a new room).
+ */
+export const cancelRoomsHostedBy = (userId) => {
+  const strUserId = userId.toString();
+  const cancelled = [];
+  for (const [code, room] of rooms.entries()) {
+    if (room.hostId === strUserId) {
+      clearDisconnectTimer(code);
+      room.isCancelled = true;
+      cancelledRooms.add(code);
+      rooms.delete(code);
+      cancelled.push({
+        code,
+        reason: 'The host created a new room. This room has been closed.',
+        members: [...room.members],
+      });
+    }
+  }
+  return cancelled;
 };
 
 /**
@@ -480,15 +638,28 @@ export const isRoomCancelled = (code) => {
  * Test utility to reset all room state.
  */
 export const _resetRooms = () => {
+  for (const timer of hostDisconnectTimers.values()) {
+    clearTimeout(timer);
+  }
+  hostDisconnectTimers.clear();
   rooms.clear();
   socketToRoom.clear();
   cancelledRooms.clear();
+  hostDisconnectGraceMs = process.env.ROOM_HOST_DISCONNECT_GRACE_MS
+    ? parseInt(process.env.ROOM_HOST_DISCONNECT_GRACE_MS, 10)
+    : (process.env.NODE_ENV === 'test' ? 2000 : 60000);
 };
 
 export default {
   createRoom,
   joinRoom,
   leaveRoom,
+  handleDisconnect,
+  cancelRoomsHostedBy,
+  setHostDisconnectGraceMs,
+  getHostDisconnectGraceMs,
+  clearDisconnectTimer,
+  hasDisconnectTimer,
   updateHostPlayback,
   submitMemberRequest,
   respondToRequest,

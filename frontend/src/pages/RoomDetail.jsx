@@ -30,6 +30,8 @@ import { useRoom } from '../context/RoomContext';
 import { usePlayer } from '../context/PlayerContext';
 import { formatTime } from '../utils/format';
 import { API_BASE_URL } from '../config/api';
+import { SafeImage } from '../components/SafeImage';
+import { SafeAvatar } from '../components/SafeAvatar';
 
 export const RoomDetail = () => {
   const { code } = useParams();
@@ -94,19 +96,23 @@ export const RoomDetail = () => {
   const [invitedMap, setInvitedMap] = useState({});
   const [inviteError, setInviteError] = useState(null);
 
-  // Auto-join room on mount if not currently connected to this room
+  // Auto-join room on mount once socket is connected if not already in room
   const hasAttemptedJoin = useRef(false);
   useEffect(() => {
-    if (code && !hasAttemptedJoin.current) {
-      hasAttemptedJoin.current = true;
+    if (!code || socketStatus !== 'connected') return;
+
+    if (!hasAttemptedJoin.current) {
       if (!currentRoom || currentRoom.code !== code.toUpperCase()) {
+        hasAttemptedJoin.current = true;
         joinRoom(code).catch((err) => {
           console.warn('Auto-join room error:', err.message);
           navigate('/rooms');
         });
+      } else {
+        hasAttemptedJoin.current = true;
       }
     }
-  }, [code, currentRoom, joinRoom, navigate]);
+  }, [code, socketStatus, currentRoom, joinRoom, navigate]);
 
   // Load songs catalogue for track selection/requests
   useEffect(() => {
@@ -395,9 +401,10 @@ export const RoomDetail = () => {
                 {/* Track Artwork and Info */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
                   <div className="relative group shrink-0">
-                    <img
+                    <SafeImage
                       src={currentSong.coverUrl}
                       alt={currentSong.title}
+                      songTitle={currentSong.title}
                       className="w-36 h-36 sm:w-44 sm:h-44 rounded-[6px] object-cover shadow-2xl border border-white/10"
                     />
                     {isPlaying && (
@@ -716,13 +723,7 @@ export const RoomDetail = () => {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-7 h-7 rounded-[3px] bg-[#282828] flex items-center justify-center text-xs font-bold text-[#ffffff] uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                        {member.avatar ? (
-                          <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-                        ) : member.name ? (
-                          member.name.charAt(0)
-                        ) : (
-                          'U'
-                        )}
+                        <SafeAvatar src={member.avatar} name={member.name} />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -803,9 +804,10 @@ export const RoomDetail = () => {
                     className="p-2.5 rounded-[4px] bg-[#161616] hover:bg-[#252525] border border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-3 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
+                      <SafeImage
                         src={song.coverUrl}
                         alt={song.title}
+                        songTitle={song.title}
                         className="w-10 h-10 rounded-[4px] object-cover shrink-0 bg-[#242424]"
                       />
                       <div className="min-w-0">
@@ -895,11 +897,7 @@ export const RoomDetail = () => {
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-xs font-bold text-[#ffffff] uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                          {friend.avatar ? (
-                            <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
-                          ) : (
-                            friend.name.charAt(0)
-                          )}
+                          <SafeAvatar src={friend.avatar} name={friend.name} />
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-xs font-semibold text-[#ffffff] truncate">{friend.name}</h4>

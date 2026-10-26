@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node scripts/seedSongs.js",
+    "migrate:covers": "node scripts/migrateSongCovers.js",
     "test": "node tests/auth.test.js && node tests/googleAuth.test.js && node tests/avatar.test.js && node tests/social.test.js && node tests/song.test.js && node tests/playlist.test.js && node tests/room.test.js && node tests/favoritesAndPlayLater.test.js"
   },
   "dependencies": {

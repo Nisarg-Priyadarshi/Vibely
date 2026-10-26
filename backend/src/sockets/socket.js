@@ -46,11 +46,31 @@ const extractTokenFromHandshake = (socket) => {
  * @returns {Server}
  */
 export const initializeSocket = (server) => {
-  const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+  const clientOrigin = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  const allowedOrigins = [
+    clientOrigin,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ];
 
   ioInstance = new Server(server, {
     cors: {
-      origin: allowedOrigin,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.replace(/\/+$/, '');
+        if (
+          allowedOrigins.includes(origin) ||
+          allowedOrigins.includes(cleanOrigin) ||
+          (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))
+        ) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Origin ${origin} not allowed by CORS`));
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -108,6 +128,12 @@ export const initializeSocket = (server) => {
               hostId: previous.room.hostId,
             });
           }
+        }
+        // If user was host of any prior room (e.g. reconnect pending), close that room
+        const previousHosted = roomService.cancelRoomsHostedBy(userId);
+        for (const prev of previousHosted) {
+          ioInstance.to(prev.code).emit('room:closed', { reason: prev.reason, code: prev.code });
+          ioInstance.in(prev.code).socketsLeave(prev.code);
         }
         const room = roomService.createRoom({
           name,
@@ -474,33 +500,35 @@ export const initializeSocket = (server) => {
 
       const code = roomService.getCodeBySocket(socket.id);
       if (code) {
-        const result = roomService.leaveRoom({
-          code,
-          userId,
+        const result = roomService.handleDisconnect({
           socketId: socket.id,
+          userId,
+          onHostTimeout: ({ code: roomCode, reason, members }) => {
+            console.log(`⏱️ [Room Cleanup] Host disconnect grace period expired for room ${roomCode}. Closing room.`);
+            ioInstance.to(roomCode).emit('room:closed', {
+              reason,
+              code: roomCode,
+            });
+            ioInstance.in(roomCode).socketsLeave(roomCode);
+            if (Array.isArray(members)) {
+              for (const m of members) {
+                if (m.socketId) {
+                  const s = ioInstance.sockets.sockets.get(m.socketId);
+                  if (s) s.leave(roomCode);
+                }
+              }
+            }
+          },
         });
 
         if (result) {
-          if (result.cancelled) {
-            // Host unexpectedly disconnected: broadcast cancellation event to all remaining members
-            ioInstance.to(result.code).emit('room:closed', {
-              reason: result.reason,
-              code: result.code,
-            });
-            ioInstance.in(result.code).socketsLeave(result.code);
-            if (Array.isArray(result.members)) {
-              for (const m of result.members) {
-                const s = ioInstance.sockets.sockets.get(m.socketId);
-                if (s) s.leave(result.code);
-              }
-            }
-          } else if (result.deleted) {
+          if (result.deleted) {
             ioInstance.to(result.code).emit('room:closed', {
               reason: result.reason || 'Room was closed because all listeners left.',
               code: result.code,
             });
             ioInstance.in(result.code).socketsLeave(result.code);
-          } else if (result.room) {
+          } else if (result.room && !result.isHost) {
             // Non-host disconnected: update member list
             ioInstance.to(code).emit('room:members_updated', {
               members: result.room.members,

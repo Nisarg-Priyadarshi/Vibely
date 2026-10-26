@@ -18,6 +18,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { useSongLists } from '../context/SongListContext';
 import { useRoom } from '../context/RoomContext';
 import { formatTime } from '../utils/format';
+import { SafeImage } from './SafeImage';
 
 export const PlayerBar = () => {
   const {
@@ -112,9 +113,10 @@ export const PlayerBar = () => {
         {/* Left: Track Information with Favorite & Play Later Actions */}
         <div className="flex items-center gap-3.5 w-full md:w-1/3 min-w-0">
           <Link to={`/songs/${sId}`} className="shrink-0 group">
-            <img
+            <SafeImage
               src={currentTrack.coverUrl}
               alt={currentTrack.title}
+              songTitle={currentTrack.title}
               className="w-12 h-12 rounded-[4px] object-cover bg-[#222222] border border-white/10 group-hover:border-[#ff7a1a]/60 transition-colors shadow-sm"
             />
           </Link>

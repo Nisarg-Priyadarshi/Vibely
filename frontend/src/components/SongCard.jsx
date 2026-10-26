@@ -5,6 +5,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { useSongLists } from '../context/SongListContext';
 import { formatTime } from '../utils/format';
 import { AddToPlaylistModal } from './AddToPlaylistModal';
+import { SafeImage } from './SafeImage';
 
 export const SongCard = ({ song, queue = [] }) => {
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayer();
@@ -53,9 +54,10 @@ export const SongCard = ({ song, queue = [] }) => {
       >
         {/* Cover Artwork Container (1:1 aspect, 4px radius) */}
         <div className="relative aspect-square w-full rounded-[4px] overflow-hidden bg-[#141414] mb-2.5 shadow-sm">
-          <img
+          <SafeImage
             src={song.coverUrl}
             alt={song.title}
+            songTitle={song.title}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

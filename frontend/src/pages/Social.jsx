@@ -23,6 +23,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useRoom } from '../context/RoomContext';
 import { API_BASE_URL } from '../config/api';
+import { SafeAvatar } from '../components/SafeAvatar';
 
 export const Social = () => {
   const { user } = useAuth();
@@ -612,11 +613,7 @@ export const Social = () => {
                       <div className="flex items-center gap-2.5 min-w-0">
                         {/* Friend Avatar */}
                         <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                          {friend.avatar ? (
-                            <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
-                          ) : (
-                            friend.name.charAt(0)
-                          )}
+                          <SafeAvatar src={friend.avatar} name={friend.name} />
                         </div>
 
                         <div className="min-w-0">
@@ -662,11 +659,7 @@ export const Social = () => {
                 <div className="flex items-center justify-between pb-4 border-b border-white/[0.08] shrink-0">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-[4px] bg-[#222222] border border-white/10 flex items-center justify-center text-white font-bold text-sm uppercase shrink-0 overflow-hidden">
-                      {activeConversation.avatar ? (
-                        <img src={activeConversation.avatar} alt={activeConversation.name} className="w-full h-full object-cover" />
-                      ) : (
-                        activeConversation.name.charAt(0)
-                      )}
+                      <SafeAvatar src={activeConversation.avatar} name={activeConversation.name} />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -713,11 +706,7 @@ export const Social = () => {
                         >
                           {!isMe && (
                             <div className="w-6 h-6 rounded-[2px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-[9px] uppercase shrink-0 overflow-hidden">
-                              {activeConversation.avatar ? (
-                                <img src={activeConversation.avatar} alt={activeConversation.name} className="w-full h-full object-cover" />
-                              ) : (
-                                activeConversation.name.charAt(0)
-                              )}
+                              <SafeAvatar src={activeConversation.avatar} name={activeConversation.name} />
                             </div>
                           )}
 
@@ -741,11 +730,7 @@ export const Social = () => {
 
                           {isMe && (
                             <div className="w-6 h-6 rounded-[2px] bg-[#333333] flex items-center justify-center text-[#ffffff] font-bold text-[9px] uppercase shrink-0 overflow-hidden">
-                              {user.avatar ? (
-                                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                              ) : (
-                                user.name.charAt(0)
-                              )}
+                              <SafeAvatar src={user.avatar} name={user.name} />
                             </div>
                           )}
                         </div>
@@ -828,11 +813,7 @@ export const Social = () => {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                        {req.user?.avatar ? (
-                          <img src={req.user.avatar} alt={req.user.name} className="w-full h-full object-cover" />
-                        ) : (
-                          req.user?.name?.charAt(0) || 'U'
-                        )}
+                        <SafeAvatar src={req.user?.avatar} name={req.user?.name} />
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-xs font-semibold text-[#ffffff] truncate">{req.user?.name}</h4>
@@ -892,11 +873,7 @@ export const Social = () => {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                        {req.user?.avatar ? (
-                          <img src={req.user.avatar} alt={req.user.name} className="w-full h-full object-cover" />
-                        ) : (
-                          req.user?.name?.charAt(0) || 'U'
-                        )}
+                        <SafeAvatar src={req.user?.avatar} name={req.user?.name} />
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-xs font-semibold text-[#ffffff] truncate">{req.user?.name}</h4>
@@ -967,11 +944,7 @@ export const Social = () => {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                        {u.avatar ? (
-                          <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
-                        ) : (
-                          u.name.charAt(0)
-                        )}
+                        <SafeAvatar src={u.avatar} name={u.name} />
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-xs font-semibold text-[#ffffff] truncate">{u.name}</h4>
@@ -1064,11 +1037,7 @@ export const Social = () => {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-[3px] bg-[#252525] flex items-center justify-center text-[#ffffff] font-bold text-xs uppercase shrink-0 overflow-hidden border border-[rgba(255,255,255,0.08)]">
-                      {inv.sender?.avatar ? (
-                        <img src={inv.sender.avatar} alt={inv.sender.name} className="w-full h-full object-cover" />
-                      ) : (
-                        inv.sender?.name?.charAt(0) || 'U'
-                      )}
+                      <SafeAvatar src={inv.sender?.avatar} name={inv.sender?.name} />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">

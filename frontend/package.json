@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node src/tests/player.test.js && node src/tests/roomPlayback.test.js && node src/tests/hostLeavesRoom.test.js",
+    "test": "node src/tests/player.test.js && node src/tests/roomPlayback.test.js && node src/tests/hostLeavesRoom.test.js && node src/tests/imageFallback.test.js && node src/tests/coopAndAuth.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

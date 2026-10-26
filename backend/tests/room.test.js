@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+process.env.NODE_ENV = 'test';
 
 import Song from '../src/models/Song.js';
 
@@ -67,6 +68,19 @@ async function runRoomTests() {
   console.log(`${colors.cyan('========================================')}\n`);
 
   await mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.DB_NAME || 'Vibely' });
+
+  let localServer = null;
+  const isServerRunning = await fetch(`${BASE_URL}/health`).then(() => true).catch(() => false);
+  if (!isServerRunning) {
+    console.log(colors.yellow('Starting local test server on port 5000...'));
+    const { default: app } = await import('../src/app.js');
+    const { initializeSocket } = await import('../src/sockets/socket.js');
+    const http = await import('http');
+    localServer = http.createServer(app);
+    initializeSocket(localServer);
+    await new Promise((resolve) => localServer.listen(5000, resolve));
+    console.log(colors.green('Local test server listening on port 5000\n'));
+  }
 
   const timestamp = Date.now();
   const hostEmail = `room_host_${timestamp}@example.com`;
@@ -505,13 +519,13 @@ async function runRoomTests() {
     const repeatedLeaveRes = await emitWithAck(hostSocket, 'room:leave', { code: createdRoomCode });
     assert(repeatedLeaveRes.success === true, 'Repeated leave request completes safely without errors');
 
-    // 9. Host unexpectedly disconnects: room closes and all remaining members receive cancellation event
-    console.log(colors.yellow('\n9. Testing Host Unexpected Disconnect & Automatic Room Cancellation:'));
+    // 9. Host temporarily disconnects: room stays active, host reconnects seamlessly
+    console.log(colors.yellow('\n9. Testing Host Temporary Disconnection & Seamless Reconnection:'));
 
     // Host creates a second room
     const createRoom2Res = await emitWithAck(hostSocket, 'room:create', {
       name: 'Host Disconnect Test Room',
-      description: 'Testing disconnect cancellation',
+      description: 'Testing disconnect reconnection',
     });
     assert(createRoom2Res.success === true && createRoom2Res.room?.code, 'Host created Room 2 for disconnect test');
     const room2Code = createRoom2Res.room.code;
@@ -520,27 +534,61 @@ async function runRoomTests() {
     const joinRoom2Res = await emitWithAck(member1Socket, 'room:join', { code: room2Code });
     assert(joinRoom2Res.success === true, 'Member 1 joined Room 2');
 
-    const member1Room2ClosedPromise = waitForEvent(member1Socket, 'room:closed');
-
-    // Host unexpectedly disconnects socket
+    // Host temporarily disconnects socket
     hostSocket.disconnect();
 
+    // Verify Room 2 is NOT immediately deleted; it remains active during grace period
+    await new Promise((r) => setTimeout(r, 400));
+    const room2DuringDisconnectRest = await fetch(`${BASE_URL}/rooms/${room2Code}`, {
+      headers: { Authorization: `Bearer ${member1Token}` },
+    });
+    assert(
+      room2DuringDisconnectRest.status === 200,
+      'Room 2 remains active and accessible via REST API during host disconnect grace period (HTTP 200)'
+    );
+
+    // Host reconnects with a new socket and rejoins Room 2
+    let newHostSocket = io(SOCKET_URL, {
+      auth: { token: hostToken },
+      autoConnect: true,
+      reconnection: false,
+      transports: ['websocket'],
+    });
+    await new Promise((resolve, reject) => {
+      newHostSocket.on('connect', resolve);
+      newHostSocket.on('connect_error', reject);
+    });
+
+    const hostRejoinRes = await emitWithAck(newHostSocket, 'room:join', { code: room2Code });
+    assert(hostRejoinRes.success === true, 'Host reconnected and rejoined Room 2 successfully');
+    assert(hostRejoinRes.room.hostId === hostId, 'Host user remains room host upon reconnection');
+    assert(hostRejoinRes.room.members.length === 2, 'Room preserves both members upon host reconnection');
+
+    // 10. Room cleanup when host fails to reconnect within grace period
+    console.log(colors.yellow('\n10. Testing Room Cleanup when Host Grace Period Expires:'));
+
+    const member1Room2ClosedPromise = waitForEvent(member1Socket, 'room:closed', 6000);
+
+    // Host disconnects and does NOT return
+    newHostSocket.disconnect();
+
+    // Member 1 receives room:closed when grace period expires
     const room2ClosedEvent = await member1Room2ClosedPromise;
     assert(
       room2ClosedEvent.reason === 'The host left. This room has been closed.',
-      'Member 1 received room:closed event when host unexpectedly disconnected'
+      'Member 1 received room:closed event when host failed to return within grace period'
     );
 
-    // Verify Room 2 is deleted and cannot be rejoined
+    // Verify Room 2 is deleted after grace period expired
     const room2Rest = await fetch(`${BASE_URL}/rooms/${room2Code}`, {
       headers: { Authorization: `Bearer ${member1Token}` },
     });
-    assert(room2Rest.status === 404, 'Room 2 was removed from registry on host disconnect (HTTP 404)');
+    assert(room2Rest.status === 404, 'Room 2 was removed from registry after host grace period expired (HTTP 404)');
 
     const rejoinRoom2Attempt = await emitWithAck(member1Socket, 'room:join', { code: room2Code });
     assert(
       rejoinRoom2Attempt.success === false,
-      'Rejoining Room 2 after host disconnect is rejected'
+      'Rejoining Room 2 after cleanup is rejected'
     );
   } catch (err) {
     console.error('Fatal test error:', err);
@@ -549,6 +597,9 @@ async function runRoomTests() {
     if (hostSocket) hostSocket.disconnect();
     if (member1Socket) member1Socket.disconnect();
     if (member2Socket) member2Socket.disconnect();
+    if (localServer) {
+      await new Promise((resolve) => localServer.close(resolve));
+    }
     await mongoose.connection.close();
   }
 

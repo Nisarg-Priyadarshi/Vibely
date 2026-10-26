@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { usePlaylists } from '../context/PlaylistContext';
 import { usePlayer } from '../context/PlayerContext';
+import { SafeImage } from '../components/SafeImage';
 
 export const Library = () => {
   const { user } = useAuth();
@@ -161,9 +162,10 @@ export const Library = () => {
                 {/* Artwork Thumbnail (1:1 aspect, 4px radius) */}
                 <div className="relative aspect-square w-full rounded-[4px] overflow-hidden mb-3 bg-[#222222] flex items-center justify-center">
                   {firstCover ? (
-                    <img
+                    <SafeImage
                       src={firstCover}
                       alt={playlist.name}
+                      songTitle={songs?.[0]?.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                   ) : (

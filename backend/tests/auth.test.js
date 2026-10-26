@@ -197,6 +197,19 @@ async function runTests() {
       'CORS dynamically supports 127.0.0.1:5173 with credentials'
     );
 
+    // Cross-origin request from production Vercel frontend
+    const vercelOriginRes = await fetch(`${BASE_URL}/me`, {
+      headers: { Origin: 'https://vibely-ten-pi.vercel.app' },
+    });
+    assert(
+      vercelOriginRes.headers.get('access-control-allow-origin') === 'https://vibely-ten-pi.vercel.app',
+      'CORS dynamically supports production origin https://vibely-ten-pi.vercel.app with credentials'
+    );
+    assert(
+      vercelOriginRes.headers.get('cross-origin-opener-policy') === 'same-origin-allow-popups',
+      'API sets Cross-Origin-Opener-Policy: same-origin-allow-popups for production Vercel requests'
+    );
+
     // Authenticated via Bearer Token header
     const authHeaderRes = await fetch(`${BASE_URL}/me`, {
       headers: { Authorization: `Bearer ${authToken}` },

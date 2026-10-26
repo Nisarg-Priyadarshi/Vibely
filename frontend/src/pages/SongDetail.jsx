@@ -23,6 +23,7 @@ import { useSongLists } from '../context/SongListContext';
 import { formatTime } from '../utils/format';
 import { AddToPlaylistModal } from '../components/AddToPlaylistModal';
 import { SongCard } from '../components/SongCard';
+import { SafeImage } from '../components/SafeImage';
 
 export const SongDetail = () => {
   const { id } = useParams();
@@ -147,9 +148,10 @@ export const SongDetail = () => {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8">
           {/* Cover Art */}
           <div className="relative w-44 sm:w-60 max-w-full aspect-square rounded-[4px] overflow-hidden shrink-0 bg-[#121212]">
-            <img
+            <SafeImage
               src={song.coverUrl}
               alt={song.title}
+              songTitle={song.title}
               className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
             />
             {isCurrentPlaying && (

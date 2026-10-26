@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { SafeAvatar } from './SafeAvatar';
 
 const NAV_LINKS = [
   { to: '/',          label: 'Explore',    icon: Compass   },
@@ -112,11 +113,7 @@ export const Navbar = () => {
                 }`}
               >
                 <div className="w-6 h-6 rounded-full bg-[#2a2a2a] border border-white/10 flex items-center justify-center text-[11px] font-bold text-[#ff7a1a] uppercase overflow-hidden shrink-0">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    user.name?.charAt(0) || <User className="w-3.5 h-3.5" />
-                  )}
+                  <SafeAvatar src={user.avatar} name={user.name} />
                 </div>
                 <span className="text-xs font-medium text-[#ffffff] max-w-[120px] truncate">
                   {user.name}
@@ -154,7 +151,7 @@ export const Navbar = () => {
               className="w-8 h-8 rounded-[4px] bg-[#303030] border border-[rgba(255,255,255,0.1)] flex items-center justify-center text-xs font-bold text-[#ffffff] overflow-hidden"
             >
               {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                <SafeAvatar src={user.avatar} name={user.name} />
               ) : (
                 user.name?.charAt(0) || <User className="w-4 h-4" />
               )}

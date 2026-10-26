@@ -19,6 +19,7 @@ import {
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { usePlaylists } from '../context/PlaylistContext';
+import { SafeAvatar } from '../components/SafeAvatar';
 
 export const Profile = () => {
   const { user, logout, checkAuth } = useAuth();
@@ -181,17 +182,11 @@ export const Profile = () => {
           {/* Avatar Container with Cloudinary Upload UI */}
           <div className="flex flex-col items-center gap-2.5 shrink-0">
             <div className="relative group w-24 h-24 rounded-[4px] overflow-hidden bg-[#242424] flex items-center justify-center border border-[rgba(255,255,255,0.1)]">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[#2a2a2a] flex items-center justify-center text-[#ffffff] font-bold text-2xl uppercase">
-                  {user.name.charAt(0)}
-                </div>
-              )}
+              <SafeAvatar
+                src={user.avatar}
+                name={user.name}
+                fallbackClassName="w-full h-full bg-[#2a2a2a] flex items-center justify-center text-[#ffffff] font-bold text-2xl uppercase"
+              />
 
               {/* Hover Change Button */}
               <button

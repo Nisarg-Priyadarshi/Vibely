@@ -37,6 +37,7 @@ export const Login = () => {
           if (result.success) navigate('/');
           else setServerError(result.error);
         },
+        use_fedcm_for_prompt: true,
       });
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'filled_black',

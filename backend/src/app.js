@@ -10,6 +10,7 @@ const app = express();
 const clientOrigin = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
 const allowedOrigins = [
   clientOrigin,
+  'https://vibely-ten-pi.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:5000',

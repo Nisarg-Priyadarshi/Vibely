@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { X, Plus, Check, AlertCircle, ListMusic, Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePlaylists } from '../context/PlaylistContext';
+import { SafeImage } from './SafeImage';
 
 export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
   const { user } = useAuth();
@@ -82,9 +83,10 @@ export const AddToPlaylistModal = ({ song, isOpen, onClose }) => {
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-5 pr-8">
-          <img
+          <SafeImage
             src={song.coverUrl}
             alt={song.title}
+            songTitle={song.title}
             className="w-12 h-12 rounded-[4px] object-cover shrink-0 bg-[#282828]"
           />
           <div className="min-w-0">

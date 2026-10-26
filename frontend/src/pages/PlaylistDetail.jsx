@@ -24,6 +24,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { usePlaylists } from '../context/PlaylistContext';
 import { useSongLists } from '../context/SongListContext';
 import { formatTime } from '../utils/format';
+import { SafeImage } from '../components/SafeImage';
 
 export const PlaylistDetail = () => {
   const { id } = useParams();
@@ -197,7 +198,12 @@ export const PlaylistDetail = () => {
           {/* Big Cover Artwork */}
           <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-[6px] overflow-hidden shadow-2xl bg-[#141414] border border-white/10 shrink-0 flex items-center justify-center">
             {firstCover ? (
-              <img src={firstCover} alt={playlist.name} className="w-full h-full object-cover" />
+              <SafeImage
+                src={firstCover}
+                alt={playlist.name}
+                songTitle={playlist.songs?.[0]?.title}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <ListMusic className="w-16 h-16 text-[#666666]" />
             )}
@@ -347,9 +353,10 @@ export const PlaylistDetail = () => {
                     {/* Title & Artist */}
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <img
+                        <SafeImage
                           src={song.coverUrl}
                           alt={song.title}
+                          songTitle={song.title}
                           className="w-10 h-10 rounded-[4px] object-cover shrink-0 bg-[#242424]"
                         />
                         <div className="min-w-0">

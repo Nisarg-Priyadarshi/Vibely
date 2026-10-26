@@ -156,6 +156,7 @@ export const RoomProvider = ({ children }) => {
       if (activeRoom?.code) {
         socket.emit('room:join', { code: activeRoom.code }, (res) => {
           if (res?.success) {
+            setCurrentRoom(res.room);
             setRoomMembers(res.room.members || []);
             setRoomState(res.room.state || null);
             setChatMessages(res.messages || []);

@@ -125,10 +125,24 @@ function createMockRoomClient({ user, initialRoom, audio, navigate }) {
     });
   };
 
+  let socketStatus = 'connected';
+
+  socket.on('disconnect', () => {
+    socketStatus = 'disconnected';
+  });
+
+  socket.on('connect', () => {
+    socketStatus = 'connected';
+    if (currentRoom?.code) {
+      notify('Reconnected to room successfully.', 'success');
+    }
+  });
+
   return {
     socket,
     leaveRoom,
     getState: () => ({
+      socketStatus,
       currentRoom,
       roomMembers,
       roomState,
@@ -282,6 +296,78 @@ async function runTests() {
       'Default message is applied if reason is omitted'
     );
     assert(navigatedTo === '/rooms', 'Navigates to /rooms with default message');
+  }
+
+  // Test 5: Temporary socket disconnect does NOT clear room state or redirect
+  console.log(colors.yellow('\n5. Testing temporary socket disconnect does NOT clear room state:'));
+  {
+    const audio = createMockAudio();
+    let navigatedTo = null;
+    const navigate = (path) => { navigatedTo = path; };
+
+    const initialRoom = {
+      code: 'VIBE55',
+      name: 'Synthwave Room',
+      hostId: 'host-123',
+      members: [{ userId: 'host-123', name: 'Host' }],
+      state: { isPlaying: true, position: 10 },
+      requests: [],
+    };
+
+    const client = createMockRoomClient({
+      user: { id: 'host-123', name: 'Host' },
+      initialRoom,
+      audio,
+      navigate,
+    });
+
+    // Simulate socket disconnect event
+    client.socket.trigger('disconnect', 'transport close');
+
+    assert(client.getState().socketStatus === 'disconnected', 'Socket status transitions to disconnected');
+    assert(client.getState().currentRoom !== null, 'currentRoom is NOT cleared on temporary disconnect');
+    assert(client.getState().currentRoom.code === 'VIBE55', 'Room code is preserved across disconnect');
+    assert(client.getState().roomMembers.length === 1, 'Room members preserved on disconnect');
+    assert(audio.pauseCount === 0, 'forcePause() is NOT called on temporary disconnect');
+    assert(navigatedTo === null, 'Client is NOT redirected away from room on disconnect');
+  }
+
+  // Test 6: Reconnecting socket preserves room and notifies user
+  console.log(colors.yellow('\n6. Testing socket reconnect preserves room and restores presence:'));
+  {
+    const audio = createMockAudio();
+    let navigatedTo = null;
+    const navigate = (path) => { navigatedTo = path; };
+
+    const initialRoom = {
+      code: 'VIBE44',
+      name: 'Ambient Room',
+      hostId: 'host-123',
+      members: [{ userId: 'host-123', name: 'Host' }, { userId: 'listener-1', name: 'Listener' }],
+      state: { isPlaying: true, position: 25 },
+      requests: [],
+    };
+
+    const client = createMockRoomClient({
+      user: { id: 'host-123', name: 'Host' },
+      initialRoom,
+      audio,
+      navigate,
+    });
+
+    // Disconnect then reconnect
+    client.socket.trigger('disconnect', 'ping timeout');
+    assert(client.getState().socketStatus === 'disconnected', 'Socket is disconnected');
+
+    client.socket.trigger('connect');
+    assert(client.getState().socketStatus === 'connected', 'Socket is reconnected');
+    assert(client.getState().currentRoom !== null, 'Room remains active upon reconnect');
+    assert(client.getState().currentRoom.hostId === 'host-123', 'Host ID remains preserved');
+    assert(
+      client.getState().notification?.message === 'Reconnected to room successfully.',
+      'Reconnection success notification is displayed'
+    );
+    assert(navigatedTo === null, 'No redirection occurred during disconnect and reconnect cycle');
   }
 
   console.log(`\n${colors.cyan('========================================================')}`);

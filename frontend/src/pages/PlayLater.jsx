@@ -18,6 +18,7 @@ import { useSongLists } from '../context/SongListContext';
 import { usePlayer } from '../context/PlayerContext';
 import { formatTime } from '../utils/format';
 import { AddToPlaylistModal } from '../components/AddToPlaylistModal';
+import { SafeImage } from '../components/SafeImage';
 
 export const PlayLater = () => {
   const { user } = useAuth();
@@ -192,9 +193,10 @@ export const PlayLater = () => {
 
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <img
+                        <SafeImage
                           src={song.coverUrl}
                           alt={song.title}
+                          songTitle={song.title}
                           className="w-9 h-9 rounded-[3px] object-cover shrink-0 border border-[rgba(255,255,255,0.07)]"
                         />
                         <div className="min-w-0">

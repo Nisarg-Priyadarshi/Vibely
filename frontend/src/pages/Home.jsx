@@ -20,6 +20,8 @@ import { usePlayer } from '../context/PlayerContext';
 import { useSongLists } from '../context/SongListContext';
 import { SongCard } from '../components/SongCard';
 import { AddToPlaylistModal } from '../components/AddToPlaylistModal';
+import { SafeImage } from '../components/SafeImage';
+import { resolveSongCover } from '../utils/imageFallback';
 
 export const Home = () => {
   const { user } = useAuth();
@@ -163,15 +165,16 @@ export const Home = () => {
           {/* Ambient blurred glow from cover artwork */}
           <div
             className="absolute -top-12 -left-12 w-96 h-96 bg-cover bg-center filter blur-3xl opacity-20 pointer-events-none scale-125"
-            style={{ backgroundImage: `url(${featuredTrack.coverUrl})` }}
+            style={{ backgroundImage: `url(${resolveSongCover(featuredTrack)})` }}
           />
 
             <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-y-[32px] md:gap-y-0 md:gap-x-[48px]">
             {/* Artwork Card */}
             <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-[6px] overflow-hidden shrink-0 shadow-2xl border border-white/10 group">
-              <img
+              <SafeImage
                 src={featuredTrack.coverUrl}
                 alt={featuredTrack.title}
+                songTitle={featuredTrack.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-[3px] bg-[#121212]/90 backdrop-blur-md text-[10px] font-bold text-white uppercase tracking-wider border border-white/10 flex items-center gap-1.5 shadow-md">
