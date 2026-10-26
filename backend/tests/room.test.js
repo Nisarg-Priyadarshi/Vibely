@@ -590,6 +590,206 @@ async function runRoomTests() {
       rejoinRoom2Attempt.success === false,
       'Rejoining Room 2 after cleanup is rejected'
     );
+    // 11. Vibely Rooms Chat After Page Refresh & Reconnection Regression Suite
+    console.log(colors.yellow('\n11. Testing Vibely Rooms Chat After Page Refresh & Reconnection (Regression Suite):'));
+
+    // 11.1 Host creates room, member joins, and initial chat works
+    let hostRegSocket = io(SOCKET_URL, {
+      auth: { token: hostToken },
+      autoConnect: true,
+      reconnection: false,
+      transports: ['websocket'],
+    });
+    await new Promise((resolve, reject) => {
+      hostRegSocket.on('connect', resolve);
+      hostRegSocket.on('connect_error', reject);
+    });
+
+    const regRoomRes = await emitWithAck(hostRegSocket, 'room:create', {
+      name: 'Refresh Chat Regression Room',
+      description: 'Testing chat persistence across refresh',
+    });
+    assert(regRoomRes.success === true && regRoomRes.room?.code, 'Host created Room 3 for refresh regression tests');
+    const room3Code = regRoomRes.room.code;
+
+    let memberRegSocket = io(SOCKET_URL, {
+      auth: { token: member1Token },
+      autoConnect: true,
+      reconnection: false,
+      transports: ['websocket'],
+    });
+    await new Promise((resolve, reject) => {
+      memberRegSocket.on('connect', resolve);
+      memberRegSocket.on('connect_error', reject);
+    });
+
+    const memberRegJoin = await emitWithAck(memberRegSocket, 'room:join', { code: room3Code });
+    assert(memberRegJoin.success === true, 'Member 1 joined Room 3');
+
+    const initialHostChat = await emitWithAck(hostRegSocket, 'room:chat_send', {
+      code: room3Code,
+      text: 'Initial host welcome message',
+    });
+    assert(initialHostChat.success === true && initialHostChat.message?.text === 'Initial host welcome message', 'Host sent initial message before refresh');
+
+    const initialMemberChat = await emitWithAck(memberRegSocket, 'room:chat_send', {
+      code: room3Code,
+      text: 'Initial member reply',
+    });
+    assert(initialMemberChat.success === true && initialMemberChat.message?.text === 'Initial member reply', 'Member sent initial message before refresh');
+
+    // 11.2 Regression Test 4: Disconnected user cannot send chat until membership is restored
+    console.log(colors.yellow('  Testing disconnected user chat rejection:'));
+    memberRegSocket.disconnect();
+    await new Promise((r) => setTimeout(r, 100));
+
+    let memberRegSocket2 = io(SOCKET_URL, {
+      auth: { token: member1Token },
+      autoConnect: true,
+      reconnection: false,
+      transports: ['websocket'],
+    });
+    await new Promise((resolve, reject) => {
+      memberRegSocket2.on('connect', resolve);
+      memberRegSocket2.on('connect_error', reject);
+    });
+
+    const unjoinedChatRes = await emitWithAck(memberRegSocket2, 'room:chat_send', {
+      code: room3Code,
+      text: 'Premature message before rejoining',
+    });
+    assert(
+      unjoinedChatRes.success === false && unjoinedChatRes.error.includes('You must be a connected room member to send chat'),
+      '4. Disconnected user cannot send chat before membership is restored'
+    );
+
+    // 11.3 Regression Test 2: Normal member refreshes, rejoins, and successfully sends chat
+    console.log(colors.yellow('  Testing normal member refresh and rejoining:'));
+    const memberRejoinRes = await emitWithAck(memberRegSocket2, 'room:join', { code: room3Code });
+    assert(memberRejoinRes.success === true, '2a. Normal member rejoins Room 3 successfully after refresh');
+    assert(memberRejoinRes.messages.length === 2, '2b. Existing room messages restored upon rejoining');
+
+    const memberAfterRejoinChat = await emitWithAck(memberRegSocket2, 'room:chat_send', {
+      code: room3Code,
+      text: 'Member chat after refresh and rejoin',
+    });
+    assert(
+      memberAfterRejoinChat.success === true && memberAfterRejoinChat.message?.text === 'Member chat after refresh and rejoin',
+      '2c. Normal member successfully sends chat after rejoining'
+    );
+
+    // 11.4 Regression Test 6: Temporary host disconnection does not delete the room
+    console.log(colors.yellow('  Testing temporary host disconnection:'));
+    hostRegSocket.disconnect();
+    await new Promise((r) => setTimeout(r, 100));
+
+    const roomDuringHostDisconnect = await fetch(`${BASE_URL}/rooms/${room3Code}`, {
+      headers: { Authorization: `Bearer ${member1Token}` },
+    });
+    assert(roomDuringHostDisconnect.status === 200, '6. Temporary host disconnection does not delete the room');
+
+    // 11.5 Regression Test 1: Host creates a room, refreshes, rejoins the same room, and successfully sends chat
+    console.log(colors.yellow('  Testing host refresh and rejoining:'));
+    let hostRegSocket2 = io(SOCKET_URL, {
+      auth: { token: hostToken },
+      autoConnect: true,
+      reconnection: false,
+      transports: ['websocket'],
+    });
+    await new Promise((resolve, reject) => {
+      hostRegSocket2.on('connect', resolve);
+      hostRegSocket2.on('connect_error', reject);
+    });
+
+    // Before rejoin, disconnected host cannot send chat
+    const hostPrematureChat = await emitWithAck(hostRegSocket2, 'room:chat_send', {
+      code: room3Code,
+      text: 'Premature host chat',
+    });
+    assert(
+      hostPrematureChat.success === false && hostPrematureChat.error.includes('You must be a connected room member to send chat'),
+      'Host cannot send chat before rejoining'
+    );
+
+    const hostRegRejoinRes = await emitWithAck(hostRegSocket2, 'room:join', { code: room3Code });
+    assert(hostRegRejoinRes.success === true, '1a. Host rejoins the same room after page refresh');
+    assert(hostRegRejoinRes.room.hostId === hostId, '1b. Host is correctly recognized as the host after reconnecting');
+    assert(hostRegRejoinRes.messages.length >= 3, '1c. Existing messages restored for host after rejoining');
+
+    const hostChatAfterRejoin = await emitWithAck(hostRegSocket2, 'room:chat_send', {
+      code: room3Code,
+      text: 'Host chat successfully sent after page refresh!',
+    });
+    assert(
+      hostChatAfterRejoin.success === true && hostChatAfterRejoin.message?.text === 'Host chat successfully sent after page refresh!',
+      '1d. Host successfully sends chat in the same room after refreshing'
+    );
+
+    // 11.6 Regression Test 3: Multiple refreshes do not create duplicate membership records
+    console.log(colors.yellow('  Testing multiple refreshes do not duplicate members:'));
+    for (let i = 0; i < 3; i++) {
+      memberRegSocket2.disconnect();
+      await new Promise((r) => setTimeout(r, 50));
+      memberRegSocket2 = io(SOCKET_URL, {
+        auth: { token: member1Token },
+        autoConnect: true,
+        reconnection: false,
+        transports: ['websocket'],
+      });
+      await new Promise((r) => memberRegSocket2.on('connect', r));
+      const repeatRejoin = await emitWithAck(memberRegSocket2, 'room:join', { code: room3Code });
+      assert(
+        repeatRejoin.success === true && repeatRejoin.room.members.length === 2,
+        `3. Refresh iteration ${i + 1} maintains exactly 2 members without duplication`
+      );
+    }
+
+    // 11.7 Regression Test 8: Multiple users can chat after reconnecting
+    console.log(colors.yellow('  Testing multiple users chatting after reconnecting:'));
+    const memberChatPromise = waitForEvent(memberRegSocket2, 'room:chat_message');
+    const hostChatPromise = waitForEvent(hostRegSocket2, 'room:chat_message');
+
+    const hostBroadcastTest = await emitWithAck(hostRegSocket2, 'room:chat_send', {
+      code: room3Code,
+      text: 'Broadcast message from reconnected host',
+    });
+    assert(hostBroadcastTest.success === true, 'Host sends broadcast message');
+
+    const [receivedByMember, receivedByHost] = await Promise.all([memberChatPromise, hostChatPromise]);
+    assert(
+      receivedByMember.text === 'Broadcast message from reconnected host' && receivedByHost.text === 'Broadcast message from reconnected host',
+      '8. Multiple users successfully receive real-time chat after reconnecting'
+    );
+
+    // 11.8 Regression Test 5: An unauthorized user cannot rejoin a room
+    console.log(colors.yellow('  Testing unauthorized user rejoin rejection:'));
+    const nonExistentRejoin = await emitWithAck(memberRegSocket2, 'room:join', { code: 'INVALID_CODE_999' });
+    assert(
+      nonExistentRejoin.success === false && nonExistentRejoin.error.includes('not found'),
+      '5a. Rejoining non-existent room is rejected'
+    );
+
+    // 11.9 Regression Test 7: Explicit host leave still cancels the room as intended
+    console.log(colors.yellow('  Testing explicit host leave still cancels the room:'));
+    const memberRoom3ClosedPromise = waitForEvent(memberRegSocket2, 'room:closed');
+    const hostExplicitLeave = await emitWithAck(hostRegSocket2, 'room:leave', { code: room3Code });
+    assert(hostExplicitLeave.success === true, '7a. Host explicitly leaves Room 3');
+
+    const room3ClosedEvent = await memberRoom3ClosedPromise;
+    assert(
+      room3ClosedEvent.reason === 'The host left. This room has been closed.',
+      '7b. Member receives room:closed on explicit host leave'
+    );
+
+    const postLeaveRejoin = await emitWithAck(memberRegSocket2, 'room:join', { code: room3Code });
+    assert(
+      postLeaveRejoin.success === false && (postLeaveRejoin.error.includes('closed') || postLeaveRejoin.error.includes('not found')),
+      '7c. Rejoining room cancelled by explicit host leave is rejected'
+    );
+
+    // Cleanup sockets used in regression suite
+    hostRegSocket2.disconnect();
+    memberRegSocket2.disconnect();
   } catch (err) {
     console.error('Fatal test error:', err);
     failedCount++;

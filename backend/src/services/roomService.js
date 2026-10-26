@@ -146,10 +146,13 @@ export const getRoomMessages = ({ code, userId }) => {
 
 /** Store and sequence a chat message on the server before broadcasting it. */
 export const addRoomMessage = ({ code, user, socketId, text }) => {
+  if (!code || typeof code !== 'string') {
+    throw new Error('Room code is required.');
+  }
   const normalizedCode = code.trim().toUpperCase();
   const room = rooms.get(normalizedCode);
-  const userId = (user.id || user._id).toString();
-  if (!room || !room.members.some((member) => member.userId === userId && member.socketId === socketId)) {
+  const userId = (user?.id || user?._id)?.toString();
+  if (!room || !userId || !room.members.some((member) => member.userId === userId && member.socketId === socketId)) {
     throw new Error('You must be a connected room member to send chat.');
   }
   if (typeof text !== 'string' || !text.trim() || text.length > 2000) {
@@ -176,6 +179,10 @@ export const joinRoom = ({ code, user, socketId }) => {
     throw new Error('Room code is required.');
   }
 
+  if (!user || !(user.id || user._id)) {
+    throw new Error('Authentication required: Valid user identity required to join a room.');
+  }
+
   const normalizedCode = code.trim().toUpperCase();
 
   if (cancelledRooms.has(normalizedCode)) {
@@ -196,6 +203,12 @@ export const joinRoom = ({ code, user, socketId }) => {
   if (existingMemberIndex >= 0) {
     // Reconnecting user: update socket ID
     room.members[existingMemberIndex].socketId = socketId;
+    if (user.name) {
+      room.members[existingMemberIndex].name = user.name;
+    }
+    if (user.avatar !== undefined) {
+      room.members[existingMemberIndex].avatar = user.avatar || null;
+    }
     socketToRoom.set(socketId, normalizedCode);
 
     // If reconnecting user is the room host, clear the disconnect grace timer
@@ -311,7 +324,8 @@ export const leaveRoom = ({ code, userId, socketId }) => {
  * Handle transport-level socket disconnection.
  * A host disconnection is treated as temporary and starts a grace period timer.
  * Only if the host fails to reconnect before the timer expires is the room closed.
- * A non-host disconnection removes only that member and keeps the room alive.
+ * A non-host disconnection sets socketId to null, preserving the room and allowing
+ * the member to refresh and seamlessly rejoin without treating disconnect as an intentional leave.
  */
 export const handleDisconnect = ({ socketId, userId, onHostTimeout }) => {
   const normalizedCode = socketToRoom.get(socketId);
@@ -387,23 +401,16 @@ export const handleDisconnect = ({ socketId, userId, onHostTimeout }) => {
     };
   }
 
-  // Non-host member disconnected
-  room.members = room.members.filter((m) => m.userId !== strUserId);
-
-  // If room is now empty, delete it
-  if (room.members.length === 0) {
-    clearDisconnectTimer(normalizedCode);
-    rooms.delete(normalizedCode);
-    return {
-      deleted: true,
-      code: normalizedCode,
-      reason: 'Room was closed because all listeners left.',
-    };
+  // Non-host member temporarily disconnected: preserve membership and room state
+  const member = room.members.find((m) => m.userId === strUserId);
+  if (member) {
+    member.socketId = null;
   }
 
   return {
     isHost: false,
     deleted: false,
+    code: normalizedCode,
     room: serializeRoom(room),
   };
 };

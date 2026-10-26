@@ -7,6 +7,29 @@ import { usePlayer } from './PlayerContext';
 
 const RoomContext = createContext(null);
 
+const ACTIVE_ROOM_KEY = 'vibely_active_room_code';
+const getSavedActiveRoom = () => {
+  try {
+    return sessionStorage.getItem(ACTIVE_ROOM_KEY);
+  } catch {
+    return null;
+  }
+};
+const saveActiveRoom = (code) => {
+  try {
+    if (code) {
+      sessionStorage.setItem(ACTIVE_ROOM_KEY, code.toUpperCase());
+    } else {
+      sessionStorage.removeItem(ACTIVE_ROOM_KEY);
+    }
+  } catch {}
+};
+const clearActiveRoom = () => {
+  try {
+    sessionStorage.removeItem(ACTIVE_ROOM_KEY);
+  } catch {}
+};
+
 export const RoomProvider = ({ children }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -24,6 +47,7 @@ export const RoomProvider = ({ children }) => {
 
   const [socketStatus, setSocketStatus] = useState('disconnected'); // 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error'
   const [connectionError, setConnectionError] = useState(null);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
 
   const [currentRoom, setCurrentRoom] = useState(null);
   const [roomMembers, setRoomMembers] = useState([]);
@@ -124,7 +148,9 @@ export const RoomProvider = ({ children }) => {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
+      clearActiveRoom();
       setSocketStatus('disconnected');
+      setIsJoiningRoom(false);
       setCurrentRoom(null);
       setRoomMembers([]);
       setRoomState(null);
@@ -151,17 +177,22 @@ export const RoomProvider = ({ children }) => {
       setSocketStatus('connected');
       setConnectionError(null);
 
-      // If user was in a room before disconnect, re-sync state
-      const activeRoom = currentRoomRef.current;
-      if (activeRoom?.code) {
-        socket.emit('room:join', { code: activeRoom.code }, (res) => {
+      // If user was in a room before disconnect or after refresh, re-sync / rejoin
+      const activeCode = currentRoomRef.current?.code || getSavedActiveRoom();
+      if (activeCode) {
+        setIsJoiningRoom(true);
+        socket.emit('room:join', { code: activeCode }, (res) => {
+          setIsJoiningRoom(false);
           if (res?.success) {
             setCurrentRoom(res.room);
             setRoomMembers(res.room.members || []);
             setRoomState(res.room.state || null);
             setChatMessages(res.messages || []);
+            saveActiveRoom(res.room.code);
             applyRoomSyncRef.current?.(res.room.state);
             notify('Reconnected to room successfully.', 'success');
+          } else {
+            clearActiveRoom();
           }
         });
       }
@@ -237,6 +268,7 @@ export const RoomProvider = ({ children }) => {
 
     socket.on('room:closed', ({ reason }) => {
       forcePause();
+      clearActiveRoom();
       const message = reason || 'The host left. This room has been closed.';
       notify(message, 'warning');
       setCurrentRoom(null);
@@ -278,6 +310,7 @@ export const RoomProvider = ({ children }) => {
           setRoomState(res.room.state || null);
           setPendingRequests(res.room.requests || []);
           setChatMessages(res.messages || []);
+          saveActiveRoom(res.room.code);
           notify(`Room "${res.room.name}" created! Share code: ${res.room.code}`, 'success');
           resolve(res.room);
         });
@@ -295,9 +328,16 @@ export const RoomProvider = ({ children }) => {
         }
 
         const normalizedCode = code ? code.trim().toUpperCase() : '';
+        if (!normalizedCode) {
+          return reject(new Error('Room code is required.'));
+        }
+
+        setIsJoiningRoom(true);
         socketRef.current.emit('room:join', { code: normalizedCode }, (res) => {
+          setIsJoiningRoom(false);
           if (!res || !res.success) {
             const errMsg = res?.error || 'Failed to join room.';
+            clearActiveRoom();
             notify(errMsg, 'error');
             return reject(new Error(errMsg));
           }
@@ -307,6 +347,7 @@ export const RoomProvider = ({ children }) => {
           setRoomState(res.room.state || null);
           setPendingRequests(res.room.requests || []);
           setChatMessages(res.messages || []);
+          saveActiveRoom(res.room.code);
           applyRoomSyncRef.current?.(res.room.state);
           notify(`Joined room "${res.room.name}"`, 'success');
           resolve(res.room);
@@ -320,6 +361,7 @@ export const RoomProvider = ({ children }) => {
   const leaveRoom = useCallback(() => {
     return new Promise((resolve) => {
       forcePause();
+      clearActiveRoom();
       if (socketRef.current && currentRoom) {
         socketRef.current.emit('room:leave', { code: currentRoom.code }, () => {
           setCurrentRoom(null);
@@ -342,7 +384,8 @@ export const RoomProvider = ({ children }) => {
   }, [currentRoom, forcePause, notify]);
 
   const sendChatMessage = useCallback((text) => new Promise((resolve, reject) => {
-    if (!socketRef.current?.connected || !currentRoom) return reject(new Error('Not connected to a room.'));
+    if (!socketRef.current?.connected) return reject(new Error('Connecting to room server... Please wait.'));
+    if (!currentRoom) return reject(new Error('You must be a connected room member to send chat.'));
     socketRef.current.emit('room:chat_send', { code: currentRoom.code, text }, (res) => {
       if (!res?.success) return reject(new Error(res?.error || 'Failed to send message.'));
       resolve(res.message);
@@ -457,6 +500,7 @@ export const RoomProvider = ({ children }) => {
       value={{
         socketStatus,
         connectionError,
+        isJoiningRoom,
         currentRoom,
         roomMembers,
         roomState,

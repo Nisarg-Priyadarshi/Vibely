@@ -152,6 +152,9 @@ export const initializeSocket = (server) => {
     // 2. Join Room
     socket.on('room:join', ({ code }, ack) => {
       try {
+        if (!socket.user) {
+          throw new Error('Authentication required: You must be logged in to join a room.');
+        }
         const requestedCode = code?.trim().toUpperCase();
         if (!requestedCode || !roomService.getRoom(requestedCode)) throw new Error('Room not found.');
         const previousCode = roomService.getCodeBySocket(socket.id);

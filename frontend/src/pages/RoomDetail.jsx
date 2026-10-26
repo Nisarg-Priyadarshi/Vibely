@@ -39,6 +39,7 @@ export const RoomDetail = () => {
   const { user } = useAuth();
   const {
     socketStatus,
+    isJoiningRoom,
     currentRoom,
     roomMembers,
     chatMessages,
@@ -96,23 +97,34 @@ export const RoomDetail = () => {
   const [invitedMap, setInvitedMap] = useState({});
   const [inviteError, setInviteError] = useState(null);
 
-  // Auto-join room on mount once socket is connected if not already in room
-  const hasAttemptedJoin = useRef(false);
+  // Auto-join / rejoin room on mount or reconnect once socket is connected
+  const joiningCodeRef = useRef(null);
   useEffect(() => {
     if (!code || socketStatus !== 'connected') return;
 
-    if (!hasAttemptedJoin.current) {
-      if (!currentRoom || currentRoom.code !== code.toUpperCase()) {
-        hasAttemptedJoin.current = true;
-        joinRoom(code).catch((err) => {
-          console.warn('Auto-join room error:', err.message);
-          navigate('/rooms');
-        });
-      } else {
-        hasAttemptedJoin.current = true;
-      }
+    const normalizedCode = code.trim().toUpperCase();
+
+    // Already in this room and active
+    if (currentRoom?.code === normalizedCode) {
+      joiningCodeRef.current = null;
+      return;
     }
-  }, [code, socketStatus, currentRoom, joinRoom, navigate]);
+
+    // Avoid duplicate concurrent joinRoom calls for this room
+    if (isJoiningRoom || joiningCodeRef.current === normalizedCode) {
+      return;
+    }
+
+    joiningCodeRef.current = normalizedCode;
+    joinRoom(normalizedCode)
+      .catch((err) => {
+        console.warn('Auto-join room error:', err.message);
+        navigate('/rooms');
+      })
+      .finally(() => {
+        joiningCodeRef.current = null;
+      });
+  }, [code, socketStatus, currentRoom?.code, isJoiningRoom, joinRoom, navigate]);
 
   // Load songs catalogue for track selection/requests
   useEffect(() => {
@@ -662,28 +674,53 @@ export const RoomDetail = () => {
               <div ref={chatEndRef} />
             </div>
 
-            <form onSubmit={handleSendChat} className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  id="room-chat-input"
-                  value={chatDraft}
-                  onChange={(event) => setChatDraft(event.target.value)}
-                  maxLength={2000}
-                  disabled={socketStatus !== 'connected' || sendingChat}
-                  placeholder="Type a message..."
-                  className="min-w-0 flex-1 input-flat text-xs py-2"
-                />
-                <button
-                  type="submit"
-                  disabled={!chatDraft.trim() || socketStatus !== 'connected' || sendingChat}
-                  aria-label="Send message"
-                  className="btn-white text-xs px-3.5 py-2 disabled:opacity-40"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              {chatError && <p role="alert" className="text-[11px] text-rose-300">{chatError}</p>}
-            </form>
+            {(() => {
+              const isChatRestoring =
+                isJoiningRoom ||
+                socketStatus !== 'connected' ||
+                !currentRoom ||
+                currentRoom.code !== code?.toUpperCase();
+              const isChatInputDisabled = isChatRestoring || sendingChat;
+
+              return (
+                <form onSubmit={handleSendChat} className="space-y-2">
+                  {isChatRestoring && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#00e599] font-mono animate-pulse pb-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>
+                        {socketStatus !== 'connected'
+                          ? `Connecting to room (${socketStatus})...`
+                          : 'Restoring room membership...'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      id="room-chat-input"
+                      value={chatDraft}
+                      onChange={(event) => setChatDraft(event.target.value)}
+                      maxLength={2000}
+                      disabled={isChatInputDisabled}
+                      placeholder={
+                        isChatRestoring
+                          ? 'Restoring room membership...'
+                          : 'Type a message...'
+                      }
+                      className="min-w-0 flex-1 input-flat text-xs py-2 disabled:opacity-50"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!chatDraft.trim() || isChatInputDisabled}
+                      aria-label="Send message"
+                      className="btn-white text-xs px-3.5 py-2 disabled:opacity-40"
+                    >
+                      {sendingChat ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  {chatError && <p role="alert" className="text-[11px] text-rose-300">{chatError}</p>}
+                </form>
+              );
+            })()}
           </section>
 
           {/* Room Members */}
